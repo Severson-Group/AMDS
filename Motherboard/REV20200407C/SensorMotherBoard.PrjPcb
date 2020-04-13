@@ -28,7 +28,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=Project Outputs for SensorMotherBoard
+OutputPath=
 LogFolderPath=
 ManagedProjectGUID=
 IncludeDesignInRelease=0
@@ -157,7 +157,7 @@ GenerateClassCluster=0
 DocumentUniqueId=FXWFHEJE
 
 [Document8]
-DocumentPath=SensorCard.SchLib
+DocumentPath=SensorMotherBoard.SCHLIB
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -171,7 +171,7 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=JUEGUOQN
+DocumentUniqueId=HVKMWFIH
 
 [Configuration1]
 Name=Sources
@@ -220,7 +220,7 @@ SCH_HasExpandLogicalToPhysicalSheets=-1
 SaveSettingsToOutJob=0
 
 [Generic_EDE]
-OutputDir=Project Outputs for SensorMotherBoard
+OutputDir=
 
 [OutputGroup1]
 Name=Netlist Outputs
