@@ -173,9 +173,9 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=HVKMWFIH
 
-[GeneratedDocument1]
-DocumentPath=Project Outputs for SensorMotherBoard\Design Rule Check - SensorMotherBoard.html
-DItemRevisionGUID=
+[Parameter1]
+Name=ProjectGroup
+Value=Severson Group
 
 [Configuration1]
 Name=Sources
