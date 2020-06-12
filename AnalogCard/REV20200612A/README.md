@@ -1,4 +1,4 @@
-# Analog Sensor CArd REV20200612A
+# Analog Sensor Card REV20200612A
 
 This folder contains the compiled design outputs for the Analog Sensor Card REV D (design frozen on June 12, 2020). This includes the schematics, images of the PCB layout, the bill of materials (BOM), and the files needed to order boards from fab houses (gerbers).
 
