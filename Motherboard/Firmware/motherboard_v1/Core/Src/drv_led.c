@@ -1,6 +1,6 @@
 #include "drv_led.h"
-#include "platform.h"
 #include "defines.h"
+#include "platform.h"
 #include <stdint.h>
 
 #define GPIO_SET_PIN(port, pin, x) port->BSRR = (x) ? pin : (pin << 16)
@@ -67,7 +67,7 @@ void drv_led_display(void)
 
 static void MX_LED_Init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
