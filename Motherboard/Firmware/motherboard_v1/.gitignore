@@ -5,6 +5,7 @@ scripts/__pycache__/
 *.o
 *.d
 *.ignore
+*.launch
 *.exe
 __pycache__
 *.pyc
