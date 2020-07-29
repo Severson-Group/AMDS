@@ -37,6 +37,9 @@ int main(void)
         for (i = 0; i < 10000000; i++) {
             asm("nop");
         }
+
+        uint16_t data = drv_spi5_rx();
+        asm("nop");
     }
 }
 
