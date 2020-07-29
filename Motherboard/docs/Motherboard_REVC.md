@@ -6,7 +6,7 @@
 
 ## Block Diagram / External Connections
 
-<img src="images/Measurementboard_REVC.svg" />
+<img src="Images/Measurementboard_REVC.svg" />
 
 ### 1. Comunication DB15 Connector
 
