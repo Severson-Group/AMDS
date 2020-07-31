@@ -5,7 +5,9 @@
 
 void adc_init(void);
 
-void adc_read_raw(uint16_t *out1, uint16_t *out2);
+void adc_read_raw_bitbang(uint16_t *out1, uint16_t *out2);
+void adc_read_raw_spi(uint16_t *out1, uint16_t *out2);
+
 void adc_read_volts(float *out1, float *out2);
 
 #endif // ADC_H

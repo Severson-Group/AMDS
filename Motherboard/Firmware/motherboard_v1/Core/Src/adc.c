@@ -6,22 +6,11 @@
 
 static void setup_pin_SYNC_ADC(void);
 static void setup_pin_CONVST(void);
-static void setup_pin_SCLK(void);
-static void setup_pin_SO(void);
 
 #define GPIO_SET_PIN(port, pin, x) port->BSRR = (x) ? pin : (pin << 16)
-#define GPIO_GET_PIN(port, pin)    ((port->IDR & pin) ? true : false)
 
-static inline void set_pin_CONVST_high(void);
-static inline void set_pin_CONVST_low(void);
-static inline void set_pin_SCLK_high(void);
-static inline void set_pin_SCLK_low(void);
-static inline bool read_pin_SO(void);
-
-// Configure ADC conversion wait type
-// 1: Timed wait
-// 0: Polled wait
-#define ADC_CONVERSION_WAIT_TIMED (0)
+#define SET_PIN_CONVST_HIGH GPIO_SET_PIN(GPIOF, GPIO_PIN_6, 1)
+#define SET_PIN_CONVST_LOW  GPIO_SET_PIN(GPIOF, GPIO_PIN_6, 0)
 
 #define ADC_FRONTEND_GAIN (10.0)
 #define ADC_FULL_SCALE    (1 << 15)
@@ -33,11 +22,6 @@ void adc_init(void)
 {
     setup_pin_SYNC_ADC();
     setup_pin_CONVST();
-    setup_pin_SCLK();
-    setup_pin_SO();
-
-    // SCLK needs to be idle HIGH
-    set_pin_SCLK_high();
 }
 
 void adc_read_volts(float *out1, float *out2)
@@ -45,7 +29,7 @@ void adc_read_volts(float *out1, float *out2)
     // Get raw bits from ADC
     uint16_t data1;
     uint16_t data2;
-    adc_read_raw(&data1, &data2);
+    adc_read_raw_bitbang(&data1, &data2);
 
     // Convert raw bits to input voltage
     float vout1 = ADC_FRONTEND_GAIN * ADC_BITS_TO_VOLTS(data1);
@@ -56,110 +40,31 @@ void adc_read_volts(float *out1, float *out2)
     *out2 = vout2;
 }
 
-void adc_read_raw(uint16_t *out1, uint16_t *out2)
+void adc_read_raw_spi(uint16_t *out1, uint16_t *out2)
 {
-    // ADCs are wired up in Daisy-Chain Mode with Busy Indicator
-    // See Figure 63 of datasheet...
-
-    // Start ADC conversion...
+    // This function has been optimized for very fast
+    // operation. It directly manipulates the SPI peripheral
+    // registers to read in data from the ADCs.
     //
-    // Must leave CONVST high the whole time
-    // else ADC does not wake up!!!
-    set_pin_CONVST_high();
+    // The ADC devices support a max of 400ksps. Looking at
+    // the waveforms from this function, the CONVST line is
+    // asserted for effectively 337kHz, approaching the limit.
 
-#if ADC_CONVERSION_WAIT_TIMED
-    // Wait for conversion to finish...
-    // Per the datasheet, we need to wait >= 1300ns.
-    // NOTE: we are not using the busy indicators!
+    // Start ADC conversion
+    SET_PIN_CONVST_HIGH;
+
+    // Wait for ADC conversion to complete (per datasheet, >= 1300ns)
     //
-    // This loop is measured to wait ~3000ns
-    for (volatile int i = 0; i < 700; i++) {
-        asm("nop");
-    }
-#else
-    // Wait for conversion to finish...
-    // Per the datasheet, the data output is LOW during
-    // the conversion. When it is done, it goes HIGH.
-
-    // Wait for DOUT to become HIGH
-    while (!read_pin_SO()) {
-        asm("nop");
+    // Each i takes ~150 ns at 200 MHz clock and -O2,
+    // so 1300 / ~150 = ~9 loops
+    for (volatile int i = 0; i < 9; i++) {
     }
 
-    // Pause for a little bit. This is required to meet timing!
-    for (volatile int i = 0; i < 15; i++) {
-        asm("nop");
-    }
-#endif
+    // Read data bits from ADCs
+    drv_spi_read_two_16bits(SPI5, out1, out2);
 
-    // Pull the data out of the ADC1...
-    uint16_t data1 = 0;
-    for (int i = 0; i < 16; i++) {
-        // SCLK falling edges shift out next data bit...
-        set_pin_SCLK_low();
-        set_pin_SCLK_high();
-
-        uint16_t bit = read_pin_SO() ? 1 : 0;
-        data1 |= (bit << i);
-    }
-
-    // Pause for a little bit between ADCs so we can see waveforms better
-    for (volatile int i = 0; i < 10; i++) {
-        asm("nop");
-    }
-
-    // Pull the data out of the ADC2...
-    uint16_t data2 = 0;
-    for (int i = 0; i < 16; i++) {
-        // SCLK falling edges shift out next data bit...
-        set_pin_SCLK_low();
-        set_pin_SCLK_high();
-
-        uint16_t bit = read_pin_SO() ? 1 : 0;
-        data2 |= (bit << i);
-    }
-
-#if 1
-    // Send final clock...
-    // This resets the ADC DOUT back to default state
-    //
-    // I believe this is optional, but recommended...? The ADC
-    // will always output a HIGH bit on this clock cycle
-    set_pin_SCLK_low();
-    set_pin_SCLK_high();
-#endif
-
-    // Return CONVST to default state...
-    set_pin_CONVST_low();
-
-    // Give user their data
-    *out1 = data1;
-    *out2 = data2;
-}
-
-static inline void set_pin_CONVST_high(void)
-{
-    GPIO_SET_PIN(GPIOF, GPIO_PIN_6, 1);
-}
-
-static inline void set_pin_CONVST_low(void)
-{
-    GPIO_SET_PIN(GPIOF, GPIO_PIN_6, 0);
-}
-
-static inline void set_pin_SCLK_high(void)
-{
-    GPIO_SET_PIN(GPIOF, GPIO_PIN_7, 1);
-}
-
-static inline void set_pin_SCLK_low(void)
-{
-    GPIO_SET_PIN(GPIOF, GPIO_PIN_7, 0);
-}
-
-static inline bool read_pin_SO(void)
-{
-    return GPIO_GET_PIN(GPIOF, GPIO_PIN_7);
+    // End conversion
+    SET_PIN_CONVST_LOW;
 }
 
 static void setup_pin_CONVST(void)
@@ -174,40 +79,6 @@ static void setup_pin_CONVST(void)
     // Configure GPIO pins
     GPIO_InitStruct.Pin = GPIO_PIN_6;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-}
-
-static void setup_pin_SCLK(void)
-{
-    GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-
-    __HAL_RCC_GPIOF_CLK_ENABLE();
-
-    // Configure GPIO pin Output Level
-    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_7, GPIO_PIN_RESET);
-
-    // Configure GPIO pins
-    GPIO_InitStruct.Pin = GPIO_PIN_7;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-}
-
-static void setup_pin_SO(void)
-{
-    GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-
-    __HAL_RCC_GPIOF_CLK_ENABLE();
-
-    // Configure GPIO pin Output Level
-    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_8, GPIO_PIN_RESET);
-
-    // Configure GPIO pins
-    GPIO_InitStruct.Pin = GPIO_PIN_8;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);

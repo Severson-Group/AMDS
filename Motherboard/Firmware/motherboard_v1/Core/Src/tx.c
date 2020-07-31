@@ -20,11 +20,17 @@ void EXTI15_10_IRQHandler(void)
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);
 
     // TODO: testing this here for now
-    float volts1;
-    float volts2;
-    adc_read_volts(&volts1, &volts2);
+    // float volts1;
+    // float volts2;
+    // adc_read_volts(&volts1, &volts2);
 
-    uint8_t data[4] = { 0x12, 0x34, 0x56, 0x78 };
+    uint16_t bits1;
+    uint16_t bits2;
+    adc_read_raw_spi(&bits1, &bits2);
+
+    uint16_t data[2];
+    data[0] = bits1;
+    data[1] = bits2;
     drv_uart_send(1, &data[0], 4);
 }
 

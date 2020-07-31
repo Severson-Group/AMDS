@@ -20,9 +20,9 @@ int main(void)
     drv_clock_init();
 
     // Initialize peripherals
-    //    drv_spi_init();
     //    drv_i2c_init();
     //    drv_gpio_init(); // TODO(NP): update the GPIO driver, not everything in there is actually a GPIO
+    drv_spi_init();
     drv_uart_init();
     drv_led_init();
 
