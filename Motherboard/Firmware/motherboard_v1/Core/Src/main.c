@@ -1,3 +1,4 @@
+// Drivers
 #include "drv_clock.h"
 #include "drv_gpio.h"
 #include "drv_i2c.h"
@@ -5,6 +6,10 @@
 #include "drv_spi.h"
 #include "drv_uart.h"
 #include "platform.h"
+
+// Modules
+#include "adc.h"
+#include "tx.h"
 
 int main(void)
 {
@@ -15,11 +20,14 @@ int main(void)
     drv_clock_init();
 
     // Initialize peripherals
-    drv_spi_init();
+    //    drv_spi_init();
+    //    drv_i2c_init();
+    //    drv_gpio_init(); // TODO(NP): update the GPIO driver, not everything in there is actually a GPIO
     drv_uart_init();
-    drv_i2c_init();
-    drv_gpio_init(); // TODO(NP): update the GPIO driver, not everything in there is actually a GPIO
     drv_led_init();
+
+    adc_init();
+    tx_init();
 
     // Infinite loop
     uint8_t led = 0;
@@ -38,7 +46,7 @@ int main(void)
             asm("nop");
         }
 
-        uint16_t data = drv_spi5_rx();
+        // uint16_t data = drv_spi5_rx();
         asm("nop");
     }
 }

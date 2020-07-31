@@ -31,20 +31,16 @@ void drv_spi_init(void)
     //    MX_SPI6_Init();
 }
 
-uint16_t drv_spi5_rx(void)
+void drv_spi5_rx(uint8_t *data, uint16_t size)
 {
-    uint16_t data;
-
     HAL_StatusTypeDef err;
-    err = HAL_SPI_Receive(&hspi5, (uint8_t *) &data, 1, 0);
+    err = HAL_SPI_Receive(&hspi5, &data[0], size, HAL_MAX_DELAY);
 
     if (err != HAL_OK) {
         while (1) {
             asm("nop");
         }
     }
-
-    return data;
 }
 
 static void MX_SPI1_Init(void)
@@ -138,7 +134,7 @@ static void MX_SPI5_Init(void)
     hspi5.Instance = SPI5;
     hspi5.Init.Mode = SPI_MODE_MASTER;
     hspi5.Init.Direction = SPI_DIRECTION_2LINES_RXONLY;
-    hspi5.Init.DataSize = SPI_DATASIZE_16BIT;
+    hspi5.Init.DataSize = SPI_DATASIZE_8BIT;
     hspi5.Init.CLKPolarity = SPI_POLARITY_LOW;
     hspi5.Init.CLKPhase = SPI_PHASE_1EDGE;
     hspi5.Init.NSS = SPI_NSS_SOFT;
