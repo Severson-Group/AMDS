@@ -102,7 +102,7 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
     //
     // The ADC devices support a max of 400ksps. Looking at
     // the waveforms from this function, the CONVST line is
-    // asserted for effectively 243kHz... It could be faster,
+    // asserted for effectively 280kHz... It could be faster,
     // but its not terrible...
 
     // Start all ADC conversions. We start them in order since

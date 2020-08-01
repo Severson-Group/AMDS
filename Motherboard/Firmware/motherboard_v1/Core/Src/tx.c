@@ -45,14 +45,14 @@ void EXTI15_10_IRQHandler(void)
         uint16_t sample1 = bits[(4 * 0) + i];
         uint16_t sample2 = bits[(4 * 1) + i];
 
-        // Send header as:
-        // bits[7:2] = 100100
-        // bits[1:0] = # of DC (2 bits, 0..3)
-        uint8_t header = 0x90;
-        header |= (0x03 & i);
-
         // Send header (not the first one)
         if (i > 0) {
+            // Send header as:
+            // bits[7:2] = 100100
+            // bits[1:0] = # of DC (2 bits, 0..3)
+            uint8_t header = 0x90;
+            header |= (0x03 & i);
+
             drv_uart_putc_fast(USART2, header);
             drv_uart_putc_fast(USART3, header);
         }
