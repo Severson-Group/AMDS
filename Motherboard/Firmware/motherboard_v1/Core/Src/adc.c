@@ -41,6 +41,7 @@ static void setup_pin_CONVST(void);
 
 // As the code runs, these state variables are updated in ISRs
 // Ping-pong buffer of latest samples
+static volatile bool is_ignore_next_sample = false;
 static volatile uint8_t read_buffer_number = 0;
 static volatile uint8_t write_buffer_number = 1;
 static volatile uint16_t latest_valid_adc_data0[8] = { 0 };
@@ -53,6 +54,11 @@ void adc_init(void)
 
     // Setup input pin which triggers ADC sampling (from AMDC)
     setup_pin_SYNC_ADC();
+}
+
+void adc_ignore_next_sample(void)
+{
+    is_ignore_next_sample = true;
 }
 
 // NOTE: this function is called from the TX ISR,
@@ -122,23 +128,38 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
     // This starts all the SPI peripherals effectively in parallel,
     // then waits for them to complete and gets the resulting data.
 
+    // Start the SCLKs
     drv_spi_start_read_two_16bits(SPI1);
     drv_spi_start_read_two_16bits(SPI4);
     drv_spi_start_read_two_16bits(SPI5);
     drv_spi_start_read_two_16bits(SPI6);
 
+    // Wait and read first ADC data
+    //
     // The strange ordering of sample data indexing is
     // to correct for PCB layout pin swapping issues.
-    drv_spi_finish_read_two_16bits(SPI1, &sample_data_out[3], &sample_data_out[7]);
-    drv_spi_finish_read_two_16bits(SPI4, &sample_data_out[1], &sample_data_out[5]);
-    drv_spi_finish_read_two_16bits(SPI5, &sample_data_out[0], &sample_data_out[4]);
-    drv_spi_finish_read_two_16bits(SPI6, &sample_data_out[2], &sample_data_out[6]);
+    drv_spi_finish_read_one_16bits(SPI1, &sample_data_out[3]);
+    drv_spi_finish_read_one_16bits(SPI4, &sample_data_out[1]);
+    drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
+    drv_spi_finish_read_one_16bits(SPI6, &sample_data_out[2]);
+
+    // Wait for second ADC data to complete
+    drv_spi_wait_for_RX(SPI1);
+    drv_spi_wait_for_RX(SPI4);
+    drv_spi_wait_for_RX(SPI5);
+    drv_spi_wait_for_RX(SPI6);
 
     // End conversion
     SET_PIN_CONVST12_LOW;
     SET_PIN_CONVST34_LOW;
     SET_PIN_CONVST56_LOW;
     SET_PIN_CONVST78_LOW;
+
+    // Read second ADC data
+    drv_spi_get_DR(SPI1, &sample_data_out[7]);
+    drv_spi_get_DR(SPI4, &sample_data_out[5]);
+    drv_spi_get_DR(SPI5, &sample_data_out[4]);
+    drv_spi_get_DR(SPI6, &sample_data_out[6]);
 }
 
 // This ISR is triggered by the AMDC to sync the ADC
@@ -177,14 +198,28 @@ void EXTI3_IRQHandler(void)
     dest[6] = new_data[6];
     dest[7] = new_data[7];
 
-    // Switch read buffer to where we just put the new data,
-    // therefore, satisfing the property that the read_buffer_number
-    // always points to a valid set of samples!
-    read_buffer_number = 1 - read_buffer_number;
+    // Only switch read / write pointers if we weren't told to ignore this sample
+    if (is_ignore_next_sample) {
+        is_ignore_next_sample = false;
+    } else {
+        // Switch read buffer to where we just put the new data,
+        // therefore, satisfying the property that the read_buffer_number
+        // always points to a valid set of samples!
+        read_buffer_number = 1 - read_buffer_number;
 
-    // Now that read buffer is set, we are safe to update write buffer
-    // for the next time this ISR runs...
-    write_buffer_number = 1 - write_buffer_number;
+        // Now that read buffer is set, we are safe to update write buffer
+        // for the next time this ISR runs...
+        write_buffer_number = 1 - write_buffer_number;
+    }
+
+    // Clear all pending IRQs for ADC conversions at the
+    // end of this ISR so that the system realigns the
+    // ADC conversions with the SYNC signal from the AMDC.
+    //
+    // For some reason, this only works if we call both of these:
+    NVIC_ClearPendingIRQ(EXTI3_IRQn);
+    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
+    NVIC_ClearPendingIRQ(EXTI3_IRQn);
 }
 
 static void setup_pin_CONVST(void)
@@ -237,6 +272,6 @@ static void setup_pin_SYNC_ADC(void)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     // EXTI interrupt init
-    HAL_NVIC_SetPriority(EXTI3_IRQn, 2, 0);
+    HAL_NVIC_SetPriority(EXTI3_IRQn, 10, 0);
     HAL_NVIC_EnableIRQ(EXTI3_IRQn);
 }

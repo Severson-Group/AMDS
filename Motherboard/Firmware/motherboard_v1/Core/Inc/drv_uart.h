@@ -6,8 +6,6 @@
 
 void drv_uart_init(void);
 
-void drv_uart_send(uint8_t amdc_uart, uint8_t *data, uint16_t len);
-
 static inline void drv_uart_putc_fast(USART_TypeDef *uart, uint8_t data)
 {
     // Wait until UART is ready to accept next character

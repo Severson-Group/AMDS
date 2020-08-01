@@ -19,4 +19,9 @@ void adc_init(void);
 // one sample old data will be returned.
 void adc_latest_bits(uint16_t *output);
 
+// Called by the TX ISR to inform the ADC module when
+// timing is screwed up and therefore, we should ignore
+// the next sample
+void adc_ignore_next_sample(void);
+
 #endif // ADC_H

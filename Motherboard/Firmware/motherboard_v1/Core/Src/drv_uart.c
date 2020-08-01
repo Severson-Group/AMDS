@@ -25,33 +25,6 @@ void drv_uart_init(void)
     MX_USART_UART_Init(&huart3, USART3);
 }
 
-void drv_uart_send(uint8_t amdc_uart, uint8_t *data, uint16_t len)
-{
-    UART_HandleTypeDef *handle = NULL;
-
-    switch (amdc_uart) {
-    case 1:
-        handle = &huart2;
-        break;
-    case 2:
-        handle = &huart3;
-        break;
-    default:
-        while (1) {
-            asm("nop");
-        }
-    }
-
-    HAL_StatusTypeDef err;
-    err = HAL_UART_Transmit(handle, data, len, HAL_MAX_DELAY);
-
-    if (err != HAL_OK) {
-        while (1) {
-            asm("nop");
-        }
-    }
-}
-
 static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 {
     // Configure USART peripheral to run in transmit mode only, 8-bit data.
@@ -71,9 +44,9 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 
     huart->Instance = handle;
     huart->Init.BaudRate = max_baudrate;
-    huart->Init.WordLength = UART_WORDLENGTH_8B;
-    huart->Init.StopBits = UART_STOPBITS_1;
-    huart->Init.Parity = UART_PARITY_NONE;
+    huart->Init.WordLength = UART_WORDLENGTH_9B;
+    huart->Init.StopBits = UART_STOPBITS_2;
+    huart->Init.Parity = UART_PARITY_ODD;
     huart->Init.Mode = UART_MODE_TX;
     huart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
     huart->Init.OverSampling = UART_OVERSAMPLING_8;

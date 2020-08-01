@@ -24,10 +24,11 @@ int main(void)
     drv_uart_init();
     drv_led_init();
 
+    // Initialize the main modules
     adc_init();
     tx_init();
 
-    // Infinite loop
+    // Infinite loop (all real work is done in ISRs)
     uint8_t led = 0;
 
     while (1) {
@@ -43,9 +44,6 @@ int main(void)
         for (i = 0; i < 10000000; i++) {
             asm("nop");
         }
-
-        // uint16_t data = drv_spi5_rx();
-        asm("nop");
     }
 }
 

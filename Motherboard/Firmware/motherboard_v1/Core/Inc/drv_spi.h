@@ -19,20 +19,31 @@ static inline void drv_spi_start_read_two_16bits(SPI_TypeDef *spi)
     spi->DR = 0x12345678;
 }
 
-static inline void drv_spi_finish_read_two_16bits(SPI_TypeDef *spi, uint16_t *out1, uint16_t *out2)
+static inline void drv_spi_wait_for_RX(SPI_TypeDef *spi)
 {
     // Wait until we have received at least one word
     while (!(spi->SR & SPI_SR_RXNE)) {
     }
+}
 
-    // Read DR gets first ADC data
-    *out1 = (uint16_t) spi->DR;
+static inline void drv_spi_get_DR(SPI_TypeDef *spi, uint16_t *out)
+{
+    *out = (uint16_t) spi->DR;
+}
 
-    // Wait until we have received at least one word
-    while (!(spi->SR & SPI_SR_RXNE)) {
-    }
+static inline void drv_spi_finish_read_one_16bits(SPI_TypeDef *spi, uint16_t *out)
+{
+    drv_spi_wait_for_RX(spi);
+    drv_spi_get_DR(spi, out);
+}
 
-    *out2 = (uint16_t) spi->DR;
+static inline void drv_spi_finish_read_two_16bits(SPI_TypeDef *spi, uint16_t *out1, uint16_t *out2)
+{
+    drv_spi_wait_for_RX(spi);
+    drv_spi_get_DR(spi, out1);
+
+    drv_spi_wait_for_RX(spi);
+    drv_spi_get_DR(spi, out2);
 }
 
 static inline void drv_spi_read_two_16bits(SPI_TypeDef *spi, uint16_t *out1, uint16_t *out2)
