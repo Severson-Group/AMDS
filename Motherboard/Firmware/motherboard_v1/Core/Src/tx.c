@@ -25,29 +25,45 @@ void EXTI15_10_IRQHandler(void)
         __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_11);
     }
 
+    // Send header before we compute anything
+    // to get the UART warmed up and running!
+    uint8_t first_header = 0x90;
+    drv_uart_putc_fast(USART2, first_header);
+    drv_uart_putc_fast(USART3, first_header);
+
     // Get latest data from ADC driver (non-blocking)
     uint16_t bits[8];
     adc_latest_bits(bits);
 
     // Send data out over UART
-    for (int uart_pin = 0; uart_pin < 2; uart_pin++) {
-        uint8_t uart_data[12];
-        for (int i = 0; i < 4; i++) {
-            uint16_t sample = bits[(4 * uart_pin) + i];
+    for (int i = 0; i < 4; i++) {
+        uint16_t sample1 = bits[(4 * 0) + i];
+        uint16_t sample2 = bits[(4 * 1) + i];
 
-            // Send header as:
-            // bits[7:2] = 100100
-            // bits[1:0] = # of DC (2 bits, 0..3)
-            uint8_t header = 0x90;
-            header |= (0x03 & i);
+        // Send header as:
+        // bits[7:2] = 100100
+        // bits[1:0] = # of DC (2 bits, 0..3)
+        uint8_t header = 0x90;
+        header |= (0x03 & i);
 
-            uart_data[(3 * i) + 0] = header;
-            uart_data[(3 * i) + 1] = (uint8_t)(sample >> 8);
-            uart_data[(3 * i) + 2] = (uint8_t)(sample & 0x00FF);
+        // Send header (not the first one)
+        if (i > 0) {
+            drv_uart_putc_fast(USART2, header);
+            drv_uart_putc_fast(USART3, header);
         }
 
-        drv_uart_send(uart_pin + 1, uart_data, 12);
+        // Send ADC sample data MSBs
+        drv_uart_putc_fast(USART2, (uint8_t)(sample1 >> 8));
+        drv_uart_putc_fast(USART3, (uint8_t)(sample2 >> 8));
+
+        // Send ADC sample data LSBs
+        drv_uart_putc_fast(USART2, (uint8_t)(sample1 & 0x00FF));
+        drv_uart_putc_fast(USART3, (uint8_t)(sample2 & 0x00FF));
     }
+
+    // Wait for entire UART transmission to complete
+    drv_uart_wait_TC(USART2);
+    drv_uart_wait_TC(USART3);
 }
 
 static void setup_pin_SYNC_TX(void)

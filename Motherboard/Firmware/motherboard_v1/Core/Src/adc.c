@@ -72,11 +72,15 @@ void adc_latest_bits(uint16_t *output)
         data = latest_valid_adc_data1;
     }
 
-    // Give user their data
-    for (int i = 0; i < 8; i++) {
-        output[i] = data[i];
-        // output[i] = ADC_BITS_TO_VOLTS(data[i]);
-    }
+    // Give user their data (unrolled for speed)
+    output[0] = data[0];
+    output[1] = data[1];
+    output[2] = data[2];
+    output[3] = data[3];
+    output[4] = data[4];
+    output[5] = data[5];
+    output[6] = data[6];
+    output[7] = data[7];
 }
 
 static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
