@@ -15,23 +15,39 @@ void tx_init(void)
 //
 // AMDC uses this signal to tell motherboard when
 // to send ADC sample data back to AMDC.
+//
+// NOTE: this ISR has the highest priority on the
+// system. It will preempt the ADC conversions.
 void EXTI15_10_IRQHandler(void)
 {
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);
+    // Clear interrupt
+    if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_11)) {
+        __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_11);
+    }
 
-    // TODO: testing this here for now
-    // float volts1;
-    // float volts2;
-    // adc_read_volts(&volts1, &volts2);
+    // Get latest data from ADC driver (non-blocking)
+    uint16_t bits[8];
+    adc_latest_bits(bits);
 
-    uint16_t bits1;
-    uint16_t bits2;
-    adc_read_raw_spi(&bits1, &bits2);
+    // Send data out over UART
+    for (int uart_pin = 0; uart_pin < 2; uart_pin++) {
+        uint8_t uart_data[12];
+        for (int i = 0; i < 4; i++) {
+            uint16_t sample = bits[(4 * uart_pin) + i];
 
-    uint16_t data[2];
-    data[0] = bits1;
-    data[1] = bits2;
-    drv_uart_send(1, &data[0], 4);
+            // Send header as:
+            // bits[7:2] = 100100
+            // bits[1:0] = # of DC (2 bits, 0..3)
+            uint8_t header = 0x90;
+            header |= (0x03 & i);
+
+            uart_data[(3 * i) + 0] = header;
+            uart_data[(3 * i) + 1] = (uint8_t)(sample >> 8);
+            uart_data[(3 * i) + 2] = (uint8_t)(sample & 0x00FF);
+        }
+
+        drv_uart_send(uart_pin + 1, uart_data, 12);
+    }
 }
 
 static void setup_pin_SYNC_TX(void)
@@ -58,6 +74,6 @@ static void setup_pin_SYNC_TX(void)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     // EXTI interrupt init
-    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }

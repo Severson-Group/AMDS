@@ -6,7 +6,7 @@
 
 void drv_spi_init(void);
 
-static inline void drv_spi_read_two_16bits(SPI_TypeDef *spi, uint16_t *out1, uint16_t *out2)
+static inline void drv_spi_start_read_two_16bits(SPI_TypeDef *spi)
 {
     // Writing to DR triggers dummy data to be sent,
     // thus driving SCK. This loads our actual data.
@@ -17,19 +17,28 @@ static inline void drv_spi_read_two_16bits(SPI_TypeDef *spi, uint16_t *out1, uin
     // up another 16 clocks! This is an optimization which
     // masks the APB latency between ADC reads. :)
     spi->DR = 0x12345678;
+}
 
+static inline void drv_spi_finish_read_two_16bits(SPI_TypeDef *spi, uint16_t *out1, uint16_t *out2)
+{
     // Wait until we have received at least one word
     while (!(spi->SR & SPI_SR_RXNE)) {
     }
 
     // Read DR gets first ADC data
-    *out1 = *(volatile uint16_t *) &(spi->DR);
+    *out1 = (uint16_t) spi->DR;
 
     // Wait until we have received at least one word
     while (!(spi->SR & SPI_SR_RXNE)) {
     }
 
-    *out2 = *(volatile uint16_t *) &(spi->DR);
+    *out2 = (uint16_t) spi->DR;
+}
+
+static inline void drv_spi_read_two_16bits(SPI_TypeDef *spi, uint16_t *out1, uint16_t *out2)
+{
+    drv_spi_start_read_two_16bits(spi);
+    drv_spi_finish_read_two_16bits(spi, out1, out2);
 }
 
 #endif // DRV_SPI_H

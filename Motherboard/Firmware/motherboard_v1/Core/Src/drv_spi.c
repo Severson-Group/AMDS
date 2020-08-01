@@ -3,11 +3,8 @@
 #include "platform.h"
 #include <stdint.h>
 
-static void MX_SPI1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_SPI3_Init(void);
-static void MX_SPI4_Init(void);
-static void MX_SPI6_Init(void);
 
 static SPI_HandleTypeDef hspi1;
 static SPI_HandleTypeDef hspi2;
@@ -20,19 +17,22 @@ static void MX_SPI_ADC_Init(SPI_HandleTypeDef *handle, SPI_TypeDef *instance);
 
 void drv_spi_init(void)
 {
-    //    MX_SPI1_Init();
     //    MX_SPI2_Init();
     //    MX_SPI3_Init();
-    //    MX_SPI4_Init();
-    //    MX_SPI6_Init();
 
+    MX_SPI_ADC_Init(&hspi1, SPI1);
+    MX_SPI_ADC_Init(&hspi4, SPI4);
     MX_SPI_ADC_Init(&hspi5, SPI5);
+    MX_SPI_ADC_Init(&hspi6, SPI6);
 
     // Start SPIs to daughter cards
     //
     // This causes the SPI peripherals to actively
     // drive the clock lines to the right polarity.
+    __HAL_SPI_ENABLE(&hspi1);
+    __HAL_SPI_ENABLE(&hspi4);
     __HAL_SPI_ENABLE(&hspi5);
+    __HAL_SPI_ENABLE(&hspi6);
 }
 
 static void MX_SPI_ADC_Init(SPI_HandleTypeDef *handle, SPI_TypeDef *instance)
@@ -57,27 +57,6 @@ static void MX_SPI_ADC_Init(SPI_HandleTypeDef *handle, SPI_TypeDef *instance)
     handle->Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
 
     if (HAL_SPI_Init(handle) != HAL_OK) {
-        PANIC;
-    }
-}
-
-static void MX_SPI1_Init(void)
-{
-    hspi1.Instance = SPI1;
-    hspi1.Init.Mode = SPI_MODE_SLAVE;
-    hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-    hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
-    hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-    hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi1.Init.NSS = SPI_NSS_SOFT;
-    hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-    hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-    hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    hspi1.Init.CRCPolynomial = 7;
-    hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-    hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-
-    if (HAL_SPI_Init(&hspi1) != HAL_OK) {
         PANIC;
     }
 }
@@ -122,48 +101,6 @@ static void MX_SPI3_Init(void)
     hspi3.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
 
     if (HAL_SPI_Init(&hspi3) != HAL_OK) {
-        PANIC;
-    }
-}
-
-static void MX_SPI4_Init(void)
-{
-    hspi4.Instance = SPI4;
-    hspi4.Init.Mode = SPI_MODE_SLAVE;
-    hspi4.Init.Direction = SPI_DIRECTION_2LINES;
-    hspi4.Init.DataSize = SPI_DATASIZE_4BIT;
-    hspi4.Init.CLKPolarity = SPI_POLARITY_LOW;
-    hspi4.Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi4.Init.NSS = SPI_NSS_SOFT;
-    hspi4.Init.FirstBit = SPI_FIRSTBIT_MSB;
-    hspi4.Init.TIMode = SPI_TIMODE_DISABLE;
-    hspi4.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    hspi4.Init.CRCPolynomial = 7;
-    hspi4.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-    hspi4.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-
-    if (HAL_SPI_Init(&hspi4) != HAL_OK) {
-        PANIC;
-    }
-}
-
-static void MX_SPI6_Init(void)
-{
-    hspi6.Instance = SPI6;
-    hspi6.Init.Mode = SPI_MODE_SLAVE;
-    hspi6.Init.Direction = SPI_DIRECTION_2LINES;
-    hspi6.Init.DataSize = SPI_DATASIZE_4BIT;
-    hspi6.Init.CLKPolarity = SPI_POLARITY_LOW;
-    hspi6.Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi6.Init.NSS = SPI_NSS_SOFT;
-    hspi6.Init.FirstBit = SPI_FIRSTBIT_MSB;
-    hspi6.Init.TIMode = SPI_TIMODE_DISABLE;
-    hspi6.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    hspi6.Init.CRCPolynomial = 7;
-    hspi6.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-    hspi6.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-
-    if (HAL_SPI_Init(&hspi6) != HAL_OK) {
         PANIC;
     }
 }
