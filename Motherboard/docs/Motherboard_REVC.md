@@ -1,32 +1,32 @@
 # Motherboard REVC
 
-The sensor motherboard is used as an interface between sensor daughter cards and AMDC. This board can connect up to eight daughter cards, it has slots where daughter cards can be plugged in. This board has STM32F7 MCU which communicates with the AMDC and the daughter cards. Standard SPI signals are used to interface with the daughter cards. High speed differential IO is used to transmit sensor data to the AMDC. IsoSPI communication interface can be used by the AMDC to send commands to the motherboard MCU.
+The sensor motherboard is used as an interface between sensor daughter cards and AMDC. This board can connect up to eight daughter cards, it has slots where daughter cards can be plugged in. This board has STM32F7 MCU which communicates with the AMDC and the daughter cards. Standard SPI signals are used to interface with the daughter cards. High speed differential IO is used to transmit sensor data to the AMDC. The IsoSPI communication interface can be used by the AMDC to send commands to the motherboard MCU (at low frequency).
 
 ## Relevant Versions of AMDC Hardware
 
 AMDC REV D
 
-## Changes from previous versions
+## Features
 
-- Can connect up to 8 daughter cards. 
-- Robust communication interface using differntial IO.
-- STM32F7 MCU
-- Higher throughput of up to 1 MSPS
+- Can connect up to 8 daughter cards
+- Robust communication interface using differential IO
+- Powerful STM32F7 MCU
+- High throughput of up to 1 MSPS (depending on ADC device on daughterboards)
 
 ## Block Diagram / External Connections
 
-Eight daughter cards (DC) trnasmits data to the STM32 MCU usind standard SPI signal. Eight daughter cards are grouped into four pairs of daisy chan connection. This is daisy chain configuration which will have the throughput of 1 MSPS. If the number of daughter cards are less than four, then single SPI configuration can be used. This single configuration will have the throughput of 500 KSPS. This can be shown in bolck diagram as follows.
+The eight daughter cards (DC) transmit data to the STM32 MCU using standard SPI protocol. The daughter cards are grouped into four pairs of daisy chain connections. This daisy chain configuration will have throughput of 1 MSPS. If the number of daughter cards is less than four, then single SPI configuration can be used. This single SPI configuration will have throughput of 500 kSPS. See the following block diagram.
 
 <img src="Images/Measurementboard_REVC.svg" />
 <img src="Images/Motherboard_3d.png" width="500" />
 
-Jumpers (P9, P10, P15, P16) are used to change the configuration as shown in the following figure,
+Jumpers (P9, P10, P15, P16) are used to change the configuration as shown in the following figure:
 
 <img src="Images/Jumper_modes.png" width="400"/>
 
-There are two interfacing DB-15 connectors in the measurement board. One connector is used for isoSPI and differential IO communication, and another connector is used for general purpose IO, which are connected to the GPIO pins of the MCU.
+There are two interfacing DB-15 connectors on the measurement board. One connector is used for isoSPI and differential IO communication, and another connector is used for general purpose IO, which are connected to the GPIO pins of the MCU.
 
-1. Communication DB15 connector, pin mappings is as shown,
+### DB15 Connector 1: AMDC Communication
 
 | Pin number | Signal name |
 |------------|--------|
@@ -46,7 +46,7 @@ There are two interfacing DB-15 connectors in the measurement board. One connect
 | 14 | D3_O_P |
 | 15 | D3_O_N |
 
-2. GPIO DB15 connector, pin mappings is as shown,
+### DB15 Connector 2: GPIO
 
 | Pin number | Signal name |
 |------------|--------|
@@ -66,7 +66,11 @@ There are two interfacing DB-15 connectors in the measurement board. One connect
 | 14 | GND |
 | 15 | GND |
 
-### IsoSPI communication interface
+## Systems on Board
+
+Per the block diagram above, the motherboard is made of several systems, as explained below.
+
+### IsoSPI Communication Interface
 
 The isoSPI communication interface is implemented using [LTC6820](https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6820.pdf). This IC provides a bi-directional interface between standard SPI signals and differential pulses. The operating conditions are provided in the following table,
 
@@ -81,7 +85,7 @@ The isoSPI communication interface is implemented using [LTC6820](https://www.an
 
 This IC can operate at a maximum SPI communication speed of 1 Mbps. The bias resistors (RB1 and RB2) are used to adjust the drive currents to the differential lines. The bias resistors (RB1 and RB2) used in the design will set the drive currents to 10 mA. The maximum supply current consumed by the IC including to drive currents for differential lines is 17 mA which corresponds to 85 mW for 5 V supply.
 
-### IsoSPI isolation transformer
+### IsoSPI Isolation Transformer
 
 To add isolation to the differential isoSPI signals, an external isolation barrier is required. This is implemented by adding pulse transformer HX1188NLT, which has 1:1 turns ratio. More information on the pulse transformer is found in the [datasheet](https://media.digikey.com/pdf/Data%20Sheets/Pulse%20PDFs/10_100BASE-T%20Single%20Port%20SMD%20Magnetics_Rev2008.pdf).
 
@@ -97,6 +101,6 @@ The [ISO3086T](https://www.ti.com/lit/ds/symlink/iso3086t.pdf?HQS=TI-null-null-d
 
 The maximum supply current consumed by the IC including to drive currents for differential lines is 60 mA, which corresponds to 300 mW for 5 V supply. 
  
-### STM32F7
+### STM32F7 Processor
 
 STM32F7 has core ARM 32-bit Cortex M7 CPU. This IC can operate at supply voltage of 1.7 V to 3.6 V. JTAG / SWD interface is used for debugging and programing the MCU. It has 6 SPIs which is used for daughter card and AMDC isoSPI interfaces. The maximum speed of the MCU SPI interace is 54 Mbps. It has 4 USART with maximum baud rate of 26 Mbps, which are used to transmit daughter card data to the AMDC. GPIO pins of the MCU can be accessed using GPIO connector. More information on this MCU can be found [here](https://www.st.com/content/ccc/resource/technical/document/datasheet/group3/c5/37/9c/1d/a6/09/4e/1a/DM00273119/files/DM00273119.pdf/jcr:content/translations/en.DM00273119.pdf).
