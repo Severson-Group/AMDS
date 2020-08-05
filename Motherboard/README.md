@@ -1,6 +1,6 @@
 # Sensor Motherboard
 
-<img src="Images/Motherboard.png" width="500" />
+<img src="docs/Images/Motherboard.png" width="500" />
 
 Sensor mother board is used interfacing sensor daughter cards with the AMDC. This board can accomodate 8 daughter cards. This board uses robust isoSPI and differential IO to communicate with the AMDC.
 
