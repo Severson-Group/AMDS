@@ -18,15 +18,15 @@ AMDC REV D
 Eight daughter cards (DC) trnasmit data to STM32 MCU usind standard SPI signal. Eight daughter cards are grouped into four pairs of daisy chan connection. This is daisy chain configuration which will have throughput of 1 MSPS. If the number of daughter cards are less than four, then single SPI configuration can be used. This single configuration will have throughput of 500 KSPS. This can be shown in bolck diagram as follows.
 
 <img src="Images/Measurementboard_REVC.svg" />
-<img src="Images/Motherboard_3d.png" />
+<img src="Images/Motherboard_3d.png" width="500" />
 
 Jumpers (P9, P10, P15, P16) are used to change the configuration as shown in the following figure,
 
-<img src="Images/Jumper_modes.png" />
+<img src="Images/Jumper_modes.png" width="400"/>
 
 There are two interfacing DB-15 connectors in the measurement board. One connector is used for isoSPI or differential IO communication another connector is used for general purpose IO.
 
-1. Comunication DB15 connector, pin mappings is as shown,
+1. Communication DB15 connector, pin mappings is as shown,
 
 | Pin number | Signal name |
 |------------|--------|
@@ -81,7 +81,7 @@ The isoSPI communication interface is implemented using [LTC6820](https://www.an
 
 This IC can operate at a maximum SPI communication speed of 1 Mbps. The bias resistors (RB1 and RB2) are used to adjust the drive currents to the differential lines. The bias resistors (RB1 and RB2) used in the design will set the drive currents to 10 mA. The maximum supply current consumed by the IC including to drive currents for differential lines is 17 mA which corresponds to 85 mW for 5 V supply.
 
-### 3. isoSPI isolation transformer
+### 3. IsoSPI isolation transformer
 
 To add isolation to the differential isoSPI signals, an external isolation barrier is required. This is implemented by adding pulse transformer HX1188NLT, which has 1:1 turns ratio. More information on the pulse transformer is found in the [datasheet](https://media.digikey.com/pdf/Data%20Sheets/Pulse%20PDFs/10_100BASE-T%20Single%20Port%20SMD%20Magnetics_Rev2008.pdf).
 
