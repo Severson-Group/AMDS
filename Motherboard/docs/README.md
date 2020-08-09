@@ -21,7 +21,7 @@ The eight daughter cards (DC) transmit data to the STM32 MCU using standard SPI 
 
 <img src="Images/Motherboard_3d.png" width="500" />
 
-The daughter cards can be connected in daisy chain pair configuration (D) or single SPI configuration (S). This daisy chain configuration will have throughput of 500 kSPS. If the number of daughter cards is less than or equal to four, then single SPI configuration can be used to get higher throughput. This single SPI configuration will have throughput of 1 MSPS. The configuration can be changed using jumpers (P9, P10, P15, P16) as shown in the following figure.
+The daughter cards can be connected in daisy chain pair configuration (D) or single SPI configuration (S). The daisy chain configuration will have throughput of 500 kSPS. If the number of daughter cards is less than or equal to four, then single SPI configuration can be used to get higher throughput. This single SPI configuration will have throughput of 1 MSPS. The configuration can be changed using jumpers (P9, P10, P15, P16) as shown in the following figure.
 
 <img src="Images/Jumper_modes.png" width="400"/>
 
@@ -107,3 +107,36 @@ The maximum supply current consumed by the IC including to drive currents for di
 ### STM32F7 Microcontroller
 
 STM32F7 has core ARM 32-bit Cortex M7 CPU. This IC can operate at supply voltage of 1.7 V to 3.6 V. JTAG / SWD interface is used for debugging and programing the MCU. It has 6 SPIs which is used for daughter card and AMDC isoSPI interfaces. The maximum speed of the MCU SPI interace is 54 Mbps. It has 4 USART with maximum baud rate of 26 Mbps, which are used to transmit daughter card data to the AMDC. GPIO pins of the MCU can be accessed using GPIO connector. More information on this MCU can be found [here](https://www.st.com/content/ccc/resource/technical/document/datasheet/group3/c5/37/9c/1d/a6/09/4e/1a/DM00273119/files/DM00273119.pdf/jcr:content/translations/en.DM00273119.pdf).
+
+## Daugter Card Interface
+
+In order to design a daugter card, the interface information provided in this section will be useful. Each daugter card slot has two headers, where the daughter cards can be plugged in. See the following figure.
+
+<img src="Images/DC_hdr.png" width="400"/>
+
+One header is used to supply power to the cards and the other header is used for SPI interface. 
+
+### Header 1: Power Supply
+
+| Pin number | Signal name |
+|------------|--------|
+| 1 | +15V |
+| 2 | GND |
+| 3 | -15V |
+
+### Header 2: SPI interface
+
+| Pin number | Signal name |
+|------------|--------|
+| 1 | 5V |
+| 2 | 3V3 |
+| 3 | GND |
+| 4 | DIN (ADC IN, MOSI) |
+| 5 | DOUT (ADC OUT, MISO) |
+| 6 | SCLK |
+| 7 | CONVST (Conversion start) |
+
+For information regarding the placement of the headers, refer the [motherboard PCB](https://github.com/Severson-Group/SensorCard/blob/Motherboard_REVC/Motherboard/altium/SensorMotherBoard.PcbDoc). For more information on designing daughter card (like ADC selection), refer the [analog card documentation](https://github.com/Severson-Group/SensorCard/tree/develop/AnalogCard/docs).
+
+
+
