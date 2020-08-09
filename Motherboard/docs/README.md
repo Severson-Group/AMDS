@@ -1,32 +1,35 @@
 # Motherboard REVC
 
-The sensor motherboard is used as an interface between sensor daughter cards and AMDC. This board can connect up to eight daughter cards, it has slots where daughter cards can be plugged in. This board has STM32F7 MCU which communicates with the AMDC and the daughter cards. Standard SPI signals are used to interface with the daughter cards. High speed differential IO is used to transmit sensor data to the AMDC. The IsoSPI communication interface can be used by the AMDC to send commands to the motherboard MCU (at low frequency).
+This document describes the design consideration and implementation details for the sensor motherboard. This board is used as an interface between sensor daughter cards and other external controller. This board can connect up to eight daughter cards, it has slots where daughter cards can be plugged in. This board has STM32F7 MCU which communicates with external controller and the daughter cards. Standard SPI is used to interface with the daughter cards. High speed differential IO is used to transmit sensor data to the external controller. The IsoSPI communication interface can be used by the controller to send commands to the motherboard MCU (at low frequency).
 
-## Relevant Versions of AMDC Hardware
+## Application / Purpose
 
-AMDC REV D
+The motherboard is specifically designed to interface directly to the isoSPI connector of [AMDC REVD](https://github.com/Severson-Group/AMDC-Hardware).
 
 ## Features
 
 - Can connect up to 8 daughter cards
 - Robust communication interface using differential IO
 - Powerful STM32F7 MCU
-- High throughput of up to 1 MSPS (depending on ADC device on daughterboards)
+- High throughput of up to 1 MSPS (depending on ADC device on daughter cards)
 
-## Block Diagram / External Connections
+## Block Diagram and SPI Connection Configuration
 
-The eight daughter cards (DC) transmit data to the STM32 MCU using standard SPI protocol. The daughter cards are grouped into four pairs of daisy chain connections. This daisy chain configuration will have throughput of 1 MSPS. If the number of daughter cards is less than four, then single SPI configuration can be used. This single SPI configuration will have throughput of 500 kSPS. See the following block diagram.
+The eight daughter cards (DC) transmit data to the STM32 MCU using standard SPI protocol. The daughter cards are grouped into four pairs of daisy chain connections. See the following block diagram.
 
 <img src="Images/Measurementboard_REVC.svg" />
+
 <img src="Images/Motherboard_3d.png" width="500" />
 
-Jumpers (P9, P10, P15, P16) are used to change the configuration as shown in the following figure:
+The daughter cards can be connected in daisy chain pair configuration (D) or single SPI configuration (S). The daisy chain configuration will have throughput of 500 kSPS. If the number of daughter cards is less than or equal to four, then single SPI configuration can be used to get higher throughput. This single SPI configuration will have throughput of 1 MSPS. The configuration can be changed using jumpers (P9, P10, P15, P16) as shown in the following figure.
 
 <img src="Images/Jumper_modes.png" width="400"/>
 
+## External Connections
+
 There are two interfacing DB-15 connectors on the measurement board. One connector is used for isoSPI and differential IO communication, and another connector is used for general purpose IO, which are connected to the GPIO pins of the MCU.
 
-### DB15 Connector 1: AMDC Communication
+### DB15 Connector 1: IsoSPI and Differential IO 
 
 | Pin number | Signal name |
 |------------|--------|
@@ -72,7 +75,7 @@ Per the block diagram above, the motherboard is made of several systems, as expl
 
 ### IsoSPI Communication Interface
 
-The isoSPI communication interface is implemented using [LTC6820](https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6820.pdf). This IC provides a bi-directional interface between standard SPI signals and differential pulses. The operating conditions are provided in the following table,
+The isoSPI communication interface is implemented using [LTC6820](https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6820.pdf). This IC provides a bi-directional interface between standard SPI signals and differential pulses. The operating conditions are provided in the following table.
 
 | Parameter                             |    Conditions     |   MIN   |  MAX  |
 |---------------------------------------|-------------------|---------|-------|
@@ -101,6 +104,39 @@ The [ISO3086T](https://www.ti.com/lit/ds/symlink/iso3086t.pdf?HQS=TI-null-null-d
 
 The maximum supply current consumed by the IC including to drive currents for differential lines is 60 mA, which corresponds to 300 mW for 5 V supply. 
  
-### STM32F7 Processor
+### STM32F7 Microcontroller
 
 STM32F7 has core ARM 32-bit Cortex M7 CPU. This IC can operate at supply voltage of 1.7 V to 3.6 V. JTAG / SWD interface is used for debugging and programing the MCU. It has 6 SPIs which is used for daughter card and AMDC isoSPI interfaces. The maximum speed of the MCU SPI interace is 54 Mbps. It has 4 USART with maximum baud rate of 26 Mbps, which are used to transmit daughter card data to the AMDC. GPIO pins of the MCU can be accessed using GPIO connector. More information on this MCU can be found [here](https://www.st.com/content/ccc/resource/technical/document/datasheet/group3/c5/37/9c/1d/a6/09/4e/1a/DM00273119/files/DM00273119.pdf/jcr:content/translations/en.DM00273119.pdf).
+
+## Daugter Card Interface
+
+In order to design a daugter card, the interface information provided in this section will be useful. Each daugter card slot has two headers, where the daughter cards can be plugged in. See the following figure.
+
+<img src="Images/DC_hdr.png" width="400"/>
+
+One header is used to supply power to the cards and the other header is used for SPI interface. 
+
+### Header 1: Power Supply
+
+| Pin number | Signal name |
+|------------|--------|
+| 1 | +15V |
+| 2 | GND |
+| 3 | -15V |
+
+### Header 2: SPI interface
+
+| Pin number | Signal name |
+|------------|--------|
+| 1 | 5V |
+| 2 | 3V3 |
+| 3 | GND |
+| 4 | DIN (ADC IN, MOSI) |
+| 5 | DOUT (ADC OUT, MISO) |
+| 6 | SCLK |
+| 7 | CONVST (Conversion start) |
+
+For information regarding the placement of the headers, refer the [motherboard PCB](https://github.com/Severson-Group/SensorCard/blob/Motherboard_REVC/Motherboard/altium/SensorMotherBoard.PcbDoc). For more information on designing daughter card (like ADC selection), refer the [analog card documentation](https://github.com/Severson-Group/SensorCard/tree/develop/AnalogCard/docs).
+
+
+
