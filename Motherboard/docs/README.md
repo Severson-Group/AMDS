@@ -1,6 +1,10 @@
-# Motherboard REVC
+# Sensor Motherboard
 
 This document describes the design consideration and implementation details for the sensor motherboard. This board is used as an interface between sensor daughter cards and other external controller. This board can connect up to eight daughter cards, it has slots where daughter cards can be plugged in. This board has STM32F7 MCU which communicates with external controller and the daughter cards. Standard SPI is used to interface with the daughter cards. High speed differential IO is used to transmit sensor data to the external controller. The IsoSPI communication interface can be used by the controller to send commands to the motherboard MCU (at low frequency).
+
+## Relevant Hardware Versions
+
+REVC
 
 ## Application / Purpose
 
