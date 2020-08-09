@@ -110,9 +110,9 @@ STM32F7 has core ARM 32-bit Cortex M7 CPU. This IC can operate at supply voltage
 
 ## Daugter Card Interface
 
-In order to design a daugter card, the interface information provided in this section will be useful. Each daugter card slot has two headers, where the daughter cards can be plugged in. See the following figure.
+In order to design a daugter card, the interface information provided in this section will be useful. Each daugter card slot has two headers, where the daughter card can be plugged in. See the following figure.
 
-<img src="Images/DC_hdr.png" width="400"/>
+<img src="Images/DC_hdr.png" width="150"/>
 
 One header is used to supply power to the cards and the other header is used for SPI interface. 
 
@@ -137,6 +137,3 @@ One header is used to supply power to the cards and the other header is used for
 | 7 | CONVST (Conversion start) |
 
 For information regarding the placement of the headers, refer the [motherboard PCB](https://github.com/Severson-Group/SensorCard/blob/Motherboard_REVC/Motherboard/altium/SensorMotherBoard.PcbDoc). For more information on designing daughter card (like ADC selection), refer the [analog card documentation](https://github.com/Severson-Group/SensorCard/tree/develop/AnalogCard/docs).
-
-
-
