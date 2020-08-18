@@ -14,7 +14,7 @@ The motherboard is specifically designed to interface directly to the isoSPI con
 
 - Can connect up to 8 sensor daughter cards.
 - Can communicate with an external controller (like AMDC). An external controller can obtain the measurement results and also is allowed to control the digital conversion process.
-- Robust differential IO communication is used to transmit sensor data to the external controller.
+- Robust differential IO communication is used to transmit sensor data to an external controller.
 - High throughput of up to 1 MSPS (depending on ADC device on daughter cards).
 
 ## Block Diagram and SPI Connection Configuration
