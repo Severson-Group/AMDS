@@ -23,6 +23,8 @@ The eight daughter cards (DC) transmit data to the STM32 MCU using standard SPI 
 
 <img src="Images/Measurementboard_REVC.svg" />
 
+Notice that the group labeling for `SCLK`, `DOUT`, `CONVST` doesn't corresond to the daughter cards. This issue will be resolved in the next revision.
+
 <img src="Images/Motherboard_3d.png" width="500" />
 
 The daughter cards can be connected in daisy chain pair configuration (D) or single SPI configuration (S). The daisy chain configuration will have a throughput of 500 kSPS. If the number of daughter cards is less than or equal to four, then a single SPI configuration can be used to get higher throughput. This single SPI configuration will have a throughput of 1 MSPS. The configuration can be changed using jumpers (P9, P10, P15, P16) as shown in the following figure.
