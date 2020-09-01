@@ -41,15 +41,23 @@ The LA 55-P datasheet specifies the burden resistor value must be between 135Ω 
 The voltage across the burden resistor is a bipolar signal (voltage span includes both positive and negative voltages).
 A non-inverting level translation circuit is designed using Op Amps as shown here:
 
-<img src="images/current-sensor-opamp-stage.svg" width="40%" />
+<img src="images/current-sensor-opamp-stage.svg" width="30%" />
 
-This circuit is used to translate the voltage across the burden resistor, which is bipolar, to the ADC input range of 0-5V.
+This circuit is used to translate the voltage across the burden resistor, which is bipolar, to the ADC input range of 0-5V. The resistor values can be calculated analytically. However, the algebra gets quite complicated. Hence it was computed using TI analog engineer's calculator. 
+**Note:** As the op-amp output voltage approaches the supply rails, it tends to distort and behave nonlinearly so the output voltage is limited to actually be 0.2V to 4.8V
 
-### ADC
+### Voltage Reference (LDO)
+The voltage reference, _V_<sub>_REF_</sub> is needed for the ADC. As 5V is readily available, and the LDO will have a minimum drop out voltage,  _V_<sub>_REF_</sub> = 4.5V was chosen. The LDO selected was `REF5045` from Texas Instruments, which can take a 5V input and provide a 4.5V reference output. This has an accuracy of 0.1% and low noise of 3μVpp/V.
+
+### First Order Anti-Aliasing Filter
+A first order RC filter is implemented on the output of the op amp circuit.The cutoff frequency was set at 48kHz and the following equations was used for the computation:
+
+_f_<sub>c</sub> = 1 / (2 π _RC_)
+
+**Note:** The cutoff frequency can easily be changed by swapping out `R3`.
+
+### Analog to Digtal Converter
 A single-ended ADC was selected. The ADC used is the Texas Instruments ADS8860. It is pseudo-differential input, SPI output, SAR ADC. 
 The maximum data throughput for a single chip is 1 MSPS but decreases by a factor of N for N devices in the daisy-chain. 
 The input voltage range is 0-5V.
-
-
-
 
