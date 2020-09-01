@@ -67,3 +67,9 @@ The input voltage range is 0-5V.
 - A screw terminal block `P1` is used to connect the +-15V supply for the current sensor
 - A BNC terminal is available to directly measure the output across the burden resistor _R_<sub>_BURDEN_</sub>
 
+## Datasheets
+- [Current Sensor](../REV20200830C/datasheets/LA55P_Current%20Sensor.pdf)
+- [Op Amp](../REV20200830C/datasheets/OPA320_OpAmp.pdf)
+- [Voltage Reference (LDO)](../REV20200830C/datasheets/REF5045_LDO.pdf)
+- [Analog to Digital Converter](../REV20200830C/datasheets/ADS_8860_ADC.pdf)
+
