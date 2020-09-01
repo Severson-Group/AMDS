@@ -31,7 +31,7 @@ It has an excellent bandwidth of 200khz and a low impedance current output that 
 ### Burden Resistor (_R_<sub>_BURDEN_</sub>)
 A burden resistor (`R5`) is used to convert the current output of the sensor to a voltage. The burden resistance, _R_<sub>_BURDEN_</sub> was calculated using the following equation
 
-_V_<sub>_BURDEN_</sub>  = _I_<sub>_PRIMARY, max_</sub>(_N_<sub>2</sub>/_N_<sub>1</sub>)_R_<sub>_BURDEN_</sub>
+_V_<sub>_BURDEN_</sub>  = _I_<sub>_PRIMARY_</sub>(_N_<sub>2</sub>/_N_<sub>1</sub>)_R_<sub>_BURDEN_</sub>
 
 _R_<sub>_BURDEN_</sub>  = (10 V/70 A)*(1000/1) = 143Ω 
 
