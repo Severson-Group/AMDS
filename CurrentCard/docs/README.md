@@ -23,7 +23,7 @@ The high level block diagram of the current sensor card is shown below:
 <img src="images/current-sensor-blockdiagram.svg" width="500%" />
 
 ### Current Sensor
-LEM LA 55-P current sensor for this design as it is the only sensor available from LEM with an open aperture and PC pins that can measure +/-55A. 
+LEM LA 55-P current sensor is selected for this design, as it is the only sensor available from LEM with an open aperture and PC pins that can measure +/-55A. 
 The open aperture was a requirement as it allows for the range to be easily scaled down just by adding turns to the primary. 
 The LA 55-P is a closed loop compensated hall effect transducer that has an accuracy of +/-0.65% and linearity of <0.15% which is quite good compared to other sensors from LEM. 
 It has an excellent bandwidth of 200khz and a low impedance current output that is inherently more immune to noise than a high impedance voltage output. 
