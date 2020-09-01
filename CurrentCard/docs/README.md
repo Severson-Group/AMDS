@@ -44,6 +44,7 @@ A non-inverting level translation circuit is designed using Op Amps as shown her
 <img src="images/current-sensor-opamp-stage.svg" width="30%" />
 
 This circuit is used to translate the voltage across the burden resistor, which is bipolar, to the ADC input range of 0-5V. The resistor values can be calculated analytically. However, the algebra gets quite complicated. Hence it was computed using TI analog engineer's calculator. 
+
 **Note:** As the op-amp output voltage approaches the supply rails, it tends to distort and behave nonlinearly so the output voltage is limited to actually be 0.2V to 4.8V
 
 ### Voltage Reference (LDO)
