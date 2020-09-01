@@ -941,8 +941,8 @@
      showgrid="true"
      inkscape:current-layer="layer1"
      inkscape:document-units="mm"
-     inkscape:cy="57.198965"
-     inkscape:cx="1121.904"
+     inkscape:cy="-42.801033"
+     inkscape:cx="968.0462"
      inkscape:zoom="2.0000001"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -1066,7 +1066,7 @@
        style="fill:none;stroke:#000000;stroke-width:1.02552;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <path
        style="fill:none;stroke:#808080;stroke-width:0.500413;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 99.929015,227.14393 v -4.54996 H 226.92901 v 4.5155"
+       d="m 99.929015,225.86795 0,-3.96875 H 226.92901 l 0,3.96875"
        id="path6831"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccc" />
@@ -1085,7 +1085,7 @@
        sodipodi:nodetypes="cccc"
        inkscape:connector-curvature="0"
        id="path6838"
-       d="m 32.460265,227.07542 v -4.42155 h 64.822917 v 4.38807"
+       d="m 32.460265,225.86795 0,-3.96875 h 64.822917 l 0,3.96875"
        style="fill:none;stroke:#808080;stroke-width:0.5005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <text
        id="text6842"
@@ -1395,7 +1395,7 @@
          id="tspan9618" /></text>
     <path
        style="fill:none;stroke:#808080;stroke-width:0.502;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 7.5894345,227.07542 v -4.42155 H 30.079031 v 4.38807"
+       d="m 7.3248483,225.86795 -1.31e-5,-3.96875 H 29.814432 l 0,3.96875"
        id="path10170"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccc" />
@@ -1412,7 +1412,7 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math';fill:#808080;stroke-width:0.264583">Input</tspan></text>
     <path
        style="fill:none;stroke:#808080;stroke-width:0.50394;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 229.57485,227.14393 v -4.54996 h 90.75236 v 4.5155"
+       d="m 229.57485,225.86795 0,-3.96875 91.28125,0 v 3.96875"
        id="path10178"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccc" />
