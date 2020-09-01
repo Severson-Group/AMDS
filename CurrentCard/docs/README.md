@@ -11,7 +11,7 @@ REV C
 
 The current measurement card was designed to the following specifications:
 
-1. Current measurement range of +/- 55V
+1. Current measurement range of +/- 55A
 2. Noise immunity
 3. Quick adjustment of the sensing range
 4. High sensor bandwidth
