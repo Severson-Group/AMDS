@@ -941,8 +941,8 @@
      showgrid="true"
      inkscape:current-layer="layer1"
      inkscape:document-units="mm"
-     inkscape:cy="-42.801033"
-     inkscape:cx="968.0462"
+     inkscape:cy="237.19896"
+     inkscape:cx="374.99432"
      inkscape:zoom="2.0000001"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -1013,12 +1013,12 @@
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccccccccccc" />
     <rect
-       style="fill:#d7e3f4;fill-opacity:1;stroke:#000000;stroke-width:0.359149;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#d7e3f4;fill-opacity:1;stroke:#000000;stroke-width:0.395243;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect6753"
        width="42.393566"
-       height="48.062485"
+       height="58.208336"
        x="32.022282"
-       y="236.68251"
+       y="231.15962"
        ry="0" />
     <path
        sodipodi:nodetypes="cc"
@@ -1427,5 +1427,24 @@
          x="254.53334"
          id="tspan10180"
          sodipodi:role="line">ADC &amp; Output</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker7442)"
+       d="M 94.372613,236.10749 H 77.308149"
+       id="path213"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="79.164543"
+       y="234.25168"
+       id="text217"><tspan
+         sodipodi:role="line"
+         id="tspan215"
+         x="79.164543"
+         y="234.25168"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444px;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math';stroke-width:0.264583"><tspan
+   id="tspan219"
+   style="font-size:4.93889px">+</tspan>-15V</tspan></text>
   </g>
 </svg>
