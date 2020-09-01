@@ -29,7 +29,7 @@ The LA 55-P is a closed loop compensated hall effect transducer that has an accu
 It has an excellent bandwidth of 200khz and a low impedance current output that is inherently more immune to noise than a high impedance voltage output. 
 
 ### Burden Resistor (_R_<sub>_BURDEN_</sub>)
-A burden resistor (`R5`) is used to convert the current output of the sensor to a voltage. The burden resistance, _R_<sub>_burden_</sub> was calculated using the following equation
+A burden resistor (`R5`) is used to convert the current output of the sensor to a voltage. The burden resistance, _R_<sub>_BURDEN_</sub> was calculated using the following equation
 
 _V_<sub>_BURDEN_</sub>  = _I_<sub>_PRIMARY, max_</sub>(_N_<sub>2</sub>/_N_<sub>1</sub>)_R_<sub>_BURDEN_</sub>
 
