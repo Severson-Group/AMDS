@@ -41,7 +41,7 @@ The LA 55-P datasheet specifies the burden resistor value must be between 135Ω 
 The voltage across the burden resistor is a bipolar signal (voltage span includes both positive and negative voltages).
 A non-inverting level translation circuit is designed using Op Amps as shown here:
 
-<TO BE ADDED>
+<img src="images/current-sensor-opampstage.svg" width="200%" />
 
 This circuit is used to translate the voltage across the burden resistor, which is bipolar, to the ADC input range of 0-5V.
 
