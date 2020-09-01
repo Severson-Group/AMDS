@@ -18,8 +18,9 @@ The current measurement card was designed to the following specifications:
 5. SPI output to interface with the AMDC
 
 ## Block Diagram
+The high level block diagram of the current sensor card is shown below:
 
-< TO BE ADDED>
+<img src="images/current-sensor-blockdiagram.svg" width="200%" />
 
 ### Current Sensor
 LEM LA 55-P current sensor for this design as it is the only sensor available from LEM with an open aperture and PC pins that can measure +/-55A. 
@@ -27,12 +28,12 @@ The open aperture was a requirement as it allows for the range to be easily scal
 The LA 55-P is a closed loop compensated hall effect transducer that has an accuracy of +/-0.65% and linearity of <0.15% which is quite good compared to other sensors from LEM. 
 It has an excellent bandwidth of 200khz and a low impedance current output that is inherently more immune to noise than a high impedance voltage output. 
 
-### Burden Resistor
+### Burden Resistor (_R_<sub>_BURDEN_</sub>)
 A burden resistor (`R5`) is used to convert the current output of the sensor to a voltage. The burden resistance, _R_<sub>_burden_</sub> was calculated using the following equation
 
-_V_<sub>_burden_</sub>  = _I_<sub>_primary, max_</sub>(_N_<sub>2</sub>/_N_<sub>1</sub>)_R_<sub>_burden_</sub>
+_V_<sub>_BURDEN_</sub>  = _I_<sub>_PRIMARY, max_</sub>(_N_<sub>2</sub>/_N_<sub>1</sub>)_R_<sub>_BURDEN_</sub>
 
-_R_<sub>_burden_</sub>  = (10 V/70 A)*(1000/1) = 143Ω 
+_R_<sub>_BURDEN_</sub>  = (10 V/70 A)*(1000/1) = 143Ω 
 
 The LA 55-P datasheet specifies the burden resistor value must be between 135Ω and 155Ω so a 150Ω resistor was selected.
 
