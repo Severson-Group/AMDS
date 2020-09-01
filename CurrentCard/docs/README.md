@@ -37,16 +37,18 @@ _R_<sub>_BURDEN_</sub>  = (10 V/70 A)*(1000/1) = 143Ω
 
 The LA 55-P datasheet specifies the burden resistor value must be between 135Ω and 155Ω so a 150Ω resistor was selected.
 
+### Op Amp Stage
+The voltage across the burden resistor is a bipolar signal (voltage span includes both positive and negative voltages).
+A non-inverting level translation circuit is designed using Op Amps as shown here:
+
+<TO BE ADDED>
+
+This circuit is used to translate the voltage across the burden resistor, which is bipolar, to the ADC input range of 0-5V.
 
 ### ADC
-The voltage across the burden resistor is a bipolar signal (voltage span includes both positive and negative voltages) that is single ended because the burden resistor is referenced to common. 
-For this reason, a single-ended ADC was selected. The ADC used is the Texas Instruments ADS8860. It is pseudo-differential input, SPI output, SAR ADC. 
+A single-ended ADC was selected. The ADC used is the Texas Instruments ADS8860. It is pseudo-differential input, SPI output, SAR ADC. 
 The maximum data throughput for a single chip is 1 MSPS but decreases by a factor of N for N devices in the daisy-chain. 
-The input voltage range is 0-5V. Therefore, an intermediate stage is needed to shift and scale the voltage from -10V – 10V to the ADC input range.
-
-### Op Amps
-
-< To BE ADDED>
+The input voltage range is 0-5V.
 
 
 
