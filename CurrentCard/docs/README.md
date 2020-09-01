@@ -62,3 +62,8 @@ A single-ended ADC was selected. The ADC used is the Texas Instruments ADS8860. 
 The maximum data throughput for a single chip is 1 MSPS but decreases by a factor of N for N devices in the daisy-chain. 
 The input voltage range is 0-5V.
 
+### Connectors
+- There are two screw terminals `P5` and `P6` to connect the conductor in which the current is to be measured
+- A screw terminal block `P1` is used to connect the +-15V supply for the current sensor
+- A BNC terminal is available to directly measure the output across the burden resistor _R_<sub>_BURDEN_</sub>
+
