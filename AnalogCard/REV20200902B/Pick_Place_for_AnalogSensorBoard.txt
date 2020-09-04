@@ -1,0 +1,65 @@
+Altium Designer Pick and Place Locations
+C:\Users\Nathan\Documents\GitHub\SensorCard\AnalogCard\altium\Project Outputs for CurrentSensorBoard\Pick Place for AnalogSensorBoard.txt
+
+========================================================================================================================
+File Design Information:
+
+Date:       04/09/20
+Time:       12:26
+Revision:   380af57a7fe9bf8ccaea729ce143dda53353401c
+Variant:    No variations
+Units used: mil
+
+Designator Comment       Layer       Footprint           Center-X(mil) Center-Y(mil) Rotation Description                                       
+CON1       1935161       TopLayer    1935161             2310.000      2621.575      270      ""                                                
+TP9        RCT-0C        TopLayer    RCT-0C              1950.000      3620.000      90       "PC TEST POINT NATURAL"                           
+TP3        RCT-0C        TopLayer    RCT-0C              1750.000      3620.000      90       "PC TEST POINT NATURAL"                           
+U3         SMDA12CTR     TopLayer    SOIC127P600X175-8N  1690.000      2720.000      90       "TVS DIODE 12V 19V 8SO"                           
+C5         Capacitor     TopLayer    0603-CAP            2000.000      3070.000      0        Capacitor                                         
+C2         Capacitor     TopLayer    0603-CAP            1480.000      3190.000      180      Capacitor                                         
+C15        Capacitor     TopLayer    0603-CAP            1440.000      3640.000      270      Capacitor                                         
+C13        Capacitor     TopLayer    0603-CAP            2099.586      3381.496      0        Capacitor                                         
+C11        Capacitor     TopLayer    0603-CAP            2040.000      4040.000      0        Capacitor                                         
+C7         Capacitor     TopLayer    0603-CAP            1540.000      3580.000      270      Capacitor                                         
+R3         Resistor      TopLayer    0603-RES            1720.000      2960.000      180      Resistor                                          
+U5         REF3040AIDBZR TopLayer    SOT23-3             1392.441      3802.441      0        "Series Voltage Reference IC ±0.2% 25mA SOT-23-3" 
+TP11       RCT-0C        TopLayer    RCT-0C              1210.000      3580.000      90       "PC TEST POINT NATURAL"                           
+TP10       RCT-0C        TopLayer    RCT-0C              1070.000      3580.000      90       "PC TEST POINT NATURAL"                           
+Q1         5-1634503-1   TopLayer    5-1634503-1         1732.500      1900.000      0        "CONN BNC JACK STR 50 OHM PCB"                    
+LED3       LED           TopLayer    0603-LED            1800.000      4565.000      180      ""                                                
+LED2       LED           TopLayer    0603-LED            1107.500      1950.000      270      ""                                                
+LED1       LED           TopLayer    0603-LED            1245.000      1950.000      270      ""                                                
+GP3        RCT-0C        TopLayer    RCT-0C              1070.000      3180.000      90       "PC TEST POINT NATURAL"                           
+GP2        RCT-0C        TopLayer    RCT-0C              2290.000      3210.000      90       "PC TEST POINT NATURAL"                           
+GP1        RCT-0C        TopLayer    RCT-0C              2280.000      4270.000      90       "PC TEST POINT NATURAL"                           
+L4         742792609     TopLayer    INDC1608X10N        1480.000      2980.000      180      "FERRITE BEAD 30 OHM 0603 1LN"                    
+L3         742792609     TopLayer    INDC1608X10N        2000.000      3270.000      360      "FERRITE BEAD 30 OHM 0603 1LN"                    
+L2         742792609     TopLayer    INDC1608X10N        1201.968      4133.858      180      "FERRITE BEAD 30 OHM 0603 1LN"                    
+L1         742792609     TopLayer    INDC1608X10N        1201.968      4033.858      180      "FERRITE BEAD 30 OHM 0603 1LN"                    
+TP8        RCT-0C        TopLayer    RCT-0C              1550.000      4270.000      90       "PC TEST POINT NATURAL"                           
+TP6        RCT-0C        TopLayer    RCT-0C              1240.000      2560.000      0        "PC TEST POINT NATURAL"                           
+TP7        RCT-0C        TopLayer    RCT-0C              1915.000      4270.000      90       "PC TEST POINT NATURAL"                           
+TP5        RCT-0C        TopLayer    RCT-0C              1732.500      4270.000      90       "PC TEST POINT NATURAL"                           
+TP4        RCT-0C        TopLayer    RCT-0C              2097.500      4270.000      90       "PC TEST POINT NATURAL"                           
+U1         INA143UA/2K5  TopLayer    SOIC127P600X175-8N  1740.000      3130.000      360      "IC OPAMP DIFF 1 CIRCUIT 8SOIC"                   
+U4         REF3020AIDBZT TopLayer    SOT23-3             2142.026      3519.055      270      "Series Voltage Reference IC ±0.2% 25mA SOT-23-3" 
+U2         ADS8865IDGSR  TopLayer    TSSOP50P490X110-10N 1800.000      3980.000      90       "IC ADC 16BIT SAR 10VSSOP"                        
+TP1        RCT-0C        TopLayer    RCT-0C              1240.000      2310.000      0        "PC TEST POINT NATURAL"                           
+TP2        RCT-0C        TopLayer    RCT-0C              1360.000      3380.000      0        "PC TEST POINT NATURAL"                           
+R2         Resistor      TopLayer    0603-RES            1870.000      3350.000      270      Resistor                                          
+R1         Resistor      TopLayer    0603-RES            1760.000      3350.000      270      Resistor                                          
+P3         HDR1x3        BottomLayer HDR1x3              2410.000      1625.000      270      ""                                                
+P2         HDR1X7        BottomLayer HDR1x7              1050.000      4300.000      90       ""                                                
+R6         Resistor      TopLayer    0603-RES            1510.000      4565.000      180      Resistor                                          
+R5         Resistor      TopLayer    0603-RES            1107.500      1790.000      270      Resistor                                          
+R4         Resistor      TopLayer    0603-RES            1245.000      1790.000      270      Resistor                                          
+P1         HDR1x3        TopLayer    Term_Block_-_3_pos  2330.000      1245.000      90       ""                                                
+C14        Capacitor     TopLayer    0603-CAP            1340.000      3640.000      270      Capacitor                                         
+C12        Capacitor     TopLayer    0603-CAP            2120.000      3680.000      90       Capacitor                                         
+C10        Capacitor     TopLayer    0603-CAP            1590.000      4030.000      180      Capacitor                                         
+C8         Capacitor     TopLayer    0603-CAP            1590.000      3930.000      180      Capacitor                                         
+C6         Capacitor     TopLayer    0603-CAP            1640.000      3580.000      270      Capacitor                                         
+C4         Capacitor     TopLayer    0603-CAP            2000.000      3170.000      360      Capacitor                                         
+C3         Capacitor     TopLayer    0603-CAP            1480.000      3090.000      180      Capacitor                                         
+C1         Capacitor     TopLayer    0603-CAP            1810.000      3490.000      360      Capacitor                                         
+C9         Capacitor     TopLayer    0603-CAP            2040.000      3940.000      360      Capacitor                                         
