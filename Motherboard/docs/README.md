@@ -4,7 +4,7 @@ This document describes the design consideration, implementation details, and bo
 
 ## Relevant Hardware Versions
 
-REVC
+REVD
 
 ## Application / Purpose
 
