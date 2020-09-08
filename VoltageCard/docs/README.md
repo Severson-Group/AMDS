@@ -19,4 +19,4 @@ The maximum data throughput of 1 MSPS can be obtained from this ADC.
 ### Datasheets
 
 - Voltage sensor, [LEM LV 25-P](https://www.lem.com/sites/default/files/products_datasheets/lv_25-p.pdf)
-- ADC, [ADS8860](https://www.ti.com/lit/ds/symlink/ads8860.pdf?ts=1599444147857&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FADS8860)
+- ADC, [ADS8860](https://www.ti.com/lit/ds/symlink/ads8860.pdf)
