@@ -1,6 +1,6 @@
-# Current Sensor Card
+# Current Measurement Card
 
-The current sensor card is a daughter card designed for the SensorCard platform. This daughtercard plugs into the MotherBoard which then drives this board.
+The current measurement card is a daughter card designed for the SensorCard platform. This daughtercard plugs into the MotherBoard which then drives this board.
 
 ## Documentation
 
