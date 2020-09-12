@@ -7,6 +7,8 @@ A block diagram is presented and each component is discussed in detail. Specific
 
 REV C
 
+![image](images/currentCard3D.png)
+
 ## Design Requirements and Considerations
 
 The current measurement card was designed to the following specifications:
