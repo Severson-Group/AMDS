@@ -7,7 +7,7 @@ A block diagram is presented and each component is discussed in detail. Specific
 
 REV C
 
-![image](images/currentCard3D.png)
+![image](images/currentCard3D.PNG)
 
 ## Design Requirements and Considerations
 
