@@ -17,7 +17,7 @@ The current measurement card was designed to the following specifications:
 2. Noise immunity
 3. Quick adjustment of the sensing range
 4. High sensor bandwidth
-5. SPI output to interface with the AMDC
+5. SPI output to interface with the sensor motherboard
 
 ## Block Diagram
 The high level block diagram of the current sensor card is shown below:
