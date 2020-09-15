@@ -42,7 +42,7 @@ The LA 55-P datasheet specifies the burden resistor value must be between 135Ω 
 
 ### Current Sensor Gain
 The LA 55P has a conversion ratio of _N_<sub>1</sub>:_N_<sub>2</sub> = 1:1000, where _N_<sub>1</sub> is the primary turns (user configurable) and _N_<sub>2</sub> is the secondary turns. With the chosen _R_<sub>_BURDEN_</sub> and _N_<sub>1</sub> = 1, the current sense circuitry has a current - voltage gain of 1/7 [V/A]. 
-To sense lower current, multiple number of primary turns can be added, without the need to modify any other parts of the circuit. As an example, to sense currents in the range of +/- 7 A, _N_<sub>1</sub> = 10 can be used, without modifying rest of the ciruit.  
+To sense lower current, multiple number of primary turns can be added, without the need to modify any other parts of the circuit. As an example, to sense currents in the range of +/- 7 A, _N_<sub>1</sub> = 10 can be used, without modifying rest of the ciruit.
 
 
 ### Op Amp Stage
@@ -68,7 +68,7 @@ _f_<sub>c</sub> = 1 / (2 π _RC_)
 ### Analog to Digtal Converter
 A single-ended ADC was selected. The ADC used is the Texas Instruments ADS8860. It is pseudo-differential input, SPI output, SAR ADC. 
 The maximum data throughput for a single chip is 1 MSPS but decreases by a factor of N for N devices in the daisy-chain. 
-The input voltage range is 0-5V.
+The input voltage range is 0-5V. The positive input pin of the ADC `AINP` is connected to the output of the low pass filter, and the negative input pin `AINN` is connected to `GND`.
 
 ### Connectors
 - There are two screw terminals `P5` and `P6` to connect the conductor in which the current is to be measured
