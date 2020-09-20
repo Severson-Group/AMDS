@@ -32,8 +32,6 @@ This folder contains schematics pdf, PCB pdf, bill of material (BOM), 3-D PCB, g
 
 ## How to order components for the board
 
-1. The components sheet can be found in `SensorMotherBoard_REVC_BOM\` folder.
+1. Upload the [BOM](https://github.com/Severson-Group/SensorCard/blob/Motherbaord_REVD_2/Motherboard/REV20200920D/SensorMotherBoard_BOM.xlsx) in https://www.digikey.com/ordering/shoppingcart.
 
-2. Upload the BOM sheet in https://www.digikey.com/ordering/shoppingcart.
-
-3. Place the order.
+2. Place the order.
