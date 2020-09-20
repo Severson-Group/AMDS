@@ -26,7 +26,7 @@ This folder contains schematics pdf, PCB pdf, bill of material (BOM), 3-D PCB, g
 |Finished Copper| 1 oz Cu (Inner Copper: 1 oz)|
 |Additional options| UL Marking: None|
 
-3. Upload the gerbers from `SensorMotherBoard_REVC_Gerber\` folder.
+3. Upload the gerbers from the [gerber folder](https://github.com/Severson-Group/SensorCard/tree/Motherbaord_REVD_2/Motherboard/REV20200920D/gerbers).
 
 4. Place the order, it should arrive in 7-9 days.
 
