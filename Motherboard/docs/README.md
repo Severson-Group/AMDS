@@ -4,7 +4,7 @@ This document describes the design consideration, implementation details, and bo
 
 ## Relevant Hardware Versions
 
-REVC
+REVD
 
 ## Application / Purpose
 
@@ -21,9 +21,7 @@ The motherboard is specifically designed to interface directly to the isoSPI con
 
 The eight daughter cards (DC) transmit data to the STM32 MCU using standard SPI protocol. The daughter cards are grouped into four pairs of daisy chain connections. See the following block diagram.
 
-<img src="Images/Measurementboard_REVC.svg" />
-
-Notice that the group labeling for `SCLK`, `DOUT`, `CONVST` doesn't corresond to the daughter cards. This issue will be resolved in the next revision.
+<img src="Images/Measurementboard_REVD.svg" />
 
 <img src="Images/Motherboard_3d.png" width="500" />
 
