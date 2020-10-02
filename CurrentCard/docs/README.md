@@ -77,6 +77,19 @@ The input voltage range is 0-4.5V. The positive input pin of the ADC `AINP` is c
 - A screw terminal block `P1` is used to connect the +-15V supply for the current sensor
 - A BNC terminal is available to directly measure the output across the burden resistor _R_<sub>_BURDEN_</sub>
 
+### Footprints
+A user may want to change some of the passive components based on the range required and the RC filter cutoff frequency desired. The footprints of passive compoonents that may need to be replaced i.e, the burden resistor (`R5`), the resistors in the Op Amp stage, and the the RC filter components is provided here for quick reference. Note that these footprints are imperial codes and **not metric codes**.
+
+| Component | Footprint |
+| ---- | ----- |
+| R3   |  0603|
+| R4   | 0603 |
+| R5 | 2512 |
+| R6 | 0603 |
+| R8 | 0603 |
+| C5 | 0603 |
+
+
 ## Datasheets
 - [Current Sensor](../REV20200830C/datasheets/LA55P_Current%20Sensor.pdf)
 - [Op Amp](../REV20200830C/datasheets/OPA320_OpAmp.pdf)
