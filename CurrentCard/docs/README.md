@@ -42,7 +42,7 @@ The LA 55-P datasheet specifies the burden resistor value must be between 135Ω 
 
 ### Current Sensor Gain
 The LA 55P has a conversion ratio of _N_<sub>1</sub>:_N_<sub>2</sub> = 1:1000, where _N_<sub>1</sub> is the primary turns (user configurable) and _N_<sub>2</sub> is the secondary turns. With the chosen _R_<sub>_BURDEN_</sub> and _N_<sub>1</sub> = 1, the current sense circuitry has a current - voltage gain of 1/7 [V/A]. 
-To sense lower current, multiple number of primary turns can be added, without the need to modify any other parts of the circuit. As an example, to sense currents in the range of +/- 7 A, _N_<sub>1</sub> = 10 can be used, without modifying rest of the ciruit.
+To sense lower current, multiple number of primary turns can be added, without the need to modify any other parts of the circuit. As an example, to sense currents in the range of +/- 7 A, _N_<sub>1</sub> = 10 can be used, without modifying rest of the circuit.
 
 
 ### Op Amp Stage
@@ -59,13 +59,13 @@ This circuit is used to translate the voltage across the burden resistor, which 
 The voltage reference, _V_<sub>_REF_</sub> is needed for the ADC. As 5V is readily available, and the LDO will have a minimum drop out voltage,  _V_<sub>_REF_</sub> = 4.5V was chosen. The LDO selected was `REF5045` from Texas Instruments, which can take a 5V input and provide a 4.5V reference output. This has an accuracy of 0.1% and low noise of 3μVpp/V.
 
 ### First Order Anti-Aliasing Filter
-A first order RC filter is implemented on the output of the op amp circuit.The cutoff frequency was set at 48kHz and the following equations was used for the computation:
+A first order RC filter is implemented on the output of the op amp circuit. The cutoff frequency was set at 48kHz and the following equations was used for the computation:
 
 _f_<sub>c</sub> = 1 / (2 π _RC_)
 
 **Note:** The cutoff frequency can easily be changed by swapping out `R3`.
 
-### Analog to Digtal Converter
+### Analog to Digital Converter
 A single-ended ADC was selected. The ADC used is the Texas Instruments ADS8860. It is pseudo-differential input, SPI output, SAR ADC. 
 The maximum data throughput for a single chip is 1 MSPS but decreases by a factor of N for N devices in the daisy-chain. 
 The input voltage range is 0-4.5V. The positive input pin of the ADC `AINP` is connected to the output of the low pass filter, and the negative input pin `AINN` is connected to `GND`.
@@ -78,7 +78,7 @@ The input voltage range is 0-4.5V. The positive input pin of the ADC `AINP` is c
 - A BNC terminal is available to directly measure the output across the burden resistor _R_<sub>_BURDEN_</sub>
 
 ### Footprints
-A user may want to change some of the passive components based on the range required and the RC filter cutoff frequency desired. The footprints of passive compoonents that may need to be replaced i.e, the burden resistor (`R5`), the resistors in the Op Amp stage, and the the RC filter components is provided here for quick reference. Note that these footprints are imperial codes and **not metric codes**.
+A user may want to change some of the passive components based on the range required and the RC filter cutoff frequency desired. The footprints of passive components that may need to be replaced i.e, the burden resistor (`R5`), the resistors in the Op Amp stage, and the RC filter components is provided here for quick reference. Note that these footprints are imperial codes and **not metric codes**.
 
 | Component | Footprint |
 | ---- | ----- |
