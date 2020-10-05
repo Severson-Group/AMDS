@@ -1,5 +1,4 @@
-Comment,Designator,Supplier Part Number 1,Quantity
-"TitleBlockWEMPEC, LA 55-P, M3","*1, IC1, MH1, MH2",,4
+Comment,Designator,Supplier Part Number 1,Supplier order Quantity
 BNC,BNC1,A33798-ND,1
 C0603C104Z3VACTU,"C1, C2, C3, C4, C9",399-1100-1-ND,5
 GRM1885C1H102JA01D,C5,490-1451-1-ND,1
