@@ -19,7 +19,7 @@ This folder contains the compiled design outputs for the current measurement car
 | Class III            | No          |
 | ITAR                 | No          |
 
-## Compatible Current Sensors
+## Compatible Current Sensor
 This board is designed to be used with LA 55-P. The Digikey part number for LA 55-P is `398-1010-ND`
 
 
