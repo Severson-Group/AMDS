@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   sodipodi:docname="current-sensor-opamp-stage.svg"
+   version="1.1"
+   viewBox="0 0 287.25 179.3"
+   data-name="Layer 1"
+   id="Layer_1">
+  <metadata
+     id="metadata94">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     inkscape:current-layer="Layer_1"
+     inkscape:window-maximized="1"
+     inkscape:window-y="-8"
+     inkscape:window-x="-8"
+     inkscape:cy="86.51479"
+     inkscape:cx="136.70642"
+     inkscape:zoom="3.9582245"
+     showgrid="false"
+     id="namedview92"
+     inkscape:window-height="1027"
+     inkscape:window-width="1920"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     guidetolerance="10"
+     gridtolerance="10"
+     objecttolerance="10"
+     borderopacity="1"
+     bordercolor="#666666"
+     pagecolor="#ffffff" />
+  <defs
+     id="defs16">
+    <style
+       id="style2">.cls-1{fill:#fff;stroke-linecap:round;}.cls-1,.cls-13,.cls-14,.cls-2,.cls-3,.cls-6,.cls-7,.cls-8{stroke:#000;}.cls-1,.cls-3{stroke-linejoin:round;}.cls-1,.cls-2,.cls-3{stroke-width:1.42px;}.cls-2,.cls-3,.cls-6,.cls-7,.cls-8{fill:none;}.cls-14,.cls-2,.cls-6,.cls-8{stroke-miterlimit:11.34;}.cls-10,.cls-15,.cls-4,.cls-5,.cls-9{isolation:isolate;}.cls-5{font-size:16px;}.cls-10,.cls-15,.cls-5,.cls-9{font-family:CambriaMath, Cambria Math;}.cls-6{stroke-width:1.25px;}.cls-8{stroke-width:1.42px;}.cls-9{font-size:14px;}.cls-10{font-size:10.4px;}.cls-11{letter-spacing:-0.03em;}.cls-12{letter-spacing:-0.02em;}.cls-13{stroke-miterlimit:2.27;stroke-width:0.57px;}.cls-13,.cls-14{fill-rule:evenodd;}.cls-14{stroke-width:2.83px;}.cls-15{font-size:10px;}.cls-16{letter-spacing:-0.01em;}</style>
+    <symbol
+       viewBox="0 0 39.72 13.53"
+       data-name="Resistor"
+       id="Resistor">
+      <path
+         d="M.71,7.45H7.63L9.42,1l3.3,11.79L16,.75l3.14,12L22.25.79l3.14,11.93,3.05-12,3,12.11,1.53-6.23H39"
+         class="cls-1"
+         id="path4463" />
+    </symbol>
+    <symbol
+       viewBox="0 0 17.14 25.38"
+       data-name="gnd"
+       id="gnd">
+      <path
+         d="M8,.71h.79v10"
+         class="cls-2"
+         id="path4485" />
+      <path
+         d="M.71,10.93H16.43L8.84,24.67Z"
+         class="cls-3"
+         id="path4487" />
+    </symbol>
+    <symbol
+       viewBox="0 0 68.26 92.95"
+       data-name="op_amp"
+       id="op_amp">
+      <g
+         class="cls-4"
+         id="text4434">
+        <text
+           id="text9"
+           transform="matrix(1, 0, 0, -1, 3.47, 39.42)"
+           class="cls-5">+</text>
+      </g>
+      <path
+         d="M7.08,73.2h7.21"
+         class="cls-6"
+         id="path4436" />
+      <polygon
+         id="polygon13"
+         points="67.16 58.26 0.5 24.36 0.5 92.14 67.16 58.26"
+         class="cls-7" />
+    </symbol>
+  </defs>
+  <path
+     transform="translate(-22.75 -16)"
+     d="M74.29,142.64h6.92l1.8-6.47L86.3,148l3.26-12,3.14,11.95L95.84,136,99,147.91l3-12L105,148l1.53-6.23h6.08"
+     class="cls-1"
+     id="path4451" />
+  <path
+     transform="translate(-22.75 -16)"
+     d="M310,74.26H230.9"
+     class="cls-2"
+     id="path4453" />
+  <path
+     transform="translate(-22.75 -16)"
+     d="M112.6,89.41h-6.92l-1.8,6.48-3.29-11.8-3.26,12-3.15-12L91.05,96.07,87.91,84.15l-3,12L81.89,84l-1.53,6.24H74.29"
+     class="cls-1"
+     id="path4469" />
+  <use
+     id="use24"
+     xlink:href="#gnd"
+     transform="translate(29.83 73.43)"
+     height="25.38"
+     width="17.14" />
+  <g
+     transform="translate(-0.25263852,2.5263852)"
+     class="cls-4"
+     id="text4505">
+    <text
+       id="text29"
+       transform="translate(3.11,113.9)"
+       class="cls-5">V</text>
+    <text
+       id="text31"
+       transform="translate(12.77,119.9)"
+       class="cls-10">REF</text>
+  </g>
+  <g
+     class="cls-4"
+     id="text4515">
+    <text
+       id="text34"
+       transform="translate(227.23 46.02)"
+       class="cls-5">V</text>
+    <text
+       id="text36"
+       transform="translate(236.89 52.02)"
+       class="cls-10">out </text>
+  </g>
+  <g
+     class="cls-4"
+     id="text4539">
+    <text
+       y="115.77"
+       x="65.988182"
+       id="text52"
+       class="cls-9">R<tspan
+   id="tspan98"
+   style="font-size:65%;baseline-shift:sub">c</tspan></text>
+  </g>
+  <g
+     class="cls-4"
+     id="text4551">
+    <text
+       y="62.436806"
+       x="63.209156"
+       id="text58"
+       class="cls-9">R<tspan
+   id="tspan132"
+   style="font-size:65%;baseline-shift:sub">b</tspan></text>
+  </g>
+  <path
+     transform="translate(-22.75 -16)"
+     d="M270.9,74.26,266,77.1V71.43Z"
+     class="cls-13"
+     id="path4152" />
+  <path
+     transform="translate(-22.75 -16)"
+     d="M267.62,74.26"
+     class="cls-14"
+     id="path2590" />
+  <path
+     transform="translate(-22.75 -16)"
+     d="M61.49,142.56H22.75"
+     class="cls-2"
+     id="path4519" />
+  <path
+     transform="translate(-22.75 -16)"
+     d="M49.09,142.63l-4.9,2.84V139.8Z"
+     class="cls-13"
+     data-name="path2624"
+     id="path2624-2" />
+  <path
+     transform="translate(-22.75 -16)"
+     d="M83.82,60.14"
+     class="cls-14"
+     id="path2622" />
+  <path
+     transform="translate(-22.75 -16)"
+     d="M83.82,90.1"
+     class="cls-14"
+     id="path3408" />
+  <use
+     style="stroke-width:1.42;stroke-miterlimit:4;stroke-dasharray:none"
+     y="0"
+     x="0"
+     id="use68"
+     xlink:href="#op_amp"
+     transform="matrix(1,0,0,-1,140.99,116.52)"
+     height="92.949997"
+     width="68.260002" />
+  <line
+     style="stroke-width:1.42;stroke-miterlimit:11.34000015;stroke-dasharray:none"
+     id="line70"
+     y2="73.2"
+     x2="141.49"
+     y1="73.41"
+     x1="89.85"
+     class="cls-2" />
+  <line
+     id="line74"
+     y2="125.96"
+     x2="115.05"
+     y1="125.78"
+     x1="89.85"
+     class="cls-2" />
+  <line
+     id="line80"
+     y2="74.1"
+     x2="38"
+     y1="74.27"
+     x1="51.54"
+     class="cls-2" />
+  <line
+     id="line82"
+     y2="126.64"
+     x2="51.54"
+     y1="126.62"
+     x1="38"
+     class="cls-2" />
+  <g
+     class="cls-4"
+     id="text5334" />
+  <path
+     id="path96"
+     d="M 114.54472,43.094566 V 7.6549091 H 217.7744 l 0,51.2098669"
+     style="fill:none;stroke:#000000;stroke-width:1.42;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none" />
+  <path
+     id="path100"
+     class="cls-1"
+     d="m 51.54,162.64 h 6.92 l 1.8,-6.47 3.29,11.83 3.26,-12 3.14,11.95 3.14,-11.95 3.16,11.91 3,-12 3,12.09 1.53,-6.23 h 6.08" />
+  <g
+     id="g106"
+     class="cls-4"
+     transform="translate(-0.25263852,38.526385)">
+    <text
+       y="115.66847"
+       x="2.3520844"
+       class="cls-5"
+       id="text102">V<tspan
+   id="tspan128"
+   style="font-size:65%;baseline-shift:sub">BURDEN</tspan></text>
+    <text
+       class="cls-10"
+       transform="translate(12.77,119.9)"
+       id="text104" />
+    <text
+       id="text226"
+       y="30.949217"
+       x="251.68053"
+       style="font-size:16px;line-height:0.85;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math'"
+       xml:space="preserve"><tspan
+         style="font-size:10.6667px;line-height:0.85;text-align:center;text-anchor:middle"
+         y="30.949217"
+         x="251.68053"
+         id="tspan224"
+         sodipodi:role="line">To Anti-Aliasing </tspan><tspan
+         style="font-size:10.6667px;line-height:0.85;text-align:center;text-anchor:middle"
+         id="tspan228"
+         y="44.549217"
+         x="251.68053"
+         sodipodi:role="line">Filter</tspan></text>
+  </g>
+  <g
+     transform="translate(0,36)"
+     id="g112"
+     class="cls-4">
+    <text
+       class="cls-9"
+       id="text110"
+       x="65.988182"
+       y="115.77">R<tspan
+   id="tspan130"
+   style="font-size:65%;baseline-shift:sub">a</tspan></text>
+  </g>
+  <path
+     id="path114"
+     class="cls-2"
+     d="M 38.74,162.56 H 0" />
+  <path
+     id="path116"
+     data-name="path2624"
+     class="cls-13"
+     d="m 26.34,162.63 -4.9,2.84 v -5.67 z" />
+  <line
+     class="cls-2"
+     x1="89.849998"
+     y1="161.78"
+     x2="115.05"
+     y2="161.95999"
+     id="line118" />
+  <line
+     class="cls-2"
+     x1="38"
+     y1="162.62"
+     x2="51.540001"
+     y2="162.64"
+     id="line120" />
+  <path
+     id="path124"
+     d="M 115.05,125.96 V 73.265172"
+     style="fill:none;stroke:#000000;stroke-width:1.42;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none" />
+  <path
+     sodipodi:nodetypes="cc"
+     id="path126"
+     d="m 115.05,162.27595 0,-36.31595"
+     style="fill:none;stroke:#000000;stroke-width:1.42;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none" />
+  <path
+     id="path134"
+     d="m 114.54472,43.094566 h 27.43813"
+     style="fill:none;stroke:#000000;stroke-width:1.42;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none" />
+  <g
+     transform="translate(-5.8846011,50.000298)"
+     style="isolation:isolate"
+     id="text4515-6"
+     class="cls-4">
+    <text
+       class="cls-10"
+       transform="translate(236.89,52.02)"
+       id="text36-3" />
+  </g>
+</svg>
