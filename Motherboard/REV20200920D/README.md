@@ -26,6 +26,17 @@ This folder contains schematics pdf, PCB pdf, bill of material (BOM), 3-D PCB, g
 |Finished Copper| 1 oz Cu (Inner Copper: 1 oz)|
 |Additional options| UL Marking: None|
 
+This table includes all parts in BOM (excluding BOM).
+
+| Question                  | Answer           |
+|---------------------------|------------------|
+| Number of Unique Elec. Parts    | 37               |
+| Number of Total Elec. Parts     | 191              |
+| Number of Total Elec. SMT Parts | 167              |
+| Number of Total Elec. THT Parts | 24               |
+| Number of Mech. Screws          | 27               |
+| Number of Mech. Standoffs       | 54               |
+
 3. Upload the gerbers from the [gerber folder](https://github.com/Severson-Group/SensorCard/tree/Motherbaord_REVD_2/Motherboard/REV20200920D/gerbers).
 
 4. Place the order, it should arrive in 7-9 days.
