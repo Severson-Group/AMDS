@@ -37,7 +37,7 @@ This table includes all parts in BOM for one board.
 | Number of Mech. Screws          | 54               |
 | Number of Mech. Standoffs       | 27               |
 
-There is a total of 27 standoffs for the board, where 11 standoffs will be used for the motherboard mounting holes, and 16 standoffs will be used for mounting all the 8 daughtercards.
+There is a total of 27 standoffs per board, where 11 standoffs will be used for the motherboard mounting holes, and 16 standoffs will be used for mounting all the 8 daughtercards.
 
 3. Upload the gerbers from the [gerber folder](https://github.com/Severson-Group/SensorCard/tree/Motherbaord_REVD_2/Motherboard/REV20200920D/gerbers).
 
