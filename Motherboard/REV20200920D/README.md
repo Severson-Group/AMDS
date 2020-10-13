@@ -39,7 +39,7 @@ This table includes all parts in BOM for one board.
 
 There is a total of 27 standoffs per board, where 11 standoffs will be used for the motherboard mounting holes, and 16 standoffs will be used for mounting all the 8 daughtercards.
 
-3. Upload the gerbers from the [gerber folder](https://github.com/Severson-Group/SensorCard/tree/feature/Add_Motherboard_assembly_files/Motherboard/REV20200920D/gerbers).
+3. Upload the gerbers from the [gerber folder](gerbers).
 
 4. Place the order, it should arrive in 7-9 days.
 
@@ -47,6 +47,6 @@ There is a total of 27 standoffs per board, where 11 standoffs will be used for 
 
 1. The BOM contains components for 10 boards. The DNP components are not included in the BOM.
 
-2. Upload the [BOM](https://github.com/Severson-Group/SensorCard/blob/feature/Add_Motherboard_assembly_files/Motherboard/REV20200920D/SensorMotherBoard_BOM_10qty.csv) in https://www.digikey.com/ordering/shoppingcart. 
+2. Upload the [BOM](SensorMotherBoard_BOM_10qty.csv) in https://www.digikey.com/ordering/shoppingcart. 
 
 3. Place the order.
