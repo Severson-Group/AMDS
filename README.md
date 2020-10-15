@@ -1,2 +1,3 @@
-# SensorCard
-Voltage and Current Sense Board 
+# AMDS
+The Advanced Motor Drive Sensing System.
+
