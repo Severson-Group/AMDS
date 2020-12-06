@@ -6,7 +6,7 @@ This document describes the design consideration and implementation details for 
 
 REV C
 
-<img src="Images/PCB_3D.png"/>
+<img src="Images/PCB_3D.png" width="25%"/>
 
 ## Design Requirements and Configurations
 
