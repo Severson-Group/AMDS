@@ -73,7 +73,7 @@ The input resistors `R9` and `R10` are 5W thru-hole resistors.
 
 ### Datasheets
 
-- [Voltage sensor] (https://www.lem.com/sites/default/files/products_datasheets/lv_25-p.pdf)
+- [Voltage sensor](https://www.lem.com/sites/default/files/products_datasheets/lv_25-p.pdf)
 - [Op Amp](https://www.ti.com/lit/ds/symlink/opa320.pdf?ts=1607198422116)
 - [Voltage Reference (LDO)](https://www.ti.com/lit/ds/symlink/ref5045.pdf?ts=1607282986767&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FREF5045)
 - [ADC](https://www.ti.com/lit/ds/symlink/ads8860.pdf)
