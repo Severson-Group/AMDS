@@ -24,12 +24,48 @@ The high level block diagram of the voltage sensor card is shown below:
 <img src="Images/Voltage_card.svg" />
 
 ### Voltage Sensor
-The voltage sensor selected is the LEM LV 25-P, which can measure the differential voltage of up to +/- 500V. This sensor has an accuracy of 0.8% and a linearity of <0.2%.
+The voltage sensor selected is the LEM LV 25-P, which is basically senses the current proportional to the voltage to be measured. The sensor has a nominal input current of 10mA, an accuracy of 0.8% and a linearity error under 0.2%. Two 25kΩ, 5W input resistors `R9` and `R10` are used to get a differential voltage measuring range up to +/- 500V. 
+The sensor output is a current in the range of +/-25mA. To vary the voltage measurement range, the input resistors `R9` and `R10` can be suitably varied such that the input current to the sensor is limited to 10mA.
+For example, to get a voltage measurement range of 250V, the resistor values of `R9` and `R10` should be reduced to 12.5kΩ each.
 
-The sensor converts the input voltage to the current output (range of +/-25mA), which is converted to the +/-10V signal using a burden resistor.
-The intermediate op-amp stage converts the +/-10V signal to 0-5V, which can be measured directly using the BNC connector. 
-To increase noise immunity, the card has an inbuilt Analog to Digital Conversion (ADC) IC. The ADC selected is the TI ADS8860, which has a SPI output. 
-The maximum data throughput of 1 MSPS can be obtained from this ADC. 
+### Burden Resistor
+The output of the voltage sensor is a current in the range of +/-25mA, which is converted to a voltage in the desired range using a burden resistor `R5`. The present implementation converts the sensor output current to a +/-8.75V signal using a burden resistor of 350Ω.
+
+### Op-Amp Stage
+The voltage across the burden resistor is a bipolar signal (voltage span includes both positive and negative voltages). An intermediate op-amp stage converts the +/-8.75V signal to 0-5V, which can be measured directly using the BNC connector.
+
+**Note:** As the op-amp output voltage approaches the supply rails, it tends to distort and behave nonlinearly so the output voltage is limited to actually be 0.2V to 4.5V.
+
+### First Order Anti-Aliasing Filter
+A first order RC filter is implemented on the output of the op amp circuit. The cutoff frequency was set at 48kHz and the following equations was used for the computation:
+
+_f_<sub>c</sub> = 1 / (2 π _RC_)
+
+**Note:** The cutoff frequency can easily be changed by swapping out `R3`.
+
+### Analog to Digital Converter
+To increase noise immunity, the card has an inbuilt Analog to Digital Conversion (ADC) IC.The ADC used is the Texas Instruments ADS8860. It is pseudo-differential input, SPI output, SAR ADC. The maximum data throughput for a single chip is 1 MSPS but decreases by a factor of N for N devices in the daisy-chain. 
+
+**Note:** The different stages of the voltage sensor card described above convert the input voltage, to a voltage in the range of 0.2V - 4.5V. Therefore, 0V input voltage corresponds to 2.35V at the ADC input. The positive peak corresponds to 4.5V and the negative peak corresponds to 0.2V.
+
+### Connectors
+- The HV terminal block `B1` with screw connectors is used to connect the HV terminals across which voltage has to be measured. 
+- A screw terminal block `P1` is used to connect the +-15V supply for the current sensor
+- A BNC terminal is available to directly measure the output across the burden resistor.
+
+### Footprints
+A user may want to change some of the passive components based on the range required and the RC filter cutoff frequency desired. The footprints of passive components that may need to be replaced i.e, the burden resistor (`R5`), the resistors in the Op Amp stage, and the RC filter components is provided here for quick reference. Note that these footprints are imperial codes and **not metric codes**.
+
+| Component | Footprint |
+| ---- | ----- |
+| R3   |  0603|
+| R4   | 0603 |
+| R5 | 2512 |
+| R6 | 0603 |
+| R8 | 0603 |
+| C5 | 0603 |
+
+The input resistors `R9` and `R10` are 5W thru-hole components.
 
 ### Datasheets
 
