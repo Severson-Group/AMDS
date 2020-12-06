@@ -6,6 +6,8 @@ This document describes the design consideration and implementation details for 
 
 REV C
 
+<img src="Images/PCB_3D.PNG" />
+
 ## Design Requirements and Configurations
 
 <img src="Images/Voltage_card.svg" />
