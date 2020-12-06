@@ -34,7 +34,7 @@ The output of the voltage sensor is a current in the range of +/-25mA, which is 
 ### Op-Amp Stage
 The voltage across the burden resistor is a bipolar signal (voltage span includes both positive and negative voltages). A non-inverting level translation circuit is designed using Op Amps as shown here:
 
-
+<img src="images/volt-sensor-opamp-stage.svg" width="30%" />
 
 This circuit is used to translate the voltage across the burden resistor, which is bipolar, to the ADC input range of 0-4.5V. The resistor values can be calculated analytically. However, the algebra gets quite complicated. Hence it was computed using TI analog engineer's calculator.
 
