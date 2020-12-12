@@ -37,7 +37,8 @@ The voltage across the burden resistor is a bipolar signal (voltage span include
 
 <img src="Images/volt-sensor-opamp-stage.svg" width="30%" />
 
-This circuit is used to translate the voltage across the burden resistor, which is bipolar, to the ADC input range of 0-4.5V. The resistor values can be calculated analytically using the following formula: 
+This circuit is used to translate the voltage across the burden resistor, which is bipolar, to the ADC input range of 0-4.5V. The resistor values can be calculated analytically using the following formula:
+
 <img src="https://latex.codecogs.com/gif.latex?V_\text{out}%20%3D%20%5Cfrac%7BR_b%7C%7CR_c%7D%7BR_a&plus;%28R_b%7C%7CR_c%29%7D%5Ctimes%20V_%5Ctext%7BBURDEN%7D&plus;%5Cfrac%7BR_a%7C%7CR_b%7D%7BR_c&plus;%28R_a%7C%7CR_b%29%7D%5Ctimes%20V_%5Ctext%7BREF%7D" />
 
 The algebra can get quite complicated when solving it analytically. Hence the resistor values were computed using the TI analog engineer's calculator.
