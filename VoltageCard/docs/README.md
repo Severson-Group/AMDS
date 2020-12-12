@@ -14,9 +14,8 @@ REV C
 The voltage measurement card was designed to the following specifications:
 
 1. Voltage measurement range of +/- 500V
-2. Noise immunity
-3. BNC output
-4. SPI output to interface with the sensor motherboard
+2. SPI output to interface with the sensor motherboard
+3. +/- 10V BNC output
 
 ## Block Diagram
 The high level block diagram of the voltage sensor card is shown below:
@@ -42,7 +41,7 @@ This circuit is used to translate the voltage across the burden resistor, which 
 
 **Note:** As the op-amp output voltage approaches the supply rails, it tends to distort and behave nonlinearly so the output voltage is limited to actually be 0.2V to 4.5V.
 
-### First Order Anti-Aliasing Filter
+### RC Filter
 A first order RC filter is implemented on the output of the op amp circuit. The cutoff frequency was set at 48kHz and the following equations was used for the computation:
 
 _f_<sub>c</sub> = 1 / (2 π _RC_)
