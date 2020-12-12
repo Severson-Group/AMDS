@@ -32,12 +32,15 @@ For example, to get a voltage measurement range of 250V, the resistor values of 
 ### Burden Resistor
 The output of the voltage sensor is a current in the range of +/-25mA, which is converted to a voltage in the desired range using a burden resistor `R5`. The present implementation converts the sensor output current to a +/-8.75V signal using a burden resistor of 350Ω.
 
-### Op-Amp Stage
+### Level shift stage
 The voltage across the burden resistor is a bipolar signal (voltage span includes both positive and negative voltages). A non-inverting level translation circuit is designed using Op Amps as shown here:
 
 <img src="Images/volt-sensor-opamp-stage.svg" width="30%" />
 
-This circuit is used to translate the voltage across the burden resistor, which is bipolar, to the ADC input range of 0-4.5V. The resistor values can be calculated analytically. However, the algebra gets quite complicated. Hence it was computed using TI analog engineer's calculator.
+This circuit is used to translate the voltage across the burden resistor, which is bipolar, to the ADC input range of 0-4.5V. The resistor values can be calculated analytically using the following formula: 
+<img src="https://latex.codecogs.com/gif.latex?V_\text{out}%20%3D%20%5Cfrac%7BR_b%7C%7CR_c%7D%7BR_a&plus;%28R_b%7C%7CR_c%29%7D%5Ctimes%20V_%5Ctext%7BBURDEN%7D&plus;%5Cfrac%7BR_a%7C%7CR_b%7D%7BR_c&plus;%28R_a%7C%7CR_b%29%7D%5Ctimes%20V_%5Ctext%7BREF%7D" />
+
+The algebra can get quite complicated when solving it analytically. Hence the resistor values were computed using the TI analog engineer's calculator.
 
 **Note:** As the op-amp output voltage approaches the supply rails, it tends to distort and behave nonlinearly so the output voltage is limited to actually be 0.2V to 4.5V.
 
