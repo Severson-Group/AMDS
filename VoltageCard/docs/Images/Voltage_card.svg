@@ -2377,9 +2377,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1"
-     inkscape:cx="608.82305"
-     inkscape:cy="117.33054"
+     inkscape:zoom="0.70710678"
+     inkscape:cx="288.23902"
+     inkscape:cy="-149.31538"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -2587,27 +2587,27 @@
          id="tspan19940-4-7-95-3-9-4"
          sodipodi:role="line">Connector</tspan></text>
     <rect
-       style="fill:#d7e3f4;fill-opacity:1;stroke:#000000;stroke-width:0.349721;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#d7e3f4;fill-opacity:1;stroke:#000000;stroke-width:0.309986;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect53001-5"
-       width="41.591549"
-       height="31.015261"
-       x="0.68027335"
-       y="149.49371"
+       width="32.635452"
+       height="31.054996"
+       x="0.66040581"
+       y="149.47385"
        ry="0" />
     <rect
        ry="0"
-       y="149.47693"
-       x="70.634644"
-       height="31.048836"
-       width="33.952206"
+       y="149.46481"
+       x="61.626686"
+       height="31.073065"
+       width="28.925039"
        id="rect53001-5-8"
-       style="fill:#d7e3f4;fill-opacity:1;stroke:#000000;stroke-width:0.316146;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:#d7e3f4;fill-opacity:1;stroke:#000000;stroke-width:0.291917;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <rect
        style="fill:#d7e3f4;fill-opacity:1;stroke:#000000;stroke-width:0.314242;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect53001-5-8-7"
        width="33.542328"
        height="31.050739"
-       x="135.81575"
+       x="120.99918"
        y="149.12216"
        ry="0" />
     <rect
@@ -2620,7 +2620,7 @@
        style="fill:#d7e3f4;fill-opacity:1;stroke:#000000;stroke-width:0.263697;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker19950-2)"
-       d="M 42.175095,165.00133 H 68.89101"
+       d="M 33.179256,165.00133 H 59.895171"
        id="path19946-4"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc" />
@@ -2638,34 +2638,34 @@
     <text
        id="text10020-4-7"
        y="162.48798"
-       x="43.779488"
+       x="34.254478"
        style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444px;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math';stroke-width:0.264583"
          y="162.48798"
-         x="43.779488"
+         x="34.254478"
          id="tspan10018-4-8"
          sodipodi:role="line">+/-25mA</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="107.35738"
-       y="162.95442"
+       x="92.109657"
+       y="169.87671"
        id="text10020-4-7-1"><tspan
          sodipodi:role="line"
          id="tspan10018-4-8-8"
-         x="107.35738"
-         y="162.95442"
+         x="92.109657"
+         y="169.87671"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444px;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math';stroke-width:0.264583">+/-8.75V</tspan></text>
     <text
        id="text10020-4-7-1-5"
        y="163.76538"
-       x="171.99187"
+       x="155.05876"
        style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444px;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math';stroke-width:0.264583"
          y="163.76538"
-         x="171.99187"
+         x="155.05876"
          id="tspan10018-4-8-8-8"
          sodipodi:role="line">0.5 - 4.5V</tspan></text>
     <text
@@ -2687,49 +2687,49 @@
     <text
        id="text45280-7-6-9-6"
        y="163.42349"
-       x="11.832417"
+       x="7.0699196"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444px;line-height:1.25;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          sodipodi:role="line"
          id="tspan12824-9-0-4-5"
-         x="11.832417"
+         x="7.0699196"
          y="163.42349"
          style="stroke-width:0.264583"> Voltage</tspan><tspan
          sodipodi:role="line"
-         x="11.832417"
+         x="7.0699196"
          y="170.47905"
          style="stroke-width:0.264583"
          id="tspan5507-4-7-1"> Sensor</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444px;line-height:1.25;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="77.709534"
+       x="65.538689"
        y="163.42349"
        id="text45280-7-6-9-6-2"><tspan
          style="stroke-width:0.264583"
          y="163.42349"
-         x="77.709534"
+         x="65.538689"
          id="tspan12824-9-0-4-5-2"
          sodipodi:role="line"> Burden</tspan><tspan
          id="tspan5507-4-7-1-6"
          style="stroke-width:0.264583"
          y="170.47905"
-         x="77.709534"
+         x="65.538689"
          sodipodi:role="line"> Resistor</tspan></text>
     <text
        id="text45280-7-6-9-6-2-9"
        y="163.72978"
-       x="152.72305"
+       x="137.90659"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444px;line-height:1.25;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        xml:space="preserve"><tspan
          sodipodi:role="line"
-         x="152.72305"
+         x="137.90659"
          y="163.72978"
          style="text-align:center;text-anchor:middle;stroke-width:0.264583"
          id="tspan5507-4-7-1-6-6"> Level shift </tspan><tspan
          id="tspan7021"
          sodipodi:role="line"
-         x="152.72305"
+         x="137.90659"
          y="170.78534"
          style="text-align:center;text-anchor:middle;stroke-width:0.264583">Stage</tspan></text>
     <text
@@ -2752,7 +2752,7 @@
        sodipodi:nodetypes="cc"
        inkscape:connector-curvature="0"
        id="path19946-4-1"
-       d="m 104.58877,165.00133 h 29.39975"
+       d="M 90.301237,165.00133 H 119.70093"
        style="fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker19950-2-3)" />
     <path
        sodipodi:nodetypes="cc"
@@ -2764,7 +2764,7 @@
        sodipodi:nodetypes="cc"
        inkscape:connector-curvature="0"
        id="path19946-4-5"
-       d="m 169.35514,164.64754 h 27.69304"
+       d="m 154.53838,164.64754 h 27.69304"
        style="fill:none;stroke:#000000;stroke-width:0.524537;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker19950-2-7)" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker19950-2-7-7)"
@@ -2830,32 +2830,32 @@
    style="font-size:65%;baseline-shift:sub"
    id="tspan2149">IN</tspan></tspan></text>
     <rect
-       style="fill:#d7e3f4;fill-opacity:1;stroke:#000000;stroke-width:0.264;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#d7e3f4;fill-opacity:1;stroke:#000000;stroke-width:0.28765;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect53001-5-8-7-6-1"
-       width="22.137346"
+       width="26.281214"
        height="31.062412"
-       x="198.34758"
+       x="183.62051"
        y="149.11632"
        ry="0" />
     <text
        id="text7058"
        y="160.31479"
-       x="209.09573"
+       x="196.92506"
        style="font-size:4.93889px;line-height:1.25;font-family:'Cambria Math';-inkscape-font-specification:'Cambria Math';stroke-width:0.264583"
        xml:space="preserve"><tspan
          style="font-size:4.93889px;text-align:center;text-anchor:middle;stroke-width:0.264583"
          y="160.31479"
-         x="209.09573"
+         x="196.92506"
          id="tspan7056"
          sodipodi:role="line" /><tspan
          id="tspan7060"
          style="font-size:5.64444px;text-align:center;text-anchor:middle;stroke-width:0.264583"
          y="167.1254"
-         x="209.09573"
+         x="196.92506"
          sodipodi:role="line">RC Filter</tspan></text>
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.506976;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker7090)"
-       d="m 220.46922,164.64754 h 11.927"
+       style="fill:none;stroke:#000000;stroke-width:0.525;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker7090)"
+       d="m 210.02034,164.64754 h 22.37588"
        id="path7086"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc" />
