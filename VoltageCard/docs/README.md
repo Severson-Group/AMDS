@@ -76,8 +76,6 @@ A user may want to change some of the passive components based on the range requ
 | R10| Input resistor |Through hole|
 | C5 | RC filter capacitor |0603 |
 
-The input resistors `R9` and `R10` are 5W thru-hole resistors.
-
 ### Datasheets
 
 - [Voltage sensor](https://www.lem.com/sites/default/files/products_datasheets/lv_25-p.pdf)
