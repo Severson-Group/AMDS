@@ -55,12 +55,6 @@ _f_<sub>c</sub> = 1 / (2 π _RC_)
 ### Analog to Digital Converter
 To increase noise immunity, the card has an inbuilt Analog to Digital Conversion (ADC) IC. The ADC used is the Texas Instruments ADS8860. It is pseudo-differential input, SPI output, SAR ADC. The maximum data throughput for a single chip is 1 MSPS but decreases by a factor of N for N devices in the daisy-chain. 
 
-The voltage at the ADC input V<sub>ADC</sub> is related to the sensor card input voltage V<sub>IN</sub> as follows:
-
-<img src="https://latex.codecogs.com/gif.latex?V_\text{ADC}&space;=&space;\frac{R_b||R_c}{R_a&plus;(R_b||R_c)}\left(&space;\frac{V_\text{IN}R_\text{BURDEN}}{R_\text{in}}K_\text{N}\right)&plus;\frac{R_a||R_b}{R_c&plus;(R_a||R_b)}\times&space;V_\text{REF}" />
-
-where R<sub>BURDEN</sub> is the burden resistor and K<sub>N</sub> is the sensor conversion ratio from the datasheet. For LV-25P, the data sheet lists K<sub>N</sub> = 2500:1000.
-
 **Note:** The different stages of the voltage sensor card described above convert the input voltage, to a voltage in the range of 0.2V - 4.5V. Therefore, 0V input voltage corresponds to 2.35V at the ADC input. The positive peak corresponds to 4.5V and the negative peak corresponds to 0.2V.
 
 ### Connectors
@@ -84,7 +78,7 @@ A user may want to change some of the passive components based on the range requ
 
 ### Datasheets
 
-- [Voltage sensor](https://www.lem.com/sites/default/files/products_datasheets/lv_25-p.pdf)
-- [Op Amp](https://www.ti.com/lit/ds/symlink/opa320.pdf?ts=1607198422116)
-- [Voltage Reference (LDO)](https://www.ti.com/lit/ds/symlink/ref5045.pdf?ts=1607282986767&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FREF5045)
-- [ADC](https://www.ti.com/lit/ds/symlink/ads8860.pdf)
+- [Voltage sensor](../REV20200913C/datasheets/LV25P_Sensor.pdf)
+- [Op Amp](../REV20200913C/datasheets/OPA320_OpAmp.pdf)
+- [Voltage Reference (LDO)](../REV20200913C/datasheets/REF5045_LDO.pdf)
+- [ADC](../REV20200913C/datasheets/ADS_8860_ADC.pdf)
