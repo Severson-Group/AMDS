@@ -65,14 +65,16 @@ To increase noise immunity, the card has an inbuilt Analog to Digital Conversion
 ### Footprints
 A user may want to change some of the passive components based on the range required and the RC filter cutoff frequency desired. The footprints of passive components that may need to be replaced i.e, the burden resistor (`R5`), the resistors in the Op Amp stage, and the RC filter components is provided here for quick reference. Note that these footprints are imperial codes and **not metric codes**.
 
-| Component | Footprint |
-| ---- | ----- |
-| R3   |  0603|
-| R4   | 0603 |
-| R5 | 2512 |
-| R6 | 0603 |
-| R8 | 0603 |
-| C5 | 0603 |
+| Component | Function | Footprint | 
+| ---- | ----- |-----------|
+| R3   | RC filter resistor | 0603| 
+| R4   | Level shift stage|0603 |
+| R5 | Burdern resistor |2512 |
+| R6 |Level shift stage |0603 |
+| R8 |Level shift stage |0603 |
+| R9 | Input resistor|Through hole|
+| R10| Input resistor |Through hole|
+| C5 | RC filter capacitor |0603 |
 
 The input resistors `R9` and `R10` are 5W thru-hole resistors.
 
