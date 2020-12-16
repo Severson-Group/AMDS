@@ -57,9 +57,9 @@ To increase noise immunity, the card has an inbuilt Analog to Digital Conversion
 
 The different stages of the voltage sensor card described above convert the input voltage, to a voltage in the range of 0.2V - 4.5V. The voltage at the ADC input V<sub>ADC</sub> is related to the sensor card input voltage V<sub>IN</sub> as follows:
 
-<img src="https://latex.codecogs.com/gif.latex?V_\text{ADC}&space;=&space;\frac{R_b||R_c}{R_a&plus;(R_b||R_c)}\left(&space;\frac{V_\text{IN}R_\text{BURDEN}}{R_\text{in}}K_\text{N}\right)&plus;\frac{R_a||R_b}{R_c&plus;(R_a||R_b)}\times&space;V_\text{REF}" />
+<img src="https://latex.codecogs.com/gif.latex?V_\text{ADC}&space;=&space;\frac{R_b||R_c}{R_a&plus;(R_b||R_c)}\left(&space;\frac{V_\text{IN}R_\text{BURDEN}}{R_\text{IN}}K_\text{N}\right)&plus;\frac{R_a||R_b}{R_c&plus;(R_a||R_b)}\times&space;V_\text{REF}" />
 
-where R<sub>BURDEN</sub> is the burden resistor and K<sub>N</sub> is the sensor conversion ratio from the datasheet. For LV-25P, the data sheet lists K<sub>N</sub> = 2500:1000.
+where R<sub>BURDEN</sub> is the burden resistor, R<sub>IN</sub> is the input resistance, and K<sub>N</sub> is the sensor conversion ratio from the datasheet. For LV-25P, the data sheet lists K<sub>N</sub> = 2500:1000.
 
 For the current design, 0V input voltage corresponds to 2.35V at the ADC input. The positive peak corresponds to 4.5V and the negative peak corresponds to 0.2V.
 
