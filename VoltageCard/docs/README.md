@@ -84,7 +84,7 @@ A user may want to change some of the passive components based on the range requ
 
 ### Datasheets
 
-- [Voltage sensor](../REV20200913C/datasheets/LV25P_Sensor.pdf)
-- [Op Amp](../REV20200913C/datasheets/OPA320_OpAmp.pdf)
-- [Voltage Reference (LDO)](../REV20200913C/datasheets/REF5045_LDO.pdf)
-- [ADC](../REV20200913C/datasheets/ADS_8860_ADC.pdf)
+- [Voltage sensor](../datasheets/LV25P_Sensor.pdf)
+- [Op Amp](../datasheets/OPA320_OpAmp.pdf)
+- [Voltage Reference (LDO)](../datasheets/REF5045_LDO.pdf)
+- [ADC](../datasheets/ADS_8860_ADC.pdf)
