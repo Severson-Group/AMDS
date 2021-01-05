@@ -1,6 +1,6 @@
-# Analog Sensor Card
+# Low Voltage Card
 
-This document describes the design considerations and implementation details for the analog sensor card, which serves as a daughtercard for the SensorCard motherboard.
+This document describes the design considerations and implementation details for the low voltage card, which serves as a daughtercard for the SensorCard mainboard.
 
 ## Relevant Hardware Versions
 
