@@ -1,6 +1,6 @@
-# Voltage Sensor Card
+# High Voltage Card
 
-This document describes the design consideration and implementation details for the voltage sensor card, which serves as a daughter card for the sensor motherboard.
+This document describes the design consideration and implementation details for the high voltage card, which serves as a daughter card for the sensor motherboard.
 A block diagram is presented and each component is discussed in detail. Specifications of each component are provided based on the datasheet.
 
 ## Relevant Hardware Versions
