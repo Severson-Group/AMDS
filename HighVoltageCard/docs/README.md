@@ -1,6 +1,6 @@
 # High Voltage Card
 
-This document describes the design consideration and implementation details for the high voltage card, which serves as a daughter card for the sensor mainboard.
+This document describes the design consideration and implementation details for the high voltage card, which serves as a daughter card for the AMDS mainboard.
 A block diagram is presented and each component is discussed in detail. Specifications of each component are provided based on the datasheet.
 
 ## Relevant Hardware Versions
@@ -14,7 +14,7 @@ REV C
 The voltage measurement card was designed to the following specifications:
 
 1. Voltage measurement range of +/- 500V
-2. SPI output to interface with the sensor motherboard
+2. SPI output to interface with the AMDS mainboard
 3. +/- 10V BNC output
 
 ## Block Diagram
