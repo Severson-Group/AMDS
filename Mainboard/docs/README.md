@@ -1,6 +1,6 @@
-# Sensor Motherboard
+# Mainboard
 
-This document describes the design consideration, implementation details, and board interface details for the sensor motherboard. A block diagram is presented and each component is discussed in detail.
+This document describes the design consideration, implementation details, and board interface details for the sensor mainboard. A block diagram is presented and each component is discussed in detail.
 
 ## Relevant Hardware Versions
 
@@ -8,7 +8,7 @@ REVD
 
 ## Application / Purpose
 
-The motherboard is specifically designed to interface directly to the isoSPI connector of [AMDC REVD](https://github.com/Severson-Group/AMDC-Hardware).
+The mainboard is specifically designed to interface directly to the isoSPI connector of [AMDC REVD](https://github.com/Severson-Group/AMDC-Hardware).
 
 ## Features
 
@@ -77,7 +77,7 @@ Implementation details of [IsoSPI](#IsoSPI-Communication-Interface) and [Differe
 
 ## Systems on Board
 
-Per the block diagram above, the motherboard is made of several systems, as explained below.
+Per the block diagram above, the mainboard is made of several systems, as explained below.
 
 ### STM32F7 Microcontroller
 
@@ -146,4 +146,4 @@ One header is used to supply power to the cards and the other header is used for
 | 6 | SCLK |
 | 7 | CONVST (Conversion start) |
 
-For information regarding the placement of the headers, refer to the [motherboard PCB](https://github.com/Severson-Group/SensorCard/blob/Motherboard_REVC/Motherboard/altium/SensorMotherBoard.PcbDoc). For more information on designing a daughter card, refer the [analog card documentation](https://github.com/Severson-Group/SensorCard/tree/develop/AnalogCard/docs).
+For information regarding the placement of the headers, refer to the [mainboard PCB](../altium/SensorMotherBoard.PcbDoc). For more information on designing a daughter card, refer the [low voltage card documentation](https://github.com/Severson-Group/SensorCard/tree/develop/AnalogCard/docs).

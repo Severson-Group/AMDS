@@ -1,6 +1,6 @@
-# Current Measurement Card
+# Current Card
 
-This document describes the design considerations and implementation details for the current measurement card. 
+This document describes the design considerations and implementation details for the current card. 
 A block diagram is presented and each component is discussed in detail. Specifications of each component are provided based on the datasheet.
 
 ## Relevant Hardware Versions

@@ -1,7 +1,7 @@
-# Current Measurement Card
+# Current Card
 
-The current measurement card is a daughter card designed for the SensorCard platform. This daughtercard plugs into the MotherBoard which then drives this board.
+The current card is a daughter card designed for the AMDS platform. This daughtercard plugs into the mainboard which then drives this card.
 
 ## Documentation
 
-Documentation about the design of this expansion board is located in the [docs folder.](docs/)
+Documentation about the design of this daughter card is located in the [docs folder.](docs/)
