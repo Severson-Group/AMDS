@@ -91,8 +91,8 @@ A user may want to change some of the passive components based on the range requ
 
 
 ## Datasheets
-- [Current Sensor](../REV20200830C/datasheets/LA55P_Current%20Sensor.pdf)
-- [Op Amp](../REV20200830C/datasheets/OPA320_OpAmp.pdf)
-- [Voltage Reference (LDO)](../REV20200830C/datasheets/REF5045_LDO.pdf)
-- [Analog to Digital Converter](../REV20200830C/datasheets/ADS_8860_ADC.pdf)
+- [Current Sensor](../datasheets/LA55P_Current%20Sensor.pdf)
+- [Op Amp](../datasheets/OPA320_OpAmp.pdf)
+- [Voltage Reference (LDO)](../datasheets/REF5045_LDO.pdf)
+- [Analog to Digital Converter](../datasheets/ADS_8860_ADC.pdf)
 
