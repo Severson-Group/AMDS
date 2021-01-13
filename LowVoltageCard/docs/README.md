@@ -4,7 +4,8 @@ This document describes the design considerations and implementation details for
 
 ## Relevant Hardware Versions
 
-REV A
+- REV A
+- REV B
 
 ## Design Requirements and Considerations
 
