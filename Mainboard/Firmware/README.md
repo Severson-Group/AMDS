@@ -1,16 +1,16 @@
-# Motherboard Firmware
+# Mainboard Firmware
 
-The "motherboard" is part of the SensorCard platform. It can hold up to eight daughter cards, each of which contain a SPI ADC device. These ADCs are then sampled by the motherboard's MCU. The ADC samples are transmitted back to the AMDC so control algorithms can make use of the extra analog inputs. Several daughter card designs exist:
+The "mainboard" is part of the SensorCard platform. It can hold up to eight daughter cards, each of which contain a SPI ADC device. These ADCs are then sampled by the mainboard's MCU. The ADC samples are transmitted back to the AMDC so control algorithms can make use of the extra analog inputs. Several daughter card designs exist:
 
 1. Current sense
 2. High Voltage sense (for bus voltage levels)
 3. Low Voltage sense (for +/- 10V levels)
 
-This folder houses all the files needed to build the firmware which runs on the MCU on the motherboard PCB.
+This folder houses all the files needed to build the firmware which runs on the MCU on the mainboard PCB.
 
 ## Required Tools
 
-To easily build this firmware and load it onto a motherboard, please install the following software on your host PC:
+To easily build this firmware and load it onto a mainboard, please install the following software on your host PC:
 
 - [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) -- the latest version is fine.
 
@@ -23,7 +23,7 @@ To develop code for STM32 processors:
 #### Generating New Projects
 
 1. Use the STM32CubeIDE to generate a new project
-2. When configuring this project, select the exact MCU device which you are targetting (the motherboard uses `STM32F765ZGT6`)
+2. When configuring this project, select the exact MCU device which you are targetting (the mainboard uses `STM32F765ZGT6`)
 3. Open the CubeMX perspective (i.e. `*.ioc` file) and configure all desired peripherals (SPIs, UARTs, ETH, etc)
 4. Change to the clock configuration tab and use the GUI to configure the PLL settings
 5. Generate initialization code to boot-strap your project. This will configure the clock and peripherals like you specified.
@@ -41,8 +41,8 @@ To develop code for STM32 processors:
 
 NOTE: The STM32 devices are typically programmed into non-volatile memory. Therefore, there is no seperate "flashing" step. Every time you upload code, it is permanantely stored on the processor. You can power cycle the device and your code will start running again.
 
-## Motherboard Firmware Design
+## Mainboard Firmware Design
 
-The motherboard firmware is fairly simple, yet very specialized for the application. Before changing *anything* in the code, make sure you understand how it works. Practically every line of the code is optimized for speed and efficiency! Using a multi-channel logic analyzer / oscilloscope is absolutely required when updating the motherboard firmware to validate code timing.
+The mainboard firmware is fairly simple, yet very specialized for the application. Before changing *anything* in the code, make sure you understand how it works. Practically every line of the code is optimized for speed and efficiency! Using a multi-channel logic analyzer / oscilloscope is absolutely required when updating the mainboard firmware to validate code timing.
 
 **Do not blindly change the code.**
