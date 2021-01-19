@@ -46,5 +46,3 @@ NOTE: The STM32 devices are typically programmed into non-volatile memory. There
 The motherboard firmware is fairly simple, yet very specialized for the application. Before changing *anything* in the code, make sure you understand how it works. Practically every line of the code is optimized for speed and efficiency! Using a multi-channel logic analyzer / oscilloscope is absolutely required when updating the motherboard firmware to validate code timing.
 
 **Do not blindly change the code.**
-
-[Read the docs...](docs/)
