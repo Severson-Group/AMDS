@@ -70,4 +70,15 @@ For application with SiC or GaN inverters where `Fsw` is typically much faster t
 
 ## Future Improvements
 
-Foo bar.
+The AMDS firmware works, albeit with limitations as described above. Some ideas to improve the system are now described:
+
+1. The AMDS cannot be configured from the master. Improvements could use the additional TX/RX pair to enable simple register protocol for confiug. This could be used to set digital filter bandwidths, turn on/off sensor card slots for faster sampling, etc.
+
+2. The `SYNC_TX` and `SYNC_ADC` ISR priorities should probably be flipped. In other words, the ADC sampling should be highest priority. This would mean that the sampling would never miss alignment the PWM carrier. However, this places a burden on the master since it must turn off requests for ADC sampling when it wants to receive new data. If the master kept telling the AMDS to sample the ADCs at all times, it could never send the data back.
+
+3. The ADC sampling throughput could be improved above 280kHz. Theoretically, the ADC devices support upwards of 1Msps, or 500ksps in two device daisy chain. This would probably require shortening the delay when the ADC is doing the sampling. The latest AMDS mainboard provides `BUSY` signals for each ADC which can be used for ISRs to end the ADC sampling window. These are not used in the current firmware. Instead, the simpler approach of just busy waiting until the max timeout is used (i.e. wait for 1300ns). However, the nominal wait time is only about 50% of this.
+
+
+
+
+
