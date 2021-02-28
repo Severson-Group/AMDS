@@ -40,11 +40,33 @@ The format of the data sent on the TX signals is UART. This means there is no cl
 
 ### Interrupt-Driven Design
 
-TODO...
+After start-up, the AMDS firmware is completely interrupt driven. This means that all processing occurs within interrupt contexts, not the main loop. There are two interrupts which are used to drive the firmware: one on the `SYNC_TX` signal edges and one on the `SYNC_ADC` signal edges. The `SYNC_TX` is the highest priority ISR, meaning it will interrupt all other code. The `SYNC_ADC` is lower priority.
+
+The typical flow is as follows:
+
+- The master is operating its PWM output, and thus, triggering the `SYNC_ADC` ISR periodically. Therefore, the ADCs on the sensorcards have been read and the latest data is stored in memory.
+- The master needs to get the latest data. It then triggers the `SYNC_TX` ISR which takes over the AMDS to send the latest data back to the master. Once the data is sent, the ADC sampling may continue.
+
+Note that when the `SYNC_TX` ISR fires, the AMDS starts the `SYNC_ADC` synchronization process over. Without doing this, the next sample would not be aligned to `SYNC_ADC` and therefore introduce noise due to drifting from the PWM carrier.
 
 ### Performance Limitations
 
-TODO...
+The AMDS itself does not directly limit the operation of the `SYNC_TX` nor `SYNC_ADC` signals. It will continue to work up to some threshold, at which point some ISRs will be missed and the performance will drop. However, the system will not "crash" -- it will continue to work, albeit not as well.
+
+The maximum ADC sampling rate is limited to about 280kHz. This means that each edge of `SYNC_ADC` can occur every 3.6usec. Practically, this means that PWM switching of 100kHz is supported since that would result in 200kHz sampling (both peak and valley of carrier).
+
+The latency for data transmission back to the master over the `TX` signals is about 6usec total. This means that all eight sensor cards can be read at more than 100kHz. Practically, the bandwidth of the TX data is not the issue since control typically only runs at 10-20kHz. However, the 6usec latency is important. This means that, for 10kHz control, at least 6% of the control period is taken by simply transmitting data back to the master. This does not include the delay in sampling from the ADC devices, which is about 1.3usec. Therefore, a conserative estimate of the latency from the AMDS is about 10usec.
+
+#### Performance Specifications
+
+Given a control frequency of `Fs` and PWM switching frequency of `Fsw`, the following constraints must be satisfied for the AMDS firmware to perform well:
+
+- `Fsw` <= 100kHz
+- 2 x `Fs` <= `Fsw`
+
+For application with SiC or GaN inverters where `Fsw` is typically much faster than `Fs`, the AMDS firmware works well.
+
+**Warning:** When `Fs` is close to `Fsw` (i.e. control frequency is equal to PWM frequency), **the current AMDS firmware design will not work well.**
 
 ## Future Improvements
 
