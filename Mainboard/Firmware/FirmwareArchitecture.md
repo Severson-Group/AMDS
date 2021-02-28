@@ -22,19 +22,17 @@ While the architecture of the AMDS firmware is fairly simple, the I/O interface,
 
 The AMDS firmware is designed to interface to the master controller over four logical wires: 2x TX and 2x RX. Physically, these signals are all diff pairs for noise immunity.
 
-#### RX Signals
+<img src="./images/firmware_arch_interface.svg" width="500" />
 
-The RX signals come from the master and are nominally square waves. On each edge transition, an ISR is triggered in the AMDS firwmare.
+#### RX Signal: `SYNC_ADC`
 
-##### RX Signal: `SYNC_ADC`
+One of the two signals, `SYNC_ADC`, is used to trigger ADC sampling. Nominally, the signal is a square wave. One each edge, the AMDS samples all the sensor cards on the mainboard. Normally, the master triggers a transition on this RX signal when the PWM carrier is at a peak or valley. This synchronizes the ADC sampling to the inverter PWM, thus reducing sampling noise.
 
-One of the two signals, `SYNC_ADC`, is used to trigger ADC sampling. One each edge, the AMDS samples all the sensor cards on the mainboard. Normally, the master triggers a transition on this RX signal when the PWM carrier is at a peak or valley. This synchronizes the ADC sampling to the inverter PWM, thus reducing sampling noise.
+#### RX Signal: `SYNC_TX`
 
-##### RX Signal: `SYNC_TX`
+The other RX signal, `SYNC_TX`, is used to trigger the AMDS to transmit the latest ADC samples back to the master. It is also normally a square wave. On each edge transition, all eight ADC samples are streamed to the master.
 
-The other RX signal, `SYNC_TX`, is used to trigger the AMDS to transmit the latest ADC samples back to the master. On each edge transition, all eight ADC samples are streamed to the master.
-
-#### TX Signals
+#### TX Signals: `DATA1` and `DATA2`
 
 The two TX signals are controlled by the AMDS and go to the master. These are only used to send ADC sample data to the master. When the `SYNC_TX` RX signal is triggered, the AMDS starts sending the latest data to the master using the two TX wires. Two lanes are used so that the data can be transmitted at twice the speed, thus reducing latency.
 
