@@ -51,7 +51,7 @@ Note that when the `SYNC_TX` ISR fires, the AMDS starts the `SYNC_ADC` synchroni
 
 ### Performance Limitations
 
-The AMDS firmware design directly affects the operation limits of the `SYNC_TX` nor `SYNC_ADC` signals. It will continue to work up to some threshold, at which point some ISRs will be missed and the performance will drop. However, the system will not "crash" -- it will continue to work, albeit not as well.
+The AMDS firmware design directly affects the operation limits of the `SYNC_TX` or `SYNC_ADC` signals. It will continue to work up to some threshold, at which point some ISRs will be missed and the performance will drop. However, the system will not "crash" -- it will continue to work, albeit not as well.
 
 The maximum ADC sampling rate is limited to about 280kHz. This means that each edge of `SYNC_ADC` can occur every 3.6usec. Practically, this means that PWM switching of 100kHz is supported since that would result in 200kHz sampling (both peak and valley of carrier). At 200kHz sampling, each edge of `SYNC_ADC` occurs every 5usec. Note that the AMDS firmware always assumes all eight sensor cards must be sampled. Even when they are not populated, the firmware timing remains as if all sensor cards were in pairs of daisy chains. This acts to limit the overall sampling throughput.
 
