@@ -46,3 +46,27 @@ NOTE: The STM32 devices are typically programmed into non-volatile memory. There
 The mainboard firmware is fairly simple, yet very specialized for the application. Before changing *anything* in the code, make sure you understand how it works. Practically every line of the code is optimized for speed and efficiency! Using a multi-channel logic analyzer / oscilloscope is absolutely required when updating the mainboard firmware to validate code timing.
 
 **Do not blindly change the code.**
+
+## Flashing Firmware to Mainboards with Alternative STM32F745ZG Processors
+
+The firmware project provided in this repository is configured for a mainboard populated with a STM32F**765**ZG processor. This project configuration is incompatible with the alternative STM32F**745**ZG chip that is populated on some mainboard PCBs. Creating a new project targeting the alternative STM32F**745**ZG processor and loading in the provided source files is required. Here's how that's done.
+
+### Create a new STM32 Project
+1. Within STM32CubeIDE create a new `STM32 project` targeting the `STM32F745ZG` device with the following settings:
+    - Targeted Language: `C`
+    - Targeted Binary Type: `Executable`
+    - Targeted Project Type: `STM32Cube`
+
+### Replace Source Code
+2. Open the file folder location of the newly created project 
+3. Navigate to the `\Core\` directory and replace the `\Src` & `\Inc` folders with the ones provided in the AMDS repository
+4. Navigate to the `\Drivers\STM32F7xx_HAL_Driver` directory and replace the `\Src` & `\Inc` folders with the ones provided in the AMDS repository
+5. Within STM32CubeIDE refresh & build the project, no errors should be present
+
+### Flash Firmware to Mainboard
+6. Select `Debug Configurations` under the `Run` menu
+7. Select the `Debugger` tab in the pop-up window
+8. Change the `Frequency (kHz)` setting from `Auto` to `140`
+9. Select `Apply` 
+
+You are now ready to connect & flash the firmware to the STM32F**745**ZG processor equiped Mainboard!
