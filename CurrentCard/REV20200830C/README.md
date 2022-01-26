@@ -7,7 +7,7 @@ This folder contains the compiled design outputs for the current measurement car
 |-------------------|---------------|
 | Size              | 3.58" x 1.47"   |
 | Number of Layers  | 2               |
-| Thickness         | 0.41mm            |
+| Thickness         | 1.57mm (0.062")           |
 | Min Hole Size     | 0.4mm           |
 | Surface Finish    | HASL (Tin Lead) |
 | Silkscreen        | Both sides      |
