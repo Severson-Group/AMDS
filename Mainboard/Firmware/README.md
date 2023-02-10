@@ -63,10 +63,17 @@ The firmware project provided in this repository is configured for a mainboard p
 4. Navigate to the `\Drivers\STM32F7xx_HAL_Driver` directory and replace the `\Src` & `\Inc` folders with the ones provided in the AMDS repository
 5. Within STM32CubeIDE refresh & build the project, no errors should be present
 
+### Increase Compiler Optimization
+6. In the `Project Explorer` pane on the left, right-click on the STM32Cube Project you created, and click on Properties
+7. Expand `C/C++ Build` and click `Settings`
+8. Find and click on `MCU GCC Compiler` > `Optimization`
+9. Select the dropdown next for `Optimization Level` and change to `Optimize more (-O2)`
+10. Select `Apply and Close`
+
 ### Flash Firmware to Mainboard
-6. Select `Debug Configurations` under the `Run` menu
-7. Select the `Debugger` tab in the pop-up window
-8. Change the `Frequency (kHz)` setting from `Auto` to `140`
-9. Select `Apply` 
+11. Select `Debug Configurations` under the `Run` menu at the top
+12. Select the `Debugger` tab in the pop-up window
+13. Change the `Frequency (kHz)` setting from `Auto` to `140`
+14. Select `Apply` 
 
 You are now ready to connect & flash the firmware to the STM32F**745**ZG processor equiped Mainboard!
