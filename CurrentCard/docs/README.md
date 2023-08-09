@@ -25,9 +25,12 @@ The high level block diagram of the current sensor card is shown below:
 <img src="images/current-sensor-blockdiagram.svg" width="500%" />
 
 ### Current Sensor
-LEM LA 55-P or LA 100-P current sensors are selected and can be used for this design based on the sensing range desired. They are available from LEM with an open aperture and PC pins. LEM LA 55-P and LA 100-P can measure +/-55A and +/-150A, respectively. Note that the LA100 series also has these variants, LA100-P/SP13 and LA100-TP, which have different gains that users must be careful about when ordering.
+Based on the sensing range desired, the current measurement card can use either LA 55-P or LA 100-P from LEM. These sensors have an open aperture and PC pins. The LA 55-P can measure +/-55A, while the LA 100-P can measure +/-150A. 
+
+**Note**: The LA 100 series has three variants, LA 100-P, LA 100-P/SP13, and LA 100-TP, that users must be careful about when ordering. The sensor gains of each of these variants are different, which has implications for the choice of the burden resistor. The rest of this document is specific to the LA 100-P variant.
+
 The open aperture was a requirement as it allows for the range to be easily scaled down just by adding turns to the primary. 
-The LA 55-P is a closed loop compensated hall effect transducers that has an accuracy of +/-0.65% and linearity of <0.15% which is quite good compared to other sensors from LEM. The LA 100-P has an accuracy of +/-0.45% and linearity of <0.15%.
+The LA 55-P is a closed loop compensated hall effect transducer that has an accuracy of +/-0.65% and linearity of <0.15% which is quite good compared to other sensors from LEM. The LA 100-P has an accuracy of +/-0.45% and linearity of <0.15%.
 They have an excellent bandwidth of 200khz and a low impedance current output that is inherently more immune to noise than a high impedance voltage output. 
 
 
