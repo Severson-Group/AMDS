@@ -26,7 +26,6 @@ int main(void)
 
     // Initialize the main modules
     adc_init();
-    tx_init();
 
     // Infinite loop (all real work is done in ISRs)
     uint8_t led = 0;

@@ -1,6 +1,7 @@
 #include "adc.h"
 #include "drv_spi.h"
 #include "platform.h"
+#include "tx.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -167,15 +168,6 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 // this ISR, all the motherboard ADCs should be sampled.
 void EXTI3_IRQHandler(void)
 {
-    // Clear interrupt
-    //
-    // NOTE: while this ISR is running and sampling ADCs, a lot
-    // could happen -- the TX ISR could run, as well as
-    // another edge which would trigger this ISR again!
-    if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_3)) {
-        __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
-    }
-
     // Perform the actual SPI transactions
     uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
@@ -211,6 +203,9 @@ void EXTI3_IRQHandler(void)
         // for the next time this ISR runs...
         write_buffer_number = 1 - write_buffer_number;
     }
+
+    // Call the function in tx.c to transmit the sampled data back to the AMDC
+    transmit_samples();
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the
