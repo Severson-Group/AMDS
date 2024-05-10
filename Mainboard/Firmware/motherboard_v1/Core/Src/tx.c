@@ -8,11 +8,6 @@
 //
 void transmit_samples(void)
 {
-    // Tell ADC driver to throw away next sample it gets
-    // since this ISR messed up alignment to PWM carrier
-    // and will add noise!
-    adc_ignore_next_sample();
-
     // Send header before we compute anything
     // to get the UART warmed up and running!
     uint8_t first_header = 0x90;

@@ -42,7 +42,6 @@ static void setup_pin_CONVST(void);
 
 // As the code runs, these state variables are updated in ISRs
 // Ping-pong buffer of latest samples
-static volatile bool is_ignore_next_sample = false;
 static volatile uint8_t read_buffer_number = 0;
 static volatile uint8_t write_buffer_number = 1;
 static volatile uint16_t latest_valid_adc_data0[8] = { 0 };
@@ -57,15 +56,7 @@ void adc_init(void)
     setup_pin_SYNC_ADC();
 }
 
-void adc_ignore_next_sample(void)
-{
-    is_ignore_next_sample = true;
-}
-
-// NOTE: this function is called from the TX ISR,
-// which can preempt ANY CODE which is running!!
-//
-// Most importantly, this preempts our ADC conversion ISR!
+// NOTE: this function is called from the transmit function
 //
 // To prove correctness, we just need to verify the invariant
 // that the `read_buffer_number` variable and corresponding buffer
@@ -190,19 +181,14 @@ void EXTI3_IRQHandler(void)
     dest[6] = new_data[6];
     dest[7] = new_data[7];
 
-    // Only switch read / write pointers if we weren't told to ignore this sample
-    if (is_ignore_next_sample) {
-        is_ignore_next_sample = false;
-    } else {
-        // Switch read buffer to where we just put the new data,
-        // therefore, satisfying the property that the read_buffer_number
-        // always points to a valid set of samples!
-        read_buffer_number = 1 - read_buffer_number;
+	// Switch read buffer to where we just put the new data,
+	// therefore, satisfying the property that the read_buffer_number
+	// always points to a valid set of samples!
+	read_buffer_number = 1 - read_buffer_number;
 
-        // Now that read buffer is set, we are safe to update write buffer
-        // for the next time this ISR runs...
-        write_buffer_number = 1 - write_buffer_number;
-    }
+	// Now that read buffer is set, we are safe to update write buffer
+	// for the next time this ISR runs...
+	write_buffer_number = 1 - write_buffer_number;
 
     // Call the function in tx.c to transmit the sampled data back to the AMDC
     transmit_samples();
