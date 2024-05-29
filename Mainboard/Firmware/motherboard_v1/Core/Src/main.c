@@ -30,6 +30,15 @@ int main(void)
     // Infinite loop (all real work is done in ISRs)
     uint8_t led = 0;
 
+    // Disable the SysTick ISR
+    //
+    // The SysTick ISR causes jitter in the firmware operation,
+    // and since this project does not use the SysTick features,
+    // we do not need it to run during operation!
+    //
+    // Set bit 0 to 0
+    SysTick->CTRL &= 0xFFFFFFFE;
+    
     while (1) {
         drv_led_clear();
         drv_led_on(1 << led);
