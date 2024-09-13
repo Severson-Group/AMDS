@@ -1,6 +1,7 @@
 #include "adc.h"
 #include "drv_spi.h"
 #include "platform.h"
+#include "tx.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -39,13 +40,8 @@ static void setup_pin_CONVST(void);
 
 #define ADC_BITS_TO_VOLTS(bits) (ADC_VOLTS_PER_BIT * (float) bits)
 
-// As the code runs, these state variables are updated in ISRs
-// Ping-pong buffer of latest samples
-static volatile bool is_ignore_next_sample = false;
-static volatile uint8_t read_buffer_number = 0;
-static volatile uint8_t write_buffer_number = 1;
-static volatile uint16_t latest_valid_adc_data0[8] = { 0 };
-static volatile uint16_t latest_valid_adc_data1[8] = { 0 };
+// Buffer of latest samples
+static volatile uint16_t latest_valid_adc_data[8] = { 0 };
 
 void adc_init(void)
 {
@@ -56,27 +52,10 @@ void adc_init(void)
     setup_pin_SYNC_ADC();
 }
 
-void adc_ignore_next_sample(void)
-{
-    is_ignore_next_sample = true;
-}
-
-// NOTE: this function is called from the TX ISR,
-// which can preempt ANY CODE which is running!!
-//
-// Most importantly, this preempts our ADC conversion ISR!
-//
-// To prove correctness, we just need to verify the invariant
-// that the `read_buffer_number` variable and corresponding buffer
-// always contain valid data.
+// NOTE: this function is called from the transmit function
 void adc_latest_bits(uint16_t *output)
 {
-    volatile uint16_t *data = NULL;
-    if (read_buffer_number == 0) {
-        data = latest_valid_adc_data0;
-    } else {
-        data = latest_valid_adc_data1;
-    }
+    volatile uint16_t *data = latest_valid_adc_data;
 
     // Give user their data (unrolled for speed)
     output[0] = data[0];
@@ -167,26 +146,12 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 // this ISR, all the motherboard ADCs should be sampled.
 void EXTI3_IRQHandler(void)
 {
-    // Clear interrupt
-    //
-    // NOTE: while this ISR is running and sampling ADCs, a lot
-    // could happen -- the TX ISR could run, as well as
-    // another edge which would trigger this ISR again!
-    if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_3)) {
-        __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
-    }
-
     // Perform the actual SPI transactions
     uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
 
     // Copy data into write buffer destination
-    volatile uint16_t *dest = NULL;
-    if (write_buffer_number == 0) {
-        dest = latest_valid_adc_data0;
-    } else {
-        dest = latest_valid_adc_data1;
-    }
+    volatile uint16_t *dest = latest_valid_adc_data;
 
     // Unrolled loop for speed
     dest[0] = new_data[0];
@@ -198,19 +163,8 @@ void EXTI3_IRQHandler(void)
     dest[6] = new_data[6];
     dest[7] = new_data[7];
 
-    // Only switch read / write pointers if we weren't told to ignore this sample
-    if (is_ignore_next_sample) {
-        is_ignore_next_sample = false;
-    } else {
-        // Switch read buffer to where we just put the new data,
-        // therefore, satisfying the property that the read_buffer_number
-        // always points to a valid set of samples!
-        read_buffer_number = 1 - read_buffer_number;
-
-        // Now that read buffer is set, we are safe to update write buffer
-        // for the next time this ISR runs...
-        write_buffer_number = 1 - write_buffer_number;
-    }
+    // Call the function in tx.c to transmit the sampled data back to the AMDC
+    transmit_samples();
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the

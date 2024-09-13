@@ -1,6 +1,6 @@
 #ifndef TX_H
 #define TX_H
 
-void tx_init(void);
+void transmit_samples(void);
 
 #endif // TX_H
