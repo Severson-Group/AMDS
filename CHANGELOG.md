@@ -4,7 +4,7 @@ This document summarizes the changes introduced to the code base for each releas
 
 ## v2.0.0
 
-- Add sampling of new data upon receipt of `SYNC_ADC` interrupt
+- Sample and transmit data upon receipt of `SYNC_ADC` interrupt
 - Remove `SYNC_TX` interrupt
 
 ## v1.0.0
