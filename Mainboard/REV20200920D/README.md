@@ -57,6 +57,6 @@ There is a total of 27 standoffs per board, where 11 standoffs will be used for 
 
 1. The BOM contains components for 1 board. The DNP components are not included in the BOM.
 
-2. Upload the [BOM](Mainboard_BOM_10qty.csv) in https://www.digikey.com/ordering/shoppingcart. 
+2. Upload the [BOM](Mainboard_BOM.csv) in https://www.digikey.com/ordering/shoppingcart. 
 
 3. Place the order.
