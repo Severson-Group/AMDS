@@ -26,6 +26,7 @@ This folder contains the compiled design outputs for AMDS REV D. This includes t
 |Board Thickness           | 1.6 mm          |
 |Min Trace Spacing         | 0.15 mm (6 mil) |
 |Min Hole Size             | 0.35 mm (14 mil)|
+|Number of Holes           | 569             |
 |Solder Mask               | Black           |
 |"HASL" to "ENIG"          | No              |
 |Finished Copper           | 1 oz            |
