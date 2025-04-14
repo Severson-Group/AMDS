@@ -28,7 +28,7 @@ This folder contains the compiled design outputs for AMDS REV D. This includes t
 |Min Hole Size             | 0.35 mm (14 mil)|
 |Number of Holes           | 569             |
 |Solder Mask               | Black           |
-|"HASL" to "ENIG"          | No              |
+|HASL or ENIG              | No              |
 |Finished Copper           | 1 oz            |
 
 ## Assembly Details
