@@ -1,52 +1,49 @@
-This folder contains schematics pdf, PCB pdf, bill of material (BOM), 3-D PCB, gerber files and all the required files to fabricate the boards.
+# AMDS REV20200920D
 
-## How to order 10 PCB boards
+This folder contains the compiled design outputs for AMDS REV D. This includes the schematics, images of the PCB layout, the bill of materials (BOM), and the files needed to order fully populated boards from an online vendor.
 
-1. Place a new quote in https://www.pcbway.com/ 
+## Potential Vendors
 
-2. Use the following table to set the pcb properties.
+| Vendor Name             | Country      | Type |
+|----------------------|-------------|--|
+| [Screaming Circuits](https://www.screamingcircuits.com/)| US| Fabrication/Assembly |
+| [OshPark](https://oshpark.com/home)| US| Fabrication |
+| [Sunstone Circuits](https://www.sunstone.com/) | US | Fabrication |
+| [PCBWay](https://www.pcbway.com/) | China | Fabrication/Assembly |
+| [JLCPCB](https://jlcpcb.com/?_gl=1%2a1kjh7v7%2a_gcl_au%2aMzYwNzcxMDQwLjE3NDMxODc1MTI.%2a_ga%2aMjM3NTY3OTQzLjE3NDMxODc1MTI.%2a_ga_VB33MLCQS2%2aMTc0MzE4NzUxMi4xLjAuMTc0MzE4NzUxMi42MC4wLjA.%2a_ga_BZ8D96C9TK%2aMTc0MzE4NzUxMi4xLjAuMTc0MzE4NzUxMi42MC4wLjA.) | China | Fabrication/Assembly |
 
-| Question             | Answer      |
-|----------------------|-------------|
-|Size| 203.4 x 203.4 mm|
-|Layer| 4 Layers|
-|Quantity| 10|
-|Board type| Single pieces|
-|Different Design in Panel| 1|
-|Material: FR-4| TG150|
-|Thickness| 1.6 mm|
-|Min Track/Spacing| 6/6mil|
-|Min Hole Size| 0.3mm|
-|Solder Mask| Black|
-|Silkscreen| White|
-|Gold fingers| No|
-|Surface Finish| HASL with lead|
-|"HASL" to "ENIG"| No|
-|Via Process| Tenting vias|
-|Finished Copper| 1 oz Cu (Inner Copper: 1 oz)|
-|Additional options| UL Marking: None|
+## Board Parameters
 
-This table includes all parts in BOM for one board. 
+| Question                 | Answer          |
+|--------------------------|-----------------|
+|Board Size                | 203.4 x 203.4 mm|
+|Number of Layers          | 4 Layers        |
+|Double Sided              | No              |
+|Surface Finish            | Tin lead        |
+|Silkscreen                | White           |
+|Board Type                | Single piece    |
+|Material                  | FR-4, TG150     |
+|Board Thickness           | 1.6 mm          |
+|Min Trace Spacing         | 0.15 mm (6 mil) |
+|Min Hole Size             | 0.35 mm (14 mil)|
+|Number of Holes           | 569             |
+|Solder Mask               | Black           |
+|HASL or ENIG              | No              |
+|Finished Copper           | 1 oz            |
 
-| Question                  | Answer           |
-|---------------------------|------------------|
-| Number of Unique Elec. Parts    | 37               |
-| Number of Total Elec. Parts     | 191              |
-| Number of Total Elec. SMT Parts | 167              |
-| Number of Total Elec. THT Parts | 24               |
-| Number of Mech. Screws          | 54               |
-| Number of Mech. Standoffs       | 27               |
+## Assembly Details
 
-There is a total of 27 standoffs per board, where 11 standoffs will be used for the motherboard mounting holes, and 16 standoffs will be used for mounting all the 8 daughtercards.
+| Question                       | Answer           |
+|--------------------------------|------------------|
+| Unique Part Count[^1]          | 37               |
+| Number of Total Parts[^1]      | 191              |
+| Total SMT Part Count           | 167              |
+| Total Thru Hole Part Count     | 24               |
+| Total Mechanical Screws        | 54               |
+| Total Mechanical Standoffs[^2] | 27               |
+[^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 39 and total parts is 272. Users are advised to not have their assembly vendor place screws and standoffs.
 
-3. Upload the gerbers from the [gerber folder](gerbers).
+[^2]: There are a total of 27 standoffs per board, where 11 standoffs will be used for the mainboard mounting holes, and 16 standoffs will be used for mounting all the 8 sensor cards.
 
-4. Place the order, it should arrive in 7-9 days.
-
-## How to order components for the board
-
-1. The BOM contains components for 10 boards. The DNP components are not included in the BOM.
-
-2. Upload the [BOM](SensorMotherBoard_BOM_10qty.csv) in https://www.digikey.com/ordering/shoppingcart. 
-
-3. Place the order.
+## Bill of Materials
+The [Bill of Materials (BOM)](mainboard-bom.csv) contains components for 1 board. If users of this repo discover that any components are unvailable, please maintain an `alternate-components.md` file in this folder that lists approved alternates.
