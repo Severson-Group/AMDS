@@ -37,15 +37,16 @@ This folder contains schematics pdf, PCB pdf, bill of material (BOM), 3-D PCB, g
 
 
 ### Assembly Details
-| Question                  | Answer           |
-|---------------------------|------------------|
-| Unique Part Count    | 37               |
-| Number of Total Parts     | 191              |
-| Total SMT Part Count | 167              |
+| Question                   | Answer           |
+|----------------------------|------------------|
+| Unique Part Count[^1]      | 37               |
+| Number of Total Parts      | 191              |
+| Total SMT Part Count       | 167              |
 | Total Thru Hole Part Count | 24               |
-| Double Sided   | No      |
-| Total Mechanical Screws          | 54               |
-| Total Mechanical Standoffs       | 27               |
+| Double Sided               | No               |
+| Total Mechanical Screws    | 54               |
+| Total Mechanical Standoffs | 27               |
+[^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 39.
 
 There are a total of 27 standoffs per board, where 11 standoffs will be used for the mainboard mounting holes, and 16 standoffs will be used for mounting all the 8 sensor cards.
 
