@@ -50,4 +50,4 @@ This folder contains the compiled design outputs for AMDS REV D. This includes t
 [^2]: There are a total of 27 standoffs per board, where 11 standoffs will be used for the mainboard mounting holes, and 16 standoffs will be used for mounting all the 8 sensor cards.
 
 ## Bill of Materials
-The [Bill of Materials (BOM)](Mainboard_BOM.csv) contains components for 1 board. If users of this repo discover that any components are unvailable, please maintain an `alternate-components.md` file in this folder that lists approved alternates.
+The [Bill of Materials (BOM)](mainboard-bom.csv) contains components for 1 board. If users of this repo discover that any components are unvailable, please maintain an `alternate-components.md` file in this folder that lists approved alternates.
