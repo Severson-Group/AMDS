@@ -35,13 +35,12 @@ This folder contains the compiled design outputs for AMDS REV D. This includes t
 | Question                       | Answer           |
 |--------------------------------|------------------|
 | Unique Part Count[^1]          | 37               |
-| Total Placements               | 272              |
-| Number of Total Parts          | 191              |
+| Number of Total Parts[^1]      | 191              |
 | Total SMT Part Count           | 167              |
 | Total Thru Hole Part Count     | 24               |
 | Total Mechanical Screws        | 54               |
 | Total Mechanical Standoffs[^2] | 27               |
-[^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 39.
+[^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 39 and total parts is 272. Users are advised to not have their assembly vendor place screws and standoffs.
 
 [^2]: There are a total of 27 standoffs per board, where 11 standoffs will be used for the mainboard mounting holes, and 16 standoffs will be used for mounting all the 8 sensor cards.
 
