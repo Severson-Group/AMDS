@@ -14,25 +14,21 @@ This folder contains the compiled design outputs for AMDS REV D. This includes t
 
 ## Board Parameters
 
-| Question             | Answer      |
-|----------------------|-------------|
-|Board Size| 203.4 x 203.4 mm|
-|Number of Layer| 4 Layers|
-|Surface Finish| Tin lead|
-|Silkscreen| White|
-|Board type| Single pieces|
-|Different Design in Panel| 1|
-|Material: FR-4| TG150|
-|Thickness| 1.6 mm|
-|Min Track/Spacing| 6/6mil|
-|Min Hole Size| 0.3mm|
-|Solder Mask| Black|
-|Gold fingers| No|
-|"HASL" to "ENIG"| No|
-|Via Process| Tenting vias|
-|Finished Copper| 1 oz Cu (Inner Copper: 1 oz)|
-|Additional options| UL Marking: None|
-
+| Question                 | Answer          |
+|--------------------------|-----------------|
+|Board Size                | 203.4 x 203.4 mm|
+|Number of Layers          | 4 Layers        |
+|Double Sided              | No              |
+|Surface Finish            | Tin lead        |
+|Silkscreen                | White           |
+|Board Type                | Single piece    |
+|Material                  | FR-4, TG150     |
+|Board Thickness           | 1.6 mm          |
+|Min Trace Spacing         | 0.15 mm (6 mil) |
+|Min Hole Size             | 0.35 mm (14 mil)|
+|Solder Mask               | Black           |
+|"HASL" to "ENIG"          | No              |
+|Finished Copper           | 1 oz            |
 
 ## Assembly Details
 
@@ -42,7 +38,6 @@ This folder contains the compiled design outputs for AMDS REV D. This includes t
 | Number of Total Parts          | 191              |
 | Total SMT Part Count           | 167              |
 | Total Thru Hole Part Count     | 24               |
-| Double Sided                   | No               |
 | Total Mechanical Screws        | 54               |
 | Total Mechanical Standoffs[^2] | 27               |
 [^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 39.
