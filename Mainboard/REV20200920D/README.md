@@ -35,6 +35,7 @@ This folder contains the compiled design outputs for AMDS REV D. This includes t
 | Question                       | Answer           |
 |--------------------------------|------------------|
 | Unique Part Count[^1]          | 37               |
+| Total Placements               | 272              |
 | Number of Total Parts          | 191              |
 | Total SMT Part Count           | 167              |
 | Total Thru Hole Part Count     | 24               |
