@@ -17,7 +17,7 @@ Quantity,Designator,Description,Value,Footprint,Supplier Part Number,Manufacture
 "8","P2, P3, P6, P7, P12, P13, P18, P19","","","HDR1x3 - MALE","732-5316-ND","61300311121","Digikey","Wurth Electronics"
 "4","P9, P10, P15, P16","Board-To-Board Connector, Vertical, Wr-Phd Series, Through Hole, Header, 3, 2.54 Mm","","HDR1x3 - MALE","732-5316-ND","61300311121","Digikey","Wurth Electronics"
 "6","R1, R2, R3, R4, R19, R20","RES 470 OHM 1% 1/10W 0603","470","RES-0603","RMCF0603FT470RCT-ND","RMCF0603FT470R","Digikey","Stackpole Electronics"
-"2","R5, R6","Resistor","0","0603-RES","P0.0GDKR-ND","ERJ-3GEY0R00V","DigiKey","Panasonic"
+"2","R5, R6","Resistor","DNP","0603-RES","P0.0GDKR-ND","ERJ-3GEY0R00V","DigiKey","Panasonic"
 "6","R7, R8, R9, R10, R17, R35","Resistor","120","0603-RES","311-120HRCT-ND","RC0603FR-07120RL","DigiKey","Yageo"
 "2","R11, R30","Res Thick Film 0603 1.2K Ohm 1% 0.1W(1/10W) }100ppm/C Molded SMD Automotive Punched T/R","1.2k","0603-RES","P1.20KHCT-ND","ERJ-3EKF1201V","Digikey","Panasonic"
 "9","R12, R24, R34, R36, R37, R45, R50, R51, R54","Resistor","0R","0603-RES","P0.0GDKR-ND","ERJ-3GEY0R00V","DigiKey","Panasonic"
