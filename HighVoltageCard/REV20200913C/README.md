@@ -27,12 +27,12 @@ This folder contains schematics pdf, PCB pdf, bill of material (BOM), 3-D PCB, g
 |Finished Copper| 1 oz Cu (Inner Copper: 1 oz)|
 |Additional options| UL Marking: None|
 
-3. Upload the gerbers from the [gerber folder](https://github.com/Severson-Group/SensorCard/tree/HV_Clearance/VoltageCard/REV20200913C/gerbers).
+3. Upload the gerbers from the [gerber folder](./gerbers).
 
 4. Place the order, it should arrive in 7-9 days.
 
 ## How to order components for the board
 
-1. Upload the [BOM](./VoltageCard_bom_qty_10.xlsx) to https://www.digikey.com/ordering/shoppingcart.
+1. Upload the [BOM](./VoltageSensorBoard_BOM.csv) to https://www.digikey.com/ordering/shoppingcart.
 
 2. Place the order.
