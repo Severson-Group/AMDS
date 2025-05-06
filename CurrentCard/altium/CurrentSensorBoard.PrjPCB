@@ -105,23 +105,6 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=JUEGUOQN
 
-[Document5]
-DocumentPath=CurrentSensorBoard.Annotation
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=
-
 [Parameter1]
 Name=ProjectRev
 Value=C
@@ -280,22 +263,12 @@ OutputName20=WireList Netlist
 OutputDocumentPath20=
 OutputVariantName20=
 OutputDefault20=0
-OutputType21=XSpiceNetlist
-OutputName21=XSpice Netlist
-OutputDocumentPath21=
-OutputVariantName21=
-OutputDefault21=0
 
 [OutputGroup2]
 Name=Simulator Outputs
 Description=
-TargetPrinter=Webex Document Loader
+TargetPrinter=NPI0430C4 (HP LaserJet P3010 Series)
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
-OutputType1=AdvSimNetlist
-OutputName1=Mixed Sim
-OutputDocumentPath1=
-OutputVariantName1=
-OutputDefault1=0
 
 [OutputGroup3]
 Name=Documentation Outputs
@@ -388,7 +361,7 @@ OutputDefault3=0
 [OutputGroup5]
 Name=Fabrication Outputs
 Description=
-TargetPrinter=Webex Document Loader
+TargetPrinter=NPI0430C4 (HP LaserJet P3010 Series)
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputType1=CompositeDrill
 OutputName1=Composite Drill Drawing
