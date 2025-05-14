@@ -7452,6 +7452,16 @@
 	)
 	(wire
 		(pts
+			(xy 218.44 246.38) (xy 218.44 234.95)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2469326d-0ea2-41b6-a461-8d03a07df470")
+	)
+	(wire
+		(pts
 			(xy 251.46 238.76) (xy 251.46 215.9)
 		)
 		(stroke
@@ -7972,6 +7982,16 @@
 	)
 	(wire
 		(pts
+			(xy 218.44 227.33) (xy 218.44 215.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "56fc9d04-6072-4029-a138-4dc6626ac519")
+	)
+	(wire
+		(pts
 			(xy 35.56 193.04) (xy 41.91 193.04)
 		)
 		(stroke
@@ -8169,6 +8189,16 @@
 			(type default)
 		)
 		(uuid "6567f39a-8be6-42a0-80ce-fc59356976dd")
+	)
+	(wire
+		(pts
+			(xy 137.16 134.62) (xy 160.02 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "68d0b1b6-2bb2-4f2e-9998-180b93466e81")
 	)
 	(wire
 		(pts
@@ -9930,6 +9960,16 @@
 		)
 		(uuid "26220fca-69fb-415b-949e-ec04ddcf55f8")
 	)
+	(label "BUSY26"
+		(at 218.44 227.33 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "2a6d6e54-f507-4a95-9c65-1e35e6eb9b46")
+	)
 	(label "IO3"
 		(at 358.14 31.75 0)
 		(effects
@@ -10350,6 +10390,16 @@
 		)
 		(uuid "7c49bda5-324e-467c-a5d0-5937acb714df")
 	)
+	(label "SO26"
+		(at 218.44 246.38 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "8168ca8a-8d6e-41f0-8d86-671f8df5064d")
+	)
 	(label "BUSY48"
 		(at 149.86 193.04 0)
 		(effects
@@ -10469,6 +10519,16 @@
 			(justify left bottom)
 		)
 		(uuid "9bf56e31-3950-400c-99ac-43b204538f27")
+	)
+	(label "AMDC isoSPI1 NSS"
+		(at 287.02 198.12 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "9dffd77b-1f08-4401-9f40-040abd8ae9d9")
 	)
 	(label "SCLK48"
 		(at 356.87 109.22 0)
@@ -10849,6 +10909,16 @@
 			(justify right bottom)
 		)
 		(uuid "fd933583-fdd7-43d1-a014-119df7c04fc0")
+	)
+	(label "I2C SCL"
+		(at 137.16 134.62 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ff887da0-1f85-424a-bb71-4667cca33dce")
 	)
 	(hierarchical_label "AMDC isoSPI1 MISO"
 		(shape output)
@@ -12073,6 +12143,73 @@
 			(project "ST_MCU_and_Current_Sensing"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/b44cb9df-cc81-42a2-af43-d93c559dd28a"
 					(reference "TG7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_US")
+		(at 218.44 231.14 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "2b3057ac-2c01-440e-922e-a0fcc65703ba")
+		(property "Reference" "R54"
+			(at 219.964 235.712 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "0R"
+			(at 219.964 225.806 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 217.424 230.886 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 218.44 231.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, US symbol"
+			(at 218.44 231.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "c1b5021c-ea76-4c7a-8c31-239b1846b96f")
+		)
+		(pin "1"
+			(uuid "71a08267-8a99-4b02-ada6-1b73bd8b9375")
+		)
+		(instances
+			(project "ST_MCU_and_Current_Sensing"
+				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/b44cb9df-cc81-42a2-af43-d93c559dd28a"
+					(reference "R54")
 					(unit 1)
 				)
 			)
