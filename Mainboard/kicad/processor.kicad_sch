@@ -7242,6 +7242,16 @@
 	)
 	(wire
 		(pts
+			(xy 264.16 198.12) (xy 287.02 198.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0f7c0c46-6dd9-458f-9485-a478be2f489d")
+	)
+	(wire
+		(pts
 			(xy 228.6 238.76) (xy 228.6 215.9)
 		)
 		(stroke
@@ -7782,6 +7792,16 @@
 	)
 	(wire
 		(pts
+			(xy 210.82 88.9) (xy 210.82 66.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "44f49396-5680-4648-a62e-6a30c70ccbb6")
+	)
+	(wire
+		(pts
 			(xy 220.98 88.9) (xy 220.98 66.04)
 		)
 		(stroke
@@ -8209,6 +8229,16 @@
 			(type default)
 		)
 		(uuid "6d30dfa2-dab2-45bb-b3af-b6222c163bed")
+	)
+	(wire
+		(pts
+			(xy 287.02 147.32) (xy 264.16 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6e0d2c1e-67de-4c70-9098-cef26c6f6fbe")
 	)
 	(wire
 		(pts
@@ -8709,6 +8739,16 @@
 			(type default)
 		)
 		(uuid "9fb1bdbd-287f-40ff-b3ea-c3a64280f6cd")
+	)
+	(wire
+		(pts
+			(xy 208.28 88.9) (xy 208.28 66.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a00ed73a-e4ac-48a4-8d63-2a3592d3751c")
 	)
 	(wire
 		(pts
@@ -9352,6 +9392,16 @@
 	)
 	(wire
 		(pts
+			(xy 226.06 88.9) (xy 226.06 66.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dc2903dc-8ac7-4780-87c9-7f8e135b1fdd")
+	)
+	(wire
+		(pts
 			(xy 124.46 187.96) (xy 124.46 191.77)
 		)
 		(stroke
@@ -9569,6 +9619,16 @@
 			(type default)
 		)
 		(uuid "edff6057-779e-4996-87ec-4e5e8244d6ca")
+	)
+	(wire
+		(pts
+			(xy 287.02 142.24) (xy 264.16 142.24)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "efd6635b-2941-4c0a-ac81-2fbf7cc8c5b7")
 	)
 	(wire
 		(pts
@@ -9960,6 +10020,16 @@
 		)
 		(uuid "420c72b7-644b-4062-8be0-c85234c24f1a")
 	)
+	(label "SCLK37"
+		(at 208.28 66.04 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "43f3fd28-bfb2-48fd-b574-d89cd6331930")
+	)
 	(label "AMDC isoSPI2 SCLK"
 		(at 356.87 199.39 0)
 		(effects
@@ -10099,6 +10169,16 @@
 			(justify left bottom)
 		)
 		(uuid "59f519ce-d02e-485b-b0a5-2af6acba9b9c")
+	)
+	(label "CONVST37"
+		(at 287.02 147.32 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "5c8df296-814a-4fc8-9e86-158ae5ca2a88")
 	)
 	(label "AMDC isoSPI1 NSS"
 		(at 356.87 193.04 0)
@@ -10679,6 +10759,16 @@
 			(justify left bottom)
 		)
 		(uuid "e4e9b8b6-9fb2-4887-ae79-c23b227202c2")
+	)
+	(label "SO37"
+		(at 210.82 66.04 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "e9459508-15b7-4f80-90cd-bfd1dac84a49")
 	)
 	(label "IO1"
 		(at 339.09 54.61 180)
@@ -12463,6 +12553,73 @@
 			(project "ST_MCU_and_Current_Sensing"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/b44cb9df-cc81-42a2-af43-d93c559dd28a"
 					(reference "#PWR033")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 287.02 142.24 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "36d246cb-9505-44c9-93f5-afed3add3aec")
+		(property "Reference" "#PWR0190"
+			(at 283.21 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 290.83 142.2401 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 287.02 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 287.02 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 287.02 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "7f746bc8-6ffd-4b8c-8631-837ebea00e26")
+		)
+		(instances
+			(project "ST_MCU_and_Current_Sensing"
+				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/b44cb9df-cc81-42a2-af43-d93c559dd28a"
+					(reference "#PWR0190")
 					(unit 1)
 				)
 			)
@@ -16309,6 +16466,73 @@
 			(project "ST_MCU_and_Current_Sensing"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/b44cb9df-cc81-42a2-af43-d93c559dd28a"
 					(reference "#PWR014")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 226.06 66.04 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "818ae7a4-03bb-4820-ac3b-6ef12f53bcb5")
+		(property "Reference" "#PWR0189"
+			(at 226.06 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 226.0601 62.23 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 226.06 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 226.06 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 226.06 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "efcda600-37e3-45b0-b722-6394d65bb623")
+		)
+		(instances
+			(project "ST_MCU_and_Current_Sensing"
+				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/b44cb9df-cc81-42a2-af43-d93c559dd28a"
+					(reference "#PWR0189")
 					(unit 1)
 				)
 			)
