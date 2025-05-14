@@ -5585,7 +5585,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Sheetfile" "power_isolation.kicad_sch"
+		(property "Sheetfile" "power-isolation.kicad_sch"
 			(at 48.26 59.0046 0)
 			(effects
 				(font
@@ -5655,7 +5655,7 @@
 			)
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31"
 					(page "5")
 				)
@@ -5687,7 +5687,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Sheetfile" "connector_isolation.kicad_sch"
+		(property "Sheetfile" "connector-isolation.kicad_sch"
 			(at 48.26 127.5846 0)
 			(effects
 				(font
@@ -5817,7 +5817,7 @@
 			)
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31"
 					(page "4")
 				)
@@ -5849,7 +5849,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Sheetfile" "SensorCard_headers.kicad_sch"
+		(property "Sheetfile" "SensorCard-headers.kicad_sch"
 			(at 217.17 126.3146 0)
 			(effects
 				(font
@@ -5979,7 +5979,7 @@
 			)
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31"
 					(page "3")
 				)
@@ -6261,7 +6261,7 @@
 			)
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31"
 					(page "2")
 				)

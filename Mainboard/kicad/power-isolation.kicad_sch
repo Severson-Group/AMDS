@@ -5935,7 +5935,7 @@
 			(uuid "e0431700-1ac8-455b-be7c-8f99cab92f02")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0139")
 					(unit 1)
@@ -6003,7 +6003,7 @@
 			(uuid "e9d6dd47-f565-4da1-a6ce-4a652b3fd606")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R50")
 					(unit 1)
@@ -6072,7 +6072,7 @@
 			(uuid "c9b6103f-40bf-4f0d-bc3a-3f043175cf8d")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C41")
 					(unit 1)
@@ -6138,7 +6138,7 @@
 			(uuid "8edff178-e22f-460b-9b64-710d981568ac")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0151")
 					(unit 1)
@@ -6210,7 +6210,7 @@
 			(uuid "c0c70a3c-4fb2-4df7-a182-63c112b9722b")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "J4")
 					(unit 1)
@@ -6276,7 +6276,7 @@
 			(uuid "6622dfde-b7bb-4ceb-9727-d41211e6b321")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0138")
 					(unit 1)
@@ -6342,7 +6342,7 @@
 			(uuid "23089d0d-8ca6-4d2b-a3e0-3f0e9f472f46")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0153")
 					(unit 1)
@@ -6408,7 +6408,7 @@
 			(uuid "47736e46-a3fd-49f6-a1e1-c266b62b46c7")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0137")
 					(unit 1)
@@ -6478,7 +6478,7 @@
 			(uuid "c98ad79a-c803-4751-86e5-ab42167cf18e")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C33")
 					(unit 1)
@@ -6602,7 +6602,7 @@
 			(uuid "fd33713d-0834-44a8-96fc-e14ae8dded6e")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "PS5")
 					(unit 1)
@@ -6668,7 +6668,7 @@
 			(uuid "469c867d-c9cc-4525-8146-7c20c9fb3e24")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0142")
 					(unit 1)
@@ -6792,7 +6792,7 @@
 			(uuid "8bb2f3b3-f7a5-458c-b2cb-d66b12b201b9")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "PS3")
 					(unit 1)
@@ -6861,7 +6861,7 @@
 			(uuid "e6769470-a9d5-46a7-8530-8df24a603d7e")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C38")
 					(unit 1)
@@ -6985,7 +6985,7 @@
 			(uuid "0d94115b-960e-48eb-8cf5-0a936bace15f")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "PS4")
 					(unit 1)
@@ -7052,7 +7052,7 @@
 			(uuid "d2f4b2eb-aff9-4a72-a722-3f48cf15ee42")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R41")
 					(unit 1)
@@ -7128,7 +7128,7 @@
 			(uuid "8c70b59b-289c-41e8-b4e8-516074d18081")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "D3")
 					(unit 1)
@@ -7204,7 +7204,7 @@
 			(uuid "670e82c7-2c0f-4d19-888a-ef1b75829325")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "D6")
 					(unit 1)
@@ -7273,7 +7273,7 @@
 			(uuid "bad80e2b-c462-433a-932a-b8cbced952f9")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C40")
 					(unit 1)
@@ -7397,7 +7397,7 @@
 			(uuid "de45b393-f166-46bb-b153-4498e7d859b5")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "PS1")
 					(unit 1)
@@ -7463,7 +7463,7 @@
 			(uuid "e0b83b93-f606-4427-a4d2-79de8a8a16f9")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR065")
 					(unit 1)
@@ -7575,7 +7575,7 @@
 			(uuid "bcb4ea5e-6ded-4181-acc1-0b65e7151a8e")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "U11")
 					(unit 1)
@@ -7641,7 +7641,7 @@
 			(uuid "4e311e15-d12d-4e0a-abe0-35fe913e5858")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0148")
 					(unit 1)
@@ -7710,7 +7710,7 @@
 			(uuid "9c50e82a-cf4d-4c65-9f47-a6f855da9d6b")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C32")
 					(unit 1)
@@ -7776,7 +7776,7 @@
 			(uuid "9d70855a-b1b6-4c6e-ac48-e5da15c3ebcc")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0145")
 					(unit 1)
@@ -7842,7 +7842,7 @@
 			(uuid "d1465fd0-acde-44ec-9d7c-79c313326da9")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0141")
 					(unit 1)
@@ -7908,7 +7908,7 @@
 			(uuid "add8c3cb-6284-4f3d-83f1-7c1c06b4912b")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0133")
 					(unit 1)
@@ -7974,7 +7974,7 @@
 			(uuid "908e4173-c215-4cc9-aa04-922b329491e7")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0152")
 					(unit 1)
@@ -8040,7 +8040,7 @@
 			(uuid "54a552dd-e7e1-43b3-8bd2-b6b4be60e3be")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0154")
 					(unit 1)
@@ -8152,7 +8152,7 @@
 			(uuid "3c9ac13f-2ef9-4c7c-8d72-4855d833ea88")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "U14")
 					(unit 1)
@@ -8219,7 +8219,7 @@
 			(uuid "ef72abd1-8b2d-4a9b-8142-2afb2ac1bf20")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R38")
 					(unit 1)
@@ -8285,7 +8285,7 @@
 			(uuid "e7a9816d-dc96-4656-a037-d1f89f7585e3")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR064")
 					(unit 1)
@@ -8355,7 +8355,7 @@
 			(uuid "e916d7ab-77b6-4359-b299-a4902f6352a6")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C35")
 					(unit 1)
@@ -8423,7 +8423,7 @@
 			(uuid "46aa678b-2334-43d6-b68c-1acd694e5a2d")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R42")
 					(unit 1)
@@ -8489,7 +8489,7 @@
 			(uuid "c17711b8-b067-4825-be75-c934be94c226")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0143")
 					(unit 1)
@@ -8565,7 +8565,7 @@
 			(uuid "672e19bc-2a3d-409d-a4d4-c9e7aa314cfd")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "D4")
 					(unit 1)
@@ -8631,7 +8631,7 @@
 			(uuid "779db542-5c99-46eb-a7af-723a0bde01d6")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0149")
 					(unit 1)
@@ -8707,7 +8707,7 @@
 			(uuid "d00018cf-0eba-475f-b5a6-7df69dc43f00")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "D2")
 					(unit 1)
@@ -8783,7 +8783,7 @@
 			(uuid "844ef8e3-22d8-495a-b205-252973418d11")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "D5")
 					(unit 1)
@@ -8938,7 +8938,7 @@
 			(uuid "389fee42-e06f-4394-aa22-8b6f3f623e30")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "L1")
 					(unit 1)
@@ -9006,7 +9006,7 @@
 			(uuid "b74b65f9-2680-433e-a6e0-fd74dced05bc")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R47")
 					(unit 1)
@@ -9076,7 +9076,7 @@
 			(uuid "b9b3e57c-317d-44bb-91ff-5e14365dd66e")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C31")
 					(unit 1)
@@ -9142,7 +9142,7 @@
 			(uuid "43f2fcd5-aee9-4987-ba43-cf02bebe600f")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0155")
 					(unit 1)
@@ -9218,7 +9218,7 @@
 			(uuid "b85f0aa3-7311-4412-9144-d4fad4a376cc")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "D1")
 					(unit 1)
@@ -9286,7 +9286,7 @@
 			(uuid "c490826b-b126-4640-b2c2-e958948a4f5b")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R43")
 					(unit 1)
@@ -9352,7 +9352,7 @@
 			(uuid "d6824dcc-b907-4ab1-949a-3eef535a4f0f")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0135")
 					(unit 1)
@@ -9476,7 +9476,7 @@
 			(uuid "0cef802b-c716-4120-9426-72e8df5a5a46")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "PS2")
 					(unit 1)
@@ -9545,7 +9545,7 @@
 			(uuid "4ad64869-75d1-45ba-919b-4495b2a93596")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C34")
 					(unit 1)
@@ -9611,7 +9611,7 @@
 			(uuid "c5495fe5-7708-4e0d-a658-f216c275c81b")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0132")
 					(unit 1)
@@ -9678,7 +9678,7 @@
 			(uuid "8de1e178-a312-4cee-9fb6-34b9d68cc44d")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R39")
 					(unit 1)
@@ -9744,7 +9744,7 @@
 			(uuid "3064eb8c-a185-44b8-9f90-28b10b724ec4")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0150")
 					(unit 1)
@@ -9810,7 +9810,7 @@
 			(uuid "88cf04cf-fd86-499d-b80d-07d96213393e")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0147")
 					(unit 1)
@@ -9876,7 +9876,7 @@
 			(uuid "6612f845-53e1-431c-8aff-62501b496124")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0144")
 					(unit 1)
@@ -9945,7 +9945,7 @@
 			(uuid "d5efd9a1-8bd6-499f-abf7-a5d01f9676eb")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C49")
 					(unit 1)
@@ -10011,7 +10011,7 @@
 			(uuid "d09dcba6-58c5-4c00-b7f5-8847beb73810")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0140")
 					(unit 1)
@@ -10080,7 +10080,7 @@
 			(uuid "ee8d6c2b-699b-4ec1-b438-2aa918c58b51")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C45")
 					(unit 1)
@@ -10147,7 +10147,7 @@
 			(uuid "02d61830-a1f2-478b-b940-15333cbe2698")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R37")
 					(unit 1)
@@ -10215,7 +10215,7 @@
 			(uuid "cd9f4247-f37d-4f5a-a411-72550c23cf3d")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R53")
 					(unit 1)
@@ -10281,7 +10281,7 @@
 			(uuid "21505f98-e2e0-4eef-9c2d-2c019e7dc43e")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0134")
 					(unit 1)
@@ -10350,7 +10350,7 @@
 			(uuid "689ca8e4-2650-40a4-890f-df5322f6f94c")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C42")
 					(unit 1)
@@ -10419,7 +10419,7 @@
 			(uuid "a72175c5-2627-4527-abae-004e4392aed9")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C48")
 					(unit 1)
@@ -10488,7 +10488,7 @@
 			(uuid "1474c74c-1347-4de4-8235-71c63ec9479b")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C43")
 					(unit 1)
@@ -10557,7 +10557,7 @@
 			(uuid "7bd698c0-0ec1-4151-85f3-8645dedfbf13")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C44")
 					(unit 1)
@@ -10623,7 +10623,7 @@
 			(uuid "50d78f1f-be5b-4e65-abc2-02d2d7b930cc")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0146")
 					(unit 1)
@@ -10691,7 +10691,7 @@
 			(uuid "6e7e5833-453c-4813-89e1-70cee7c81b6d")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R49")
 					(unit 1)
@@ -10760,7 +10760,7 @@
 			(uuid "d89ce9e4-433b-41a1-a993-495ee760834d")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C36")
 					(unit 1)
@@ -10829,7 +10829,7 @@
 			(uuid "5a20959e-d55c-4ba8-a9a4-01ec16178809")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C51")
 					(unit 1)
@@ -10897,7 +10897,7 @@
 			(uuid "a001a018-eb58-47e5-8556-9d7bf52025e2")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R51")
 					(unit 1)
@@ -10966,7 +10966,7 @@
 			(uuid "56326ef8-b1d6-4151-ba3c-2af96a191159")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C46")
 					(unit 1)
@@ -11036,7 +11036,7 @@
 			(uuid "d8254e3e-e6ea-414a-bc03-73ab3d89c35f")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C37")
 					(unit 1)
@@ -11102,7 +11102,7 @@
 			(uuid "01cf3c43-eac9-4342-a863-1a81ac89145f")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "#PWR0136")
 					(unit 1)
@@ -11172,7 +11172,7 @@
 			(uuid "6f819895-8314-40b0-8baa-d0cb013a9c1a")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C29")
 					(unit 1)
@@ -11254,7 +11254,7 @@
 			(uuid "df529555-ca0b-485d-bdb2-fa9a5eeb6ce3")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "U15")
 					(unit 1)
@@ -11321,7 +11321,7 @@
 			(uuid "cae79c30-e6b6-47fb-b2e8-3af30d3c95af")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R40")
 					(unit 1)
@@ -11389,7 +11389,7 @@
 			(uuid "bb246825-7796-4e28-b56b-7f4b54f401af")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R44")
 					(unit 1)
@@ -11458,7 +11458,7 @@
 			(uuid "bfe62341-d9fd-44c0-bf47-f527d537c011")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C30")
 					(unit 1)
@@ -11531,7 +11531,7 @@
 			(uuid "fe5ccf63-d616-439e-b8ec-6485119e2c5b")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "U13")
 					(unit 1)
@@ -11599,7 +11599,7 @@
 			(uuid "d9f0bce8-74bf-4073-bb08-0b21c5fbe3df")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R45")
 					(unit 1)
@@ -11667,7 +11667,7 @@
 			(uuid "5294170b-407e-4bc5-af7d-c279508daec2")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R48")
 					(unit 1)
@@ -11736,7 +11736,7 @@
 			(uuid "530c8d4f-2487-4999-afd6-6bf5817158fc")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C50")
 					(unit 1)
@@ -11809,7 +11809,7 @@
 			(uuid "aae88e8b-c723-4230-8308-84d5da2fa612")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "U12")
 					(unit 1)
@@ -11891,7 +11891,7 @@
 			(uuid "e22cf183-a103-4544-b46f-55595bbd0b86")
 		)
 		(instances
-			(project ""
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "U16")
 					(unit 1)
@@ -11960,7 +11960,7 @@
 			(uuid "2362d466-da83-495c-a0f2-6c8a9b764f9b")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C47")
 					(unit 1)
@@ -12028,7 +12028,7 @@
 			(uuid "778ec55f-e6b1-41ee-afc9-9dced05ed6ff")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R52")
 					(unit 1)
@@ -12096,7 +12096,7 @@
 			(uuid "5f8e3058-711c-4165-9a3f-af42af61cc8d")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "R46")
 					(unit 1)
@@ -12166,7 +12166,7 @@
 			(uuid "3b77f381-1fe8-4c73-87ce-75b9b866eead")
 		)
 		(instances
-			(project "ST_MCU_and_Current_Sensing"
+			(project "AMDS-mainboard"
 				(path "/3118e6ec-7f2d-463d-8664-25fa12ba0e31/74e452d2-28d7-45a2-933c-920fad914ead"
 					(reference "C39")
 					(unit 1)
