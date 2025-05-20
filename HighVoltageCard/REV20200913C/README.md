@@ -1,6 +1,6 @@
-# High Voltage Measurement Card
+# High Voltage Card
 
-This folder contains the compiled design outputs for the High Voltage Measurement Card. This includes the schematics, images of the PCB layout, the bill of materials (BOM), and the files needed to order fully populated boards from an online vendor.
+This folder contains the compiled design outputs for the High Voltage Card. This includes the schematics, images of the PCB layout, the bill of materials (BOM), and the files needed to order fully populated boards from an online vendor.
 
 ## Board Parameters
 
@@ -14,7 +14,7 @@ This folder contains the compiled design outputs for the High Voltage Measuremen
 | Material                  | FR-4, TG150     |
 | Board Thickness           | 1.6 mm          |
 | Min Trace Spacing         | 0.15 mm (6 mil) |
-| Min Hole Size             | 0.39 mm (15 mil)|
+| Min Hole Size             | 0.40 mm (16 mil)|
 | Number of Holes           | 54              |
 | Solder Mask               | Black           |
 | HASL or ENIG              | No              |
