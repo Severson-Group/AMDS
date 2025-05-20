@@ -17,5 +17,5 @@ Quantity,Designator,Description,Value,Footprint,Supplier Part Number,Manufacture
 "1","U1","IC OPAMP DIFF 1 CIRCUIT 8SOIC","","SOIC127P600X175-8N","296-46094-1-ND","INA143UA/2K5","Digikey","Texas Instruments"
 "1","U2","IC ADC 16BIT SAR 10VSSOP","","TSSOP50P490X110-10N","296-39883-1-ND","ADS8865IDGSR","Digikey","Texas Instruments"
 "1","U3","TVS DIODE 12V 19V 8SO","","SOIC127P600X175-8N","1655-2009-1-ND","SMDA12LCC","Digi-Key","SMC Diode Solutions"
-"1","U4","Series Voltage Reference IC �0.2% 25mA SOT-23-3","","SOT23-3","REF3020AIDBZTCT-ND","REF3020AIDBZT","Digikey","Texas Instruments"
-"1","U5","Series Voltage Reference IC �0.2% 25mA SOT-23-3","","SOT23-3","296-35920-1-ND","REF3040AIDBZR","Digikey","Texas Instruments"
+"1","U4","Series Voltage Reference IC ±0.2% 25mA SOT-23-3","","SOT23-3","REF3020AIDBZTCT-ND","REF3020AIDBZT","Digikey","Texas Instruments"
+"1","U5","Series Voltage Reference IC ±0.2% 25mA SOT-23-3","","SOT23-3","296-35920-1-ND","REF3040AIDBZR","Digikey","Texas Instruments"

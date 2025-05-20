@@ -1,33 +1,40 @@
-# Analog Sensor Card REV20200902B
+# Low Voltage Card REV20200902B
 
-This folder contains the compiled design outputs for the Analog Sensor Card REV B (design frozen on September 2, 2020). This includes the schematics, images of the PCB layout, the bill of materials (BOM), and the files needed to order boards from fab houses (gerbers).
+This folder contains the compiled design outputs for the Low Voltage Card. This includes the schematics, images of the PCB layout, the bill of materials (BOM), and the files needed to order fully populated boards from an online vendor.
 
-## PCB Properties
+## Board Parameters
 
-| Question                | Answer           |
-|-------------------------|------------------|
-| Board Size (H x W)      | 3.575" x 1.465"  |
-| Numer of Layers         | 2                |
-| Number of Holes         | 55               |
-| Number of Slots/Cutouts | 0                |
-| Surface Finish          | Tin Lead (HASL)  |
-| Silkscreen              | Both Sides       |
-| Copper Weight           | 1oz              |
-| Trace Width / Spacing   | 6/6mil           |
-| Min Drill               | 13mil            |
+| Question                  | Answer          |
+|---------------------------|-----------------|
+| Board Size                | 3.575" x 1.465" |
+| Number of Layers          | 2 Layers        |
+| Double Sided              | No              |
+| Surface Finish            | Tin lead        |
+| Silkscreen                | White           |
+| Material                  | FR-4, TG150     |
+| Board Thickness           | 1.6 mm          |
+| Min Trace Spacing         | 0.15 mm (6 mil) |
+| Min Hole Size             | 0.38 mm (15 mil)|
+| Number of Holes           | 55              |
+| Solder Mask               | Black           |
+| HASL or ENIG              | No              |
+| Finished Copper           | 1 oz            |
 
-## PCB Assembly (for qty 1, full BOM)
+## Assembly Details
 
-The BOM includes screws and standoffs, these are listed seperately in the table below. The "Parts" rows are the electrical components that are soldered to the board.
+| Question                          | Answer           |
+|-----------------------------------|------------------|
+| Unique Part Count[^1]             | 20               |
+| Number of Total Parts[^1]         | 52               |
+| Total SMT Part Count              | 47               |
+| Total Through-hole Part Count     | 5                |
+| Total Mechanical Screws[^2]       | 2                |
+| Total Mechanical Standoffs[^2]    | 2                |
+| BGA / QFN                         | No               |
 
-This table includes all parts in BOM. If you want any parts DNP, you must subtract these yourself.
+[^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 22 and total parts is 56. Users are advised to not have their assembly vendor place screws and standoffs.
 
-| Question                  | Answer           |
-|---------------------------|------------------|
-| Number of Unique Elec. Parts    | 20               |
-| Number of Total Elec. Parts     | 52               |
-| Number of Total Elec. SMT Parts | 47               |
-| Number of Total Elec. THT Parts | 5                |
-| Number of Mech. Screws          | 2                |
-| Number of Mech. Standoffs       | 2                |
+[^2]: For information regarding these screws and standoffs, refer to the [Main Board](../../Mainboard/REV20200920D/README.md)
 
+## Bill of Materials
+The [Bill of Materials (BOM)](low-voltage-card-bom.csv) contains components for 1 board. If users of this repo discover that any components are unavailable, please maintain an `alternate-components.md` file in this folder that lists approved alternates. 
