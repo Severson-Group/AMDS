@@ -34,4 +34,4 @@ This folder contains the compiled design outputs for the High Voltage Measuremen
 
 [^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 25 and total parts is 46. Users are advised to not have their assembly vendor place screws and standoffs.
 
-[^2]: For information regarding these screws and standoffs, refer to the [Main Board](Mainboard\REV20200920D\README.md)
+[^2]: For information regarding these screws and standoffs, refer to the [Main Board](../../Mainboard/REV20200920D/README.md)
