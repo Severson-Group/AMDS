@@ -34,7 +34,7 @@ This folder contains the compiled design outputs for the Low Voltage Card. This 
 
 [^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 22 and total parts is 56. Users are advised to not have their assembly vendor place screws and standoffs.
 
-[^2]: For information regarding these screws and standoffs, refer to the [Main Board](../../Mainboard/REV20200920D/README.md)
+[^2]: There are screws and standoffs required for mounting this card to the mainboard. For details on what those components are, please refer to the [Main Board](../../Mainboard/REV20200920D/README.md)
 
 ## Bill of Materials
 The [Bill of Materials (BOM)](low-voltage-card-bom.csv) contains components for 1 board. If users of this repo discover that any components are unavailable, please maintain an `alternate-components.md` file in this folder that lists approved alternates. 
