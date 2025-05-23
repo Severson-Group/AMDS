@@ -1,6 +1,6 @@
-# Current Measurement Card REV20200830C
+# Current Card REV20200830C
 
-This folder contains the compiled design outputs for the Current Measurement Card. This includes the schematics, images of the PCB layout, the bill of materials (BOM), and the files needed to order fully populated boards from an online vendor.
+This folder contains the compiled design outputs for the Current Card. This includes the schematics, images of the PCB layout, the bill of materials (BOM), and the files needed to order fully populated boards from an online vendor.
 
 ## Board Parameters
 
