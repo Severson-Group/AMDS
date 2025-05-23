@@ -28,7 +28,7 @@ This folder contains the compiled design outputs for the Current Card. This incl
 | Number of Total Parts[^1]         | 41               |
 | Total SMT Part Count              | 27               |
 | Total Through-hole Part Count     | 14               |
-| Total Mechanical Screws[^2]       | 2                |
+| Total Mechanical Screws[^2]       | 4                |
 | Total Mechanical Standoffs[^2]    | 2                |
 | BGA / QFN                         | No               |
 
@@ -37,4 +37,5 @@ The [Bill of Materials (BOM)](current-sensor-bom.csv) contains components for 1 
 
 
 [^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 23 and total parts is 45. Users are advised to not have their assembly vendor place screws and standoffs.
-[^2]: For information regarding these screws and standoffs, refer to the [Main Board](../../Mainboard/REV20200920D/README.md)
+
+[^2]: There are screws and standoffs required for mounting this card to the mainboard. For details on what those components are, please refer to the [Main Board](../../Mainboard/REV20200920D/README.md)
