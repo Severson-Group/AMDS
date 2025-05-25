@@ -34,7 +34,7 @@ This folder contains the compiled design outputs for AMDS REV D. This includes t
 
 [^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 45 and total parts is 269. Users are advised to not have their assembly vendor place screws and standoffs.
 
-[^2]: There are a total of 43 screws per board, where 11 screws will be used for the mainboard mounting holes, and 32 screws will be used for mounting all the 8 sensor cards.
+[^2]: There are a total of 43 screws per board, where 11 screws will be used for the mainboard mounting holes, and 32 screws will be used for mounting the 8 sensor cards.
 
 [^3]: There are a total of 27 standoffs per board, where 11 standoffs will be used for the mainboard mounting holes, and 16 standoffs will be used for mounting all the 8 sensor cards.
 
