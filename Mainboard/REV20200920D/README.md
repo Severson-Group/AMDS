@@ -44,6 +44,8 @@ The [Bill of Materials (BOM)](mainboard-bom.csv) contains components for 1 board
 Note that several resistors are indicated with a value of `DNP` (do not populate). These are components that should not be soldered onto the board in standard builds to avoid ground loops and allow for daisy chain operation[^4].
 
 ## Sensor Card Mounting
-The [Bill of Materials (BOM)](mainboard-bom.csv) and [Schematic](mainboard-sch.pdf) contain the screws and standoffs required to mount 8 sensor cards to 1 board.
+The [Bill of Materials (BOM)](mainboard-bom.csv) and [Schematic](mainboard-sch.pdf)[^5] contain the screws and standoffs required to mount 8 sensor cards to 1 board.
 
 [^4]: An audit of the DNP components is discussed in [this GitHub issue](https://github.com/Severson-Group/AMDS/issues/63).
+
+[^5]: Note that the large amount of mounting hardware on this schematic means that the default export PDF from Altium results in a large file size. For this reason, developers are advised to use Adobe to compress the schematic file before committing to the repo. The `Low` compression setting is recommended.
