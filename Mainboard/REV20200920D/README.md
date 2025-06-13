@@ -24,10 +24,10 @@ This folder contains the compiled design outputs for AMDS REV D. This includes t
 
 | Question                          | Answer           |
 |-----------------------------------|------------------|
-| Unique Part Count[^1]             | 45               |
+| Unique Part Count[^1]             | 42               |
 | Number of Total Parts[^1]         | 199              |
 | Total SMT Part Count              | 146              |
-| Total Through-hole Part Count     | 123              |
+| Total Through-hole Part Count     | 53               |
 | Total Mechanical Screws[^2]       | 43               |
 | Total Mechanical Standoffs[^3]    | 27               |
 | BGA / QFN                         | No               |
