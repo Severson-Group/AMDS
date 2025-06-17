@@ -1,0 +1,144 @@
+UNITS=MM
+#
+#Component attribute names
+#
+@0 .comp_mount_type
+@1 .comp_height
+@2 .no_pop
+@3 .comp_ignore
+@4 .comp_variant_list
+
+#
+#Component attribute text strings
+#
+
+# CMP 0
+CMP 6 61.214 43.815 90 N P3 HDR1x3 ;0=2,1=0.0000
+PRP Color 'Green'
+PRP ComponentLink1Description 'https://datasheet.ciiva.com/32373/2152973-32373113.pdf?src-supplier=Onlinecomponents.com'
+PRP ComponentLink1URL 'https://datasheet.ciiva.com/32373/2152973-32373113.pdf?src-supplier=Onlinecomponents.com'
+PRP ComponentLink2Description 'https://datasheet.ciiva.com/11748/0900766b805762f6-11748764.pdf?src-supplier=RSComponents'
+PRP ComponentLink2URL 'https://datasheet.ciiva.com/11748/0900766b805762f6-11748764.pdf?src-supplier=RSComponents'
+PRP ComponentLink3Description 'https://datasheet.ciiva.com/8003/525120-8003961.pdf?src-supplier=Element14'
+PRP ComponentLink3URL 'https://datasheet.ciiva.com/8003/525120-8003961.pdf?src-supplier=Element14'
+PRP ComponentLink4Description 'https://datasheet.ciiva.com/6857/eng-cd-215297-d-basefilename-6857450.pdf?src-supplier=Digi-Key'
+PRP ComponentLink4URL 'https://datasheet.ciiva.com/6857/eng-cd-215297-d-basefilename-6857450.pdf?src-supplier=Digi-Key'
+PRP ComponentLink5Description 'https://datasheet.ciiva.com/1439/1651969-1439469.pdf?src-supplier=Farnell'
+PRP ComponentLink5URL 'https://datasheet.ciiva.com/1439/1651969-1439469.pdf?src-supplier=Farnell'
+PRP ComponentLink6Description 'https://datasheet.ciiva.com/14120/215297serie-eng-tds-14120829.pdf?src-supplier=Distrelec'
+PRP ComponentLink6URL 'https://datasheet.ciiva.com/14120/215297serie-eng-tds-14120829.pdf?src-supplier=Distrelec'
+PRP Connector_Type 'Receptacle'
+PRP Contact_Current_Rating '3A'
+PRP Contact_Gender 'Female'
+PRP Contact_Material 'Bronze'
+PRP Contact_Plating 'Gold'
+PRP Contact_Post_Length '3.1mm'
+PRP Contact_Resistance '12mR'
+PRP Contact_Shape 'Square'
+PRP Current_Rating '3A'
+PRP Depth '2.52mm'
+PRP ELV 'Compliant'
+PRP Flammability_Rating 'UL94 V-0'
+PRP Gender 'Receptacle'
+PRP Height '7mm'
+PRP Housing_Color 'Black'
+PRP Housing_Material 'Polyester'
+PRP Length '7.62mm'
+PRP Manufacturer 'TE Connectivity'
+PRP Manufacturer_Part_Number '215297-3'
+PRP Max_Operating_Temperature '105°C'
+PRP Min_Operating_Temperature '-55°C'
+PRP Mount 'Through Hole'
+PRP Number_of_Contacts '3'
+PRP Number_of_Positions '3'
+PRP Number_of_Rows '1'
+PRP Orientation 'Straight'
+PRP Package_Quantity '240'
+PRP Packaging 'Tray'
+PRP PCB_Mounting_Orientation 'Vertical'
+PRP PCB_Mount_Retention 'With'
+PRP PCB_Thickness '1.6mm'
+PRP Pitch '2.54mm'
+PRP Pricing_1 '1=0.81000, 10=0.71400, 100=0.61600, 500=0.50400, 1000=0.44800, 5000=0.39200, 10000=0.37240 (USD)'
+PRP RoHS 'Yes'
+PRP Sealable 'No (Without)'
+PRP Stackable 'Yes'
+PRP Stock_1 '7420'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 'A106650-ND'
+PRP Tail_Length '3.1mm'
+PRP Termination 'Solder'
+TOP 0 61.214 43.815 90 N 22 4 1
+TOP 1 61.214 41.275 90 N 11 62 2
+TOP 2 61.214 38.735 90 N 21 5 3
+#
+# CMP 1
+CMP 7 26.67 101.6 270 N P2 HDR1X7 ;0=2,1=0.0000
+PRP Approvals 'CSA'
+PRP Boss 'No (Without)'
+PRP Color 'Black'
+PRP ComponentLink1Description 'https://datasheet.ciiva.com/16318/eng-cs-1307819-section-5-0908-16318099.pdf?src-supplier=Future+Electronics'
+PRP ComponentLink1URL 'https://datasheet.ciiva.com/16318/eng-cs-1307819-section-5-0908-16318099.pdf?src-supplier=Future+Electronics'
+PRP ComponentLink2Description 'https://datasheet.ciiva.com/15175/getdatasheetpartid-36747-15175462.pdf?src-supplier=Verical'
+PRP ComponentLink2URL 'https://datasheet.ciiva.com/15175/getdatasheetpartid-36747-15175462.pdf?src-supplier=Verical'
+PRP ComponentLink3Description 'https://datasheet.ciiva.com/746/eng-cd-534237-r5-746279.pdf?src-supplier=Digi-Key'
+PRP ComponentLink3URL 'https://datasheet.ciiva.com/746/eng-cd-534237-r5-746279.pdf?src-supplier=Digi-Key'
+PRP ComponentLink4Description 'https://datasheet.ciiva.com/9479/eng-ds-1307819-ampmodu-0811-9479736.pdf?src-supplier=Avnet'
+PRP ComponentLink4URL 'https://datasheet.ciiva.com/9479/eng-ds-1307819-ampmodu-0811-9479736.pdf?src-supplier=Avnet'
+PRP ComponentLink5Description 'https://datasheet.ciiva.com/30056/eng-ds-1307819-ampmodu-0811-30056440.pdf?src-supplier=Onlinecomponents.com'
+PRP ComponentLink5URL 'https://datasheet.ciiva.com/30056/eng-ds-1307819-ampmodu-0811-30056440.pdf?src-supplier=Onlinecomponents.com'
+PRP Connector_Type 'Receptacle'
+PRP Contact_Current_Rating '2A'
+PRP Contact_Material 'Bronze'
+PRP Contact_Plating 'Gold'
+PRP Contact_Post_Length '2.92mm'
+PRP Contact_Resistance '12MR'
+PRP Contact_Shape 'Square'
+PRP Current_Rating '2A'
+PRP Depth '3.56mm'
+PRP ELV 'Compliant'
+PRP Flammability_Rating 'UL94 V-0'
+PRP Gender 'Receptacle'
+PRP Height '3.56mm'
+PRP High_Temperature_Compatible 'No'
+PRP Housing_Color 'Black'
+PRP Housing_Material 'Polyester'
+PRP Insulation_Resistance '5GR'
+PRP Lead_Free 'Lead Free'
+PRP Length '17.78mm'
+PRP Manufacturer 'TE Connectivity'
+PRP Manufacturer_Part_Number '5-534237-5'
+PRP Max_Operating_Temperature '105°C'
+PRP Min_Operating_Temperature '-65°C'
+PRP Mount 'Through Hole'
+PRP Number_of_Contacts '7'
+PRP Number_of_Positions '7'
+PRP Number_of_Rows '1'
+PRP Orientation 'Straight'
+PRP Package_Quantity '32'
+PRP Packaging 'Rail/Tube'
+PRP PCB_Mounting_Orientation 'Vertical'
+PRP PCB_Mount_Retention 'Without'
+PRP PCB_Thickness '2.4mm'
+PRP Pitch '2.54mm'
+PRP Pricing_1 '1=2.35000, 32=2.00094, 128=1.82703, 512=1.52250, 1024=1.30500, 5024=1.15710 (USD)'
+PRP Radiation_Hardening 'No'
+PRP REACH_SVHC 'Unknown'
+PRP RoHS 'Yes'
+PRP Row_Spacing '0.1inch'
+PRP Sealable 'No (Without)'
+PRP Stackable 'Yes'
+PRP Stock_1 '2592'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 'A32908-ND'
+PRP Tail_Length '2.92mm'
+PRP Termination 'Solder'
+PRP Voltage_Rating '750V'
+TOP 0 26.67 101.6 270 N 3 3 1
+TOP 1 26.67 104.14 270 N 1 2 2
+TOP 2 26.67 106.68 270 N 11 63 3
+TOP 3 26.67 109.22 270 N 12 5 4
+TOP 4 26.67 111.76 270 N 8 5 5
+TOP 5 26.67 114.3 270 N 20 5 6
+TOP 6 26.67 116.84 270 N 13 5 7
+#
