@@ -26,8 +26,8 @@ This folder contains the compiled design outputs for the High Voltage Card. This
 |-----------------------------------|------------------|
 | Unique Part Count[^1]             | 23               |
 | Number of Total Parts[^1]         | 42               |
-| Total SMT Part Count              | 29               |
-| Total Through-hole Part Count     | 13               |
+| Total SMT Part Count              | 27               |
+| Total Through-hole Part Count     | 15               |
 | Total Mechanical Screws[^2]       | 2                |
 | Total Mechanical Standoffs[^2]    | 2                |
 | BGA / QFN                         | No               |
