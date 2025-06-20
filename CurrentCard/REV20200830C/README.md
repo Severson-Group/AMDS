@@ -1,25 +1,41 @@
-# Current Measurement Card REV20200830C
+# Current Card REV20200830C
 
-This folder contains the compiled design outputs for the current measurement card rev C (design frozen on August 30, 2020). This includes the schematics, image of the PCB, the bill of materials (BOM), and the gerber files.
+This folder contains the compiled design outputs for the Current Card. This includes the schematics, images of the PCB layout, the bill of materials (BOM), and the files needed to order fully populated boards from an online vendor.
 
-## PCB Properties
-| Question          | Answer        |
-|-------------------|---------------|
-| Size              | 3.58" x 1.47"   |
-| Number of Layers  | 2               |
-| Thickness         | 0.41mm            |
-| Min Hole Size     | 0.4mm           |
-| Surface Finish    | HASL (Tin Lead) |
-| Silkscreen        | Both sides      |
-| Unique Part Count | 21            |
-| SMT Part Count    | 29            |
-| Trough-Hole Count | 11            |
-| Number of Slots/Cutouts | 0           |
-| RoHS                 | No          |
-| Class III            | No          |
-| ITAR                 | No          |
+## Board Parameters
 
-## Compatible Current Sensor
-This board is designed to be used with LA 55-P. The Digikey part number for LA 55-P is `398-1010-ND`
+| Question                  | Answer          |
+|---------------------------|-----------------|
+| Board Size                | 3.58" x 1.47"   |
+| Number of Layers          | 2 Layers        |
+| Double Sided              | No              |
+| Surface Finish            | Tin lead        |
+| Silkscreen                | White           |
+| Material                  | FR-4, TG150     |
+| Board Thickness           | 1.6 mm          |
+| Min Trace Spacing         | 0.15 mm (6 mil) |
+| Min Hole Size             | 0.40 mm (16 mil)|
+| Number of Holes           | 58              |
+| Solder Mask               | Black           |
+| HASL or ENIG              | No              |
+| Finished Copper           | 1 oz            |
+
+## Assembly Details
+
+| Question                          | Answer           |
+|-----------------------------------|------------------|
+| Unique Part Count[^1]             | 21               |
+| Number of Total Parts[^1]         | 41               |
+| Total SMT Part Count              | 27               |
+| Total Through-hole Part Count     | 14               |
+| Total Mechanical Screws[^2]       | 4                |
+| Total Mechanical Standoffs[^2]    | 2                |
+| BGA / QFN                         | No               |
+
+## Bill of Materials
+The [Bill of Materials (BOM)](current-sensor-bom.csv) contains components for 1 board. If users of this repo discover that any components are unavailable, please maintain an `alternate-components.md` file in this folder that lists approved alternates.
 
 
+[^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 23 and total parts is 45. Users are advised to not have their assembly vendor place screws and standoffs.
+
+[^2]: There are screws and standoffs required for mounting this card to the mainboard. For details on what those components are, please refer to the [Main Board](../../Mainboard/REV20200920D/README.md)
