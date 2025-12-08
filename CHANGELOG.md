@@ -2,6 +2,10 @@
 
 This document summarizes the changes introduced to the code base for each release.
 
+## v2.0.1
+
+- Fix and standarize PCB release file packages for all boards
+
 ## v2.0.0
 
 - Sample and transmit data upon receipt of `SYNC_ADC` interrupt
