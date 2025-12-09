@@ -1,38 +1,40 @@
+# High Voltage Card REV20200913C
 
-This folder contains schematics pdf, PCB pdf, bill of material (BOM), 3-D PCB, gerber files and all the required files to fabricate the boards.
+This folder contains the compiled design outputs for the High Voltage Card. This includes the schematics, images of the PCB layout, the bill of materials (BOM), and the files needed to order fully populated boards from an online vendor.
 
-## How to order 10 PCB boards
+## Board Parameters
 
-1. Place a new quote in https://www.pcbway.com/ 
+| Question                  | Answer          |
+|---------------------------|-----------------|
+| Board Size                | 3.57" x 1.46"   |
+| Number of Layers          | 2 Layers        |
+| Double Sided              | No              |
+| Surface Finish            | Tin lead        |
+| Silkscreen                | White           |
+| Material                  | FR-4, TG150     |
+| Board Thickness           | 1.6 mm          |
+| Min Trace Spacing         | 0.15 mm (6 mil) |
+| Min Hole Size             | 0.40 mm (16 mil)|
+| Number of Holes           | 54              |
+| Solder Mask               | Black           |
+| HASL or ENIG              | No              |
+| Finished Copper           | 1 oz            |
 
-2. Use the following table to set the pcb properties.
+## Assembly Details
 
-| Question             | Answer      |
-|----------------------|-------------|
-|Size| 37.2 x 90.8 mm|
-|Layer| 2 Layers|
-|Quantity| 10|
-|Board type| Single pieces|
-|Different Design in Panel| 1|
-|Material: FR-4| TG150|
-|Thickness| 1.6 mm|
-|Min Track/Spacing| 6/6mil|
-|Min Hole Size| 0.3mm|
-|Solder Mask| Black|
-|Silkscreen| White|
-|Gold fingers| No|
-|Surface Finish| HASL with lead|
-|"HASL" to "ENIG"| No|
-|Via Process| Tenting vias|
-|Finished Copper| 1 oz Cu (Inner Copper: 1 oz)|
-|Additional options| UL Marking: None|
+| Question                          | Answer           |
+|-----------------------------------|------------------|
+| Unique Part Count[^1]             | 23               |
+| Number of Total Parts[^1]         | 42               |
+| Total SMT Part Count              | 27               |
+| Total Through-hole Part Count     | 15               |
+| Total Mechanical Screws[^2]       | 2                |
+| Total Mechanical Standoffs[^2]    | 2                |
+| BGA / QFN                         | No               |
 
-3. Upload the gerbers from the [gerber folder](https://github.com/Severson-Group/SensorCard/tree/HV_Clearance/VoltageCard/REV20200913C/gerbers).
+## Bill of Materials
+The [Bill of Materials (BOM)](high-voltage-sensor-bom.csv) contains components for 1 board. If users of this repo discover that any components are unavailable, please maintain an `alternate-components.md` file in this folder that lists approved alternates.
 
-4. Place the order, it should arrive in 7-9 days.
+[^1]: This number does not include screws or standoffs. With screws and standoffs included, the unique part count is 25 and total parts is 46. Users are advised to not have their assembly vendor place screws and standoffs.
 
-## How to order components for the board
-
-1. Upload the [BOM](./VoltageCard_bom_qty_10.xlsx) to https://www.digikey.com/ordering/shoppingcart.
-
-2. Place the order.
+[^2]: There are screws and standoffs required for mounting this card to the mainboard. For details on what those components are, please refer to the [Main Board](../../Mainboard/REV20200920D/README.md)
