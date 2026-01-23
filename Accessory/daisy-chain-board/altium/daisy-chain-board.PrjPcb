@@ -101,7 +101,7 @@ GenerateClassCluster=0
 DocumentUniqueId=PJKRPLWX
 
 [Document4]
-DocumentPath=..\..\..\..\..\..\Documents\daisy-chain-board\altium\PCB.PcbDoc
+DocumentPath=PCB.PcbDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -118,7 +118,7 @@ GenerateClassCluster=0
 DocumentUniqueId=AHCLKWDL
 
 [Document5]
-DocumentPath=..\..\..\..\..\..\Documents\daisy-chain-board\altium\PcbLib-daisy-chain.PcbLib
+DocumentPath=PcbLib-daisy-chain.PcbLib
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
