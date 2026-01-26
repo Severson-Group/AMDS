@@ -134,6 +134,10 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=DSKGGWXV
 
+[GeneratedDocument1]
+DocumentPath=Project Outputs for daisy-chain-board\Design Rule Check - PCB.html
+DItemRevisionGUID=
+
 [Parameter1]
 Name=ProjectGroup
 Value=eLev Lab
