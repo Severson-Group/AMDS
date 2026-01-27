@@ -67,7 +67,7 @@ GenerateClassCluster=0
 DocumentUniqueId=KAYZPDGD
 
 [Document2]
-DocumentPath=Schlib-daisy-chain.SchLib
+DocumentPath=sch-lib-daisy-chain.SchLib
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -84,7 +84,7 @@ GenerateClassCluster=0
 DocumentUniqueId=ITDHQCZZ
 
 [Document3]
-DocumentPath=TopLevel.SchDoc
+DocumentPath=top-level.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -101,7 +101,7 @@ GenerateClassCluster=0
 DocumentUniqueId=PJKRPLWX
 
 [Document4]
-DocumentPath=PCB.PcbDoc
+DocumentPath=pcb-daisy-chain.PcbDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -118,7 +118,7 @@ GenerateClassCluster=0
 DocumentUniqueId=AHCLKWDL
 
 [Document5]
-DocumentPath=PcbLib-daisy-chain.PcbLib
+DocumentPath=pcb-lib-daisy-chain.PcbLib
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
