@@ -135,6 +135,10 @@ GenerateClassCluster=0
 DocumentUniqueId=
 
 [GeneratedDocument1]
+DocumentPath=Project Outputs for daisy-chain-board\Design Rule Check - pcb-daisy-chain.html
+DItemRevisionGUID=
+
+[GeneratedDocument2]
 DocumentPath=Project Outputs for daisy-chain-board\Design Rule Check - PCB.html
 DItemRevisionGUID=
 
