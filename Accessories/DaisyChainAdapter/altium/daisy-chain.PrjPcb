@@ -132,14 +132,10 @@ ClassGenCCAutoRoomEnabled=0
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=
+DocumentUniqueId=DSKGGWXV
 
 [GeneratedDocument1]
-DocumentPath=Project Outputs for daisy-chain-board\Design Rule Check - pcb-daisy-chain.html
-DItemRevisionGUID=
-
-[GeneratedDocument2]
-DocumentPath=Project Outputs for daisy-chain-board\Design Rule Check - PCB.html
+DocumentPath=Project Outputs for daisy-chain\Design Rule Check - pcb-daisy-chain.html
 DItemRevisionGUID=
 
 [Parameter1]
