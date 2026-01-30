@@ -1,4 +1,4 @@
-Quantity,Designator,Description,Value,Footprint,Supplier Part Number 1,Manufacturer Part Number,Supplier 1,Manufacturer
+Quantity,Designator,Description,Value,Footprint,Supplier Part Number,Manufacturer Part Number,Supplier,Manufacturer
 "4","C1, C2, C3, C4","CAP CER 0.1UF 50V Y5V 0603","0.1uF","0603-CAP","311-1343-1-ND","CC0603ZRY5V9BB104","Digi-Key","YAGEO"
 "1","C5","CAP CER 10UF 25V X5R 0805","10uF","0603-CAP","490-10748-6-ND","GRM21BR61E106MA73L","Digi-Key","Murata Electronics"
 "2","C6, C7","CAP CER 6.8UF 50V JB 1206","6.8uF","CAP-1206","445-11734-1-ND","C3216JB1H685K160AB","Digi-Key","TDK"
