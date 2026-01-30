@@ -1,0 +1,19 @@
+----------------------------------------------------------------------------------------------------------------------------------
+NCDrill File Report For: pcb-daisy-chain.PcbDoc   1/30/2026  11:21:58 AM
+----------------------------------------------------------------------------------------------------------------------------------
+
+Layer Pair : Top Layer to Bottom Layer
+ASCII RoundHoles File : pcb-daisy-chain.TXT
+
+Tool       Hole Size               Hole Tolerance               Hole Type       Hole Count   Plated         Tool Travel
+----------------------------------------------------------------------------------------------------------------------------------
+T1      0.356mm (14mil)                                           Round             31        PTH        170.27mm (6.70inch)
+T2      0.9mm (35mil)                                             Round             30        PTH        92.89mm (3.66inch)
+T3      1mm (39mil)                                               Round             7         PTH        17.78mm (0.70inch)
+T4      1.3mm (51mil)                                             Round             2         PTH        5.00mm (0.20inch)
+T5      3.2mm (126mil)                                            Round             4         PTH        89.25mm (3.51inch)
+T6      3.3mm (130mil)                                            Round             4         PTH        176.86mm (6.96inch)
+----------------------------------------------------------------------------------------------------------------------------------
+Totals                                                                              78
+
+Total Processing Time (hh:mm:ss) : 00:00:01
