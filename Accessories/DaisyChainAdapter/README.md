@@ -18,7 +18,11 @@ Documentation about the design of this  board can be found in the [docs folder.]
 
 ## Related Issues / PRs
 
-- [Issue #81: Develop and test the Daisy Chain Adapter Board](https://github.com/Severson-Group/AMDS/issues/81)
-- [Issue #85: Create daisy chain schematic](https://github.com/Severson-Group/AMDS/issues/85)
-- [Issue #86: Create daisy chain PCB](https://github.com/Severson-Group/AMDS/issues/86)
-- [Issue #86: Create daisy chain documentation](https://github.com/Severson-Group/AMDS/issues/87)
+- [PR #82: Add Daisy Chain Adapter Board](https://github.com/Severson-Group/AMDS/pull/82)
+  - [Issue #81: Develop and test the Daisy Chain Adapter Board](https://github.com/Severson-Group/AMDS/issues/81)
+- [PR #83: Add Daisy Chain Board - Schematic](https://github.com/Severson-Group/AMDS/pull/83)
+  - [Issue #85: Create daisy chain schematic](https://github.com/Severson-Group/AMDS/issues/85)
+- [PR #84: Add Daisy Chain Board - PCB](https://github.com/Severson-Group/AMDS/pull/84)
+  - [Issue #86: Create daisy chain PCB](https://github.com/Severson-Group/AMDS/issues/86)
+- [PR #88: Add Daisy Chain Board - Docs](https://github.com/Severson-Group/AMDS/pull/88)
+  - [Issue #86: Create daisy chain documentation](https://github.com/Severson-Group/AMDS/issues/87)
