@@ -23,6 +23,7 @@ static void setup_pin_CONVST(void);
 // clang-format on
 
 #define GPIO_SET_PIN(port, pin, x) port->BSRR = (x) ? pin : (pin << 16)
+#define GPIO_TOGGLE_PIN(port, pin) ((port)->BSRR = ((port)->ODR & (pin)) ? ((pin) << 16) : (pin))
 
 #define SET_PIN_CONVST12_HIGH GPIO_SET_PIN(GPIOE, GPIO_PIN_10, 1)
 #define SET_PIN_CONVST34_HIGH GPIO_SET_PIN(GPIOE, GPIO_PIN_11, 1)
@@ -147,7 +148,8 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 void EXTI3_IRQHandler(void)
 {
     // Perform the actual SPI transactions
-    uint16_t new_data[8] = { 0 };
+	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+	uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
 
     // Copy data into write buffer destination
@@ -214,9 +216,12 @@ static void setup_pin_SYNC_ADC(void)
     GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
 
     // Configure GPIO pin Output Level
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, GPIO_PIN_RESET);
+
 
     // Configure GPIO pins
     GPIO_InitStruct.Pin = GPIO_PIN_3;
@@ -224,6 +229,12 @@ static void setup_pin_SYNC_ADC(void)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_1;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
     // EXTI interrupt init
     HAL_NVIC_SetPriority(EXTI3_IRQn, 10, 0);

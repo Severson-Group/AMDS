@@ -9,6 +9,9 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 static UART_HandleTypeDef huart2;
 static UART_HandleTypeDef huart3;
 
+static UART_HandleTypeDef huart4;
+static UART_HandleTypeDef huart5;
+
 void drv_uart_init(void)
 {
     // Twiddle some bits in the RCC module to set USART2 and USART3 clock source.
@@ -21,8 +24,14 @@ void drv_uart_init(void)
     __HAL_RCC_USART2_CONFIG(RCC_USART2CLKSOURCE_SYSCLK);
     __HAL_RCC_USART3_CONFIG(RCC_USART3CLKSOURCE_SYSCLK);
 
+    __HAL_RCC_UART4_CONFIG(RCC_UART4CLKSOURCE_SYSCLK);
+	__HAL_RCC_UART5_CONFIG(RCC_UART5CLKSOURCE_SYSCLK);
+
     MX_USART_UART_Init(&huart2, USART2);
     MX_USART_UART_Init(&huart3, USART3);
+
+    MX_USART_UART_Init(&huart4, UART4);
+	MX_USART_UART_Init(&huart5, UART5);
 }
 
 static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
@@ -47,7 +56,15 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
     huart->Init.WordLength = UART_WORDLENGTH_9B;
     huart->Init.StopBits = UART_STOPBITS_2;
     huart->Init.Parity = UART_PARITY_ODD;
-    huart->Init.Mode = UART_MODE_TX;
+
+    if (huart->Instance == UART4) {
+    	huart->Init.Mode = UART_MODE_TX_RX;
+    } else if (huart->Instance == UART5) {
+    	huart->Init.Mode = UART_MODE_RX;
+    } else {
+    	huart->Init.Mode = UART_MODE_TX;
+    }
+
     huart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
     huart->Init.OverSampling = UART_OVERSAMPLING_8;
     huart->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
@@ -94,6 +111,37 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
         GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     }
+
+    else if (uartHandle->Instance == UART4) {
+		// USART3 clock enable
+		__HAL_RCC_UART4_CLK_ENABLE();
+
+		__HAL_RCC_GPIOD_CLK_ENABLE();
+		// USART3 GPIO Configuration
+		// PD0     ------> UART4_RX
+		// PD1     ------> UART4_TX
+		GPIO_InitStruct.Pin = GPIO_PIN_0;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF8_UART4;
+		HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+	}
+
+    else if (uartHandle->Instance == UART5) {
+		// USART3 clock enable
+		__HAL_RCC_UART5_CLK_ENABLE();
+
+		__HAL_RCC_GPIOD_CLK_ENABLE();
+		// USART3 GPIO Configuration
+		// PD2      ------> UART5_RX
+		GPIO_InitStruct.Pin = GPIO_PIN_2;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF8_UART5;
+		HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+	}
 }
 
 void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
@@ -120,4 +168,25 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
         */
         HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10 | GPIO_PIN_11);
     }
+
+    else if (uartHandle->Instance == UART4) {
+		/* Peripheral clock disable */
+		__HAL_RCC_UART4_CLK_DISABLE();
+
+		/**USART3 GPIO Configuration
+		PD0     ------> UART4_RX
+		PD1     ------> UART4_TX
+		*/
+		HAL_GPIO_DeInit(GPIOD, GPIO_PIN_0);
+	}
+
+    else if (uartHandle->Instance == UART5) {
+		/* Peripheral clock disable */
+		__HAL_RCC_UART5_CLK_DISABLE();
+
+		/**USART3 GPIO Configuration
+		PD2      ------> UART5_RX
+		*/
+		HAL_GPIO_DeInit(GPIOD, GPIO_PIN_2);
+	}
 }
