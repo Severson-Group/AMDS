@@ -1,4 +1,5 @@
 #include "adc.h"
+#include "queue.h"
 #include "drv_spi.h"
 #include "platform.h"
 #include "tx.h"
@@ -167,6 +168,8 @@ void EXTI3_IRQHandler(void)
 
     // Call the function in tx.c to transmit the sampled data back to the AMDC
     transmit_samples();
+
+    current_id = HAL_GetTick();
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the
