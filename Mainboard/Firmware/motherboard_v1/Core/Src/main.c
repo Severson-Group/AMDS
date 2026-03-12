@@ -1,7 +1,6 @@
 // Drivers
 #include "drv_clock.h"
 #include "drv_gpio.h"
-#include "queue.h"
 #include "drv_i2c.h"
 #include "drv_led.h"
 #include "drv_spi.h"
@@ -27,8 +26,6 @@ int main(void)
 
     // Initialize the main modules
     adc_init();
-
-    queue_init(&sensor_queue, sensor_buffer, AMDS_QUEUE_SIZE);
 
     // Infinite loop (all real work is done in ISRs)
     uint8_t led = 0;

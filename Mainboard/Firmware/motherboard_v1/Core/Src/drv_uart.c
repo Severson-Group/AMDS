@@ -1,7 +1,6 @@
 #include "drv_uart.h"
 #include "defines.h"
 #include "drv_clock.h"
-#include "queue.h"
 #include "platform.h"
 #include <stdint.h>
 
@@ -13,71 +12,129 @@ static UART_HandleTypeDef huart3;
 static UART_HandleTypeDef huart4;
 static UART_HandleTypeDef huart5;
 
+static DMA_HandleTypeDef hdma_uart4_rx;
+static DMA_HandleTypeDef hdma_uart5_rx;
+
 // 3-byte packet buffers for each UART
 #define PACKET_SIZE      3
 #define PACKETS_PER_UART 4
 #define TOTAL_PACKETS    (PACKETS_PER_UART * 2)   // 8 packets, 24 bytes total
 
-static uint8_t UART4_RxBuf[PACKET_SIZE];
-static uint8_t UART5_RxBuf[PACKET_SIZE];
-
-// Shared 24-byte accumulator
-// Layout: [UART4 pkt0..3 | UART5 pkt0..3]
-static uint8_t shared_samples[TOTAL_PACKETS * PACKET_SIZE];
 static uint8_t uart4_packet_count = 0;
 static uint8_t uart5_packet_count = 0;
+volatile uint8_t uart4_amds_sample_count = 0;
+volatile uint8_t uart5_amds_sample_count = 0;
 
-static void try_enqueue(void)
-{
-    if (uart4_packet_count == PACKETS_PER_UART &&
-        uart5_packet_count == PACKETS_PER_UART)
-    {
-        amds_item_t item;
-        for (int i = 0; i < sizeof(shared_samples); i++) {
-            item.samples[i] = shared_samples[i];
+void process_uart_fifo(UART_HandleTypeDef *huart, uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id) {
+    // Calculate current DMA write position (NDTR counts down)
+    uint32_t dma_write_ptr = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart->hdmarx);
+
+    while (track->read_index != dma_write_ptr) {
+        uint8_t byte = pool[track->read_index];
+        track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
+
+        switch (track->state) {
+            case STATE_IDLE:
+                // Look for any valid header (0x90, 0x94, 0x98 ranges)
+                if ((byte & 0xF0) == 0x90) {
+                    track->header = byte;
+                    track->state = STATE_GOT_HEADER;
+                }
+                break;
+
+            case STATE_GOT_HEADER:
+                track->data[0] = byte;
+                track->state = STATE_GOT_BYTE1;
+                break;
+
+            case STATE_GOT_BYTE1:
+                track->data[1] = byte;
+
+                // Packet Complete: Reconstruct 16-bit value
+                uint16_t value = ((uint16_t)track->data[0] << 8) | track->data[1];
+
+                // Map to your global array logic from drv_uart.c
+                uint8_t offset = (track->header & 0x03) + (uart_id == 5 ? 4 : 0);
+                uint8_t sample_set = (track->header & 0x0C) >> 2; // e.g., 0 for 0x90, 1 for 0x94
+
+                latest_valid_amds_samples[sample_set][offset] = value;
+                amds_samples_ready[sample_set] = true;
+
+                track->state = STATE_IDLE;
+                break;
         }
-        queue_enqueue_from_isr(&sensor_queue, &item, current_id);
-
-        // Reset for next set
-        uart4_packet_count = 0;
-        uart5_packet_count = 0;
     }
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == UART4) {
-        if (uart4_packet_count < PACKETS_PER_UART) {
-            uint8_t offset = uart4_packet_count * PACKET_SIZE;  // first 12 bytes
-            for (int i = 0; i < PACKET_SIZE; i++) {
-                shared_samples[offset + i] = UART4_RxBuf[i];
-            }
-            uart4_packet_count++;
-        }
-        HAL_UART_Receive_IT(huart, UART4_RxBuf, PACKET_SIZE);
-        try_enqueue();
+    	if (uart4_packet_count < PACKETS_PER_UART) {
 
-    } else if (huart->Instance == UART5) {
-        if (uart5_packet_count < PACKETS_PER_UART) {
-            uint8_t offset = (PACKETS_PER_UART * PACKET_SIZE) + uart5_packet_count * PACKET_SIZE;  // last 12 bytes
-            for (int i = 0; i < PACKET_SIZE; i++) {
-                shared_samples[offset + i] = UART5_RxBuf[i];
-            }
-            uart5_packet_count++;
+    	    uint8_t offset = uart4_packet_count;
+
+    	    uint16_t value = ((uint16_t)UART4_RxBuf[1] << 8) | (uint16_t)UART4_RxBuf[2];
+
+    	    latest_valid_amds_samples[uart4_amds_sample_count][offset] = value;
+
+    	    uart4_packet_count++;
+    	}
+
+        if (uart4_packet_count == PACKETS_PER_UART) {
+        	amds_samples_ready[uart4_amds_sample_count] = true;
+        	uart4_amds_sample_count++;
+        	uart4_packet_count = 0;
         }
-        HAL_UART_Receive_IT(huart, UART5_RxBuf, PACKET_SIZE);
-        try_enqueue();
+
+        if (uart4_amds_sample_count == 2) {
+        	amds_samples_ready[uart4_amds_sample_count + 1] = true;
+        	uart4_amds_sample_count = 0;
+        }
+//		HAL_UART_Receive_DMA(huart, UART4_RxBuf, PACKET_SIZE);
+    } else if (huart->Instance == UART5) {
+    	if (uart5_packet_count < PACKETS_PER_UART) {
+
+			uint8_t offset = uart5_packet_count + 4;
+
+			uint16_t value = ((uint16_t)UART5_RxBuf[1] << 8) | (uint16_t)UART5_RxBuf[2];
+
+			latest_valid_amds_samples[uart5_amds_sample_count][offset] = value;
+
+			uart5_packet_count++;
+		}
+
+        if (uart5_packet_count == PACKETS_PER_UART) {
+        	amds_samples_ready[uart5_amds_sample_count] = true;
+        	uart5_amds_sample_count++;
+			uart5_packet_count = 0;
+		}
+
+		if (uart5_amds_sample_count == 2) {
+			amds_samples_ready[uart5_amds_sample_count + 2] = true;
+			uart5_amds_sample_count = 0;
+		}
+//		HAL_UART_Receive_DMA(huart, UART5_RxBuf, PACKET_SIZE);
     }
 }
 
 void UART4_IRQHandler(void)
 {
-    HAL_UART_IRQHandler(&huart4);
+	HAL_UART_IRQHandler(&huart4);
+}
+
+void DMA1_Stream2_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&hdma_uart4_rx);
 }
 
 void UART5_IRQHandler(void)
 {
     HAL_UART_IRQHandler(&huart5);
+}
+
+void DMA1_Stream0_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&hdma_uart5_rx);
 }
 
 void drv_uart_init(void)
@@ -135,7 +192,7 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 
     huart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
     huart->Init.OverSampling = UART_OVERSAMPLING_8;
-    huart->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+    huart->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_ENABLE;
     huart->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
 
     if (HAL_UART_Init(huart) != HAL_OK) {
@@ -144,23 +201,23 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 
     // Interrupt setup must come AFTER HAL_UART_Init()
 	if (huart->Instance == UART4) {
-		NVIC_SetPriority(UART4_IRQn, 11);
+    	NVIC_SetPriority(UART4_IRQn, 9);
 		HAL_NVIC_EnableIRQ(UART4_IRQn);
 
 		__HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
 		__HAL_UART_FLUSH_DRREGISTER(huart);
 
-		if (HAL_UART_Receive_IT(huart, UART4_RxBuf, PACKET_SIZE) != HAL_OK) {
+		if (HAL_UART_Receive_DMA(&huart4, uart4_rx_dma_buf, RX_DMA_BUF_SIZE) != HAL_OK) {
 			PANIC;
 		}
-	} else if (huart->Instance == UART5) {
-		NVIC_SetPriority(UART5_IRQn, 11);
+    } else if (huart->Instance == UART5) {
+    	NVIC_SetPriority(UART5_IRQn, 9);
 		HAL_NVIC_EnableIRQ(UART5_IRQn);
 
 		__HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
 		__HAL_UART_FLUSH_DRREGISTER(huart);
 
-		if (HAL_UART_Receive_IT(huart, UART5_RxBuf, PACKET_SIZE) != HAL_OK) {
+		if (HAL_UART_Receive_DMA(&huart5, uart5_rx_dma_buf, RX_DMA_BUF_SIZE) != HAL_OK) {
 			PANIC;
 		}
 	}
@@ -206,6 +263,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
     else if (uartHandle->Instance == UART4) {
 		// USART3 clock enable
 		__HAL_RCC_UART4_CLK_ENABLE();
+		__HAL_RCC_DMA1_CLK_ENABLE();
 
 		__HAL_RCC_GPIOD_CLK_ENABLE();
 		// USART3 GPIO Configuration
@@ -217,11 +275,36 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
 		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 		GPIO_InitStruct.Alternate = GPIO_AF8_UART4;
 		HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+		// DMA config - check your device's DMA request mapping table
+		// for the correct stream/channel for UART4_RX
+		hdma_uart4_rx.Instance = DMA1_Stream2;        // verify in datasheet
+		hdma_uart4_rx.Init.Channel = DMA_CHANNEL_4; // HAL constant for your device
+		hdma_uart4_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+		hdma_uart4_rx.Init.PeriphInc = DMA_PINC_DISABLE;  // RDR address stays fixed
+		hdma_uart4_rx.Init.MemInc = DMA_MINC_ENABLE;      // buffer pointer increments
+		hdma_uart4_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+		hdma_uart4_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+		hdma_uart4_rx.Init.Mode = DMA_CIRCULAR;         // or DMA_CIRCULAR (see note below)
+		hdma_uart4_rx.Init.Priority = DMA_PRIORITY_HIGH;
+		hdma_uart4_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+
+		if (HAL_DMA_Init(&hdma_uart4_rx) != HAL_OK) {
+			PANIC;
+		}
+
+		// This links the DMA handle to the UART handle
+		__HAL_LINKDMA(uartHandle, hdmarx, hdma_uart4_rx);
+
+		// DMA stream IRQ
+		NVIC_SetPriority(DMA1_Stream2_IRQn, 7);  // higher priority than UART
+		HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
 	}
 
     else if (uartHandle->Instance == UART5) {
 		// USART3 clock enable
 		__HAL_RCC_UART5_CLK_ENABLE();
+		__HAL_RCC_DMA1_CLK_ENABLE();
 
 		__HAL_RCC_GPIOD_CLK_ENABLE();
 		// USART3 GPIO Configuration
@@ -232,6 +315,30 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
 		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 		GPIO_InitStruct.Alternate = GPIO_AF8_UART5;
 		HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+		// DMA config - check your device's DMA request mapping table
+		// for the correct stream/channel for UART4_RX
+		hdma_uart5_rx.Instance = DMA1_Stream0;        // verify in datasheet
+		hdma_uart5_rx.Init.Channel = DMA_CHANNEL_4; // HAL constant for your device
+		hdma_uart5_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+		hdma_uart5_rx.Init.PeriphInc = DMA_PINC_DISABLE;  // RDR address stays fixed
+		hdma_uart5_rx.Init.MemInc = DMA_MINC_ENABLE;      // buffer pointer increments
+		hdma_uart5_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+		hdma_uart5_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+		hdma_uart5_rx.Init.Mode = DMA_CIRCULAR;         // or DMA_CIRCULAR (see note below)
+		hdma_uart5_rx.Init.Priority = DMA_PRIORITY_HIGH;
+		hdma_uart5_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+
+		if (HAL_DMA_Init(&hdma_uart5_rx) != HAL_OK) {
+			PANIC;
+		}
+
+		// This links the DMA handle to the UART handle
+		__HAL_LINKDMA(uartHandle, hdmarx, hdma_uart5_rx);
+
+		// DMA stream IRQ
+		NVIC_SetPriority(DMA1_Stream0_IRQn, 8);  // higher priority than UART
+		HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
 	}
 }
 

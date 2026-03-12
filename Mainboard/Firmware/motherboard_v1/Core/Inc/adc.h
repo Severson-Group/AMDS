@@ -18,5 +18,6 @@ void adc_init(void);
 // but if it is called in the middle of an conversion,
 // one sample old data will be returned.
 void adc_latest_bits(uint16_t *output);
+void adc_latest_amds(uint16_t *output);
 
 #endif // ADC_H

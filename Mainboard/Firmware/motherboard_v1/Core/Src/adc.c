@@ -1,5 +1,5 @@
 #include "adc.h"
-#include "queue.h"
+#include "drv_uart.h"
 #include "drv_spi.h"
 #include "platform.h"
 #include "tx.h"
@@ -45,6 +45,10 @@ static void setup_pin_CONVST(void);
 // Buffer of latest samples
 static volatile uint16_t latest_valid_adc_data[8] = { 0 };
 
+volatile uint16_t latest_valid_amds_samples[2][8] = { 0 };
+
+volatile bool amds_samples_ready[4] = { 1 };
+
 void adc_init(void)
 {
     // Setup output pin which starts ADC conversions
@@ -68,6 +72,37 @@ void adc_latest_bits(uint16_t *output)
     output[5] = data[5];
     output[6] = data[6];
     output[7] = data[7];
+}
+
+// NOTE: this function is called from the transmit function
+void adc_latest_amds(uint16_t *output)
+{
+    volatile uint16_t *data1 = latest_valid_amds_samples[0];
+    volatile uint16_t *data2 = latest_valid_amds_samples[1];
+
+    if (amds_samples_ready[0] && amds_samples_ready[1]) {
+    	// Give user their data (unrolled for speed)
+    	output[0] = data1[0];
+		output[1] = data1[1];
+		output[2] = data1[2];
+		output[3] = data1[3];
+		output[4] = data1[4];
+		output[5] = data1[5];
+		output[6] = data1[6];
+		output[7] = data1[7];
+    }
+
+    if (amds_samples_ready[2] && amds_samples_ready[3]) {
+    	// Give user their data (unrolled for speed)
+		output[8]  = data2[0];
+		output[9]  = data2[1];
+		output[10] = data2[2];
+		output[11] = data2[3];
+		output[12] = data2[4];
+		output[13] = data2[5];
+		output[14] = data2[6];
+		output[15] = data2[7];
+    }
 }
 
 static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
@@ -169,8 +204,6 @@ void EXTI3_IRQHandler(void)
     // Call the function in tx.c to transmit the sampled data back to the AMDC
     transmit_samples();
 
-    current_id = HAL_GetTick();
-
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the
     // ADC conversions with the SYNC signal from the AMDC.
@@ -223,7 +256,7 @@ static void setup_pin_SYNC_ADC(void)
 
     // Configure GPIO pin Output Level
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, GPIO_PIN_SET);
 
 
     // Configure GPIO pins
