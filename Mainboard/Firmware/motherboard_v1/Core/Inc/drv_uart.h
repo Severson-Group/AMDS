@@ -7,6 +7,9 @@
 
 void drv_uart_init(void);
 
+extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart3;
+
 // 16-byte accumulator
 // Layout: [UART4 pkt0-3 | UART5 pkt0-3][UART4 pkt4-7 | UART5 pkt4-7]
 extern volatile uint16_t latest_valid_amds_samples[2][8];
@@ -28,15 +31,25 @@ typedef struct {
     uint32_t read_index;
 } uart_rx_tracker_t;
 
-static uart_rx_tracker_t tracker4 = {0};
-static uart_rx_tracker_t tracker5 = {0};
+extern uart_rx_tracker_t tracker4;
+extern uart_rx_tracker_t tracker5;
 
 #define AMDS_RX_BUF_SIZE 256
-static uint8_t UART4_DMA_Pool[AMDS_RX_BUF_SIZE];
-static uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
+extern uint8_t UART4_DMA_Pool[AMDS_RX_BUF_SIZE];
+extern uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
+
+// Define large buffers for outgoing data
+#define TX_BUF_SIZE 512
+extern uint8_t usart2_tx_ring[TX_BUF_SIZE];
+extern uint8_t usart3_tx_ring[TX_BUF_SIZE];
+
+extern uint32_t usart2_tx_write_idx;
+extern uint32_t usart3_tx_write_idx;
 
 
+void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id);
 
+void dma_send(uint8_t uart_id, uint8_t *data, uint8_t len);
 
 static inline void drv_uart_putc_fast(USART_TypeDef *uart, uint8_t data)
 {
@@ -47,6 +60,17 @@ static inline void drv_uart_putc_fast(USART_TypeDef *uart, uint8_t data)
 
     // Load the TDR register to send a character
     uart->TDR = data;
+}
+
+static inline void drv_uart_putc_dma(USART_TypeDef *uart, uint8_t data)
+{
+    if (uart == USART2) {
+        usart2_tx_ring[usart2_tx_write_idx] = data;
+        usart2_tx_write_idx = (usart2_tx_write_idx + 1) % TX_BUF_SIZE;
+    } else if (uart == USART3) {
+        usart3_tx_ring[usart3_tx_write_idx] = data;
+        usart3_tx_write_idx = (usart3_tx_write_idx + 1) % TX_BUF_SIZE;
+    }
 }
 
 static inline void drv_uart_wait_TC(USART_TypeDef *uart)

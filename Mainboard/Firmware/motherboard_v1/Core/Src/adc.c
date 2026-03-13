@@ -47,7 +47,7 @@ static volatile uint16_t latest_valid_adc_data[8] = { 0 };
 
 volatile uint16_t latest_valid_amds_samples[2][8] = { 0 };
 
-volatile bool amds_samples_ready[4] = { 1 };
+volatile bool amds_samples_ready[4] = { 0 };
 
 void adc_init(void)
 {
@@ -80,29 +80,25 @@ void adc_latest_amds(uint16_t *output)
     volatile uint16_t *data1 = latest_valid_amds_samples[0];
     volatile uint16_t *data2 = latest_valid_amds_samples[1];
 
-    if (amds_samples_ready[0] && amds_samples_ready[1]) {
-    	// Give user their data (unrolled for speed)
-    	output[0] = data1[0];
-		output[1] = data1[1];
-		output[2] = data1[2];
-		output[3] = data1[3];
-		output[4] = data1[4];
-		output[5] = data1[5];
-		output[6] = data1[6];
-		output[7] = data1[7];
-    }
+	// Give user their data (unrolled for speed)
+	output[0] = data1[0];
+	output[1] = data1[1];
+	output[2] = data1[2];
+	output[3] = data1[3];
+	output[4] = data1[4];
+	output[5] = data1[5];
+	output[6] = data1[6];
+	output[7] = data1[7];
 
-    if (amds_samples_ready[2] && amds_samples_ready[3]) {
-    	// Give user their data (unrolled for speed)
-		output[8]  = data2[0];
-		output[9]  = data2[1];
-		output[10] = data2[2];
-		output[11] = data2[3];
-		output[12] = data2[4];
-		output[13] = data2[5];
-		output[14] = data2[6];
-		output[15] = data2[7];
-    }
+	// Give user their data (unrolled for speed)
+	output[8]  = data2[0];
+	output[9]  = data2[1];
+	output[10] = data2[2];
+	output[11] = data2[3];
+	output[12] = data2[4];
+	output[13] = data2[5];
+	output[14] = data2[6];
+	output[15] = data2[7];
 }
 
 static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
