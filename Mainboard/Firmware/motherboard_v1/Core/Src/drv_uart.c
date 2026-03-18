@@ -185,14 +185,22 @@ void DMA1_Stream0_IRQHandler(void)
     HAL_DMA_IRQHandler(&hdma_uart5_rx);
 }
 
-void DMA1_Stream3_IRQHandler(void)
-{
+// USART2 DMA and UART Interrupts
+void DMA1_Stream6_IRQHandler(void) {
+    HAL_DMA_IRQHandler(&hdma_usart2_tx);
+}
+
+void USART2_IRQHandler(void) {
+    HAL_UART_IRQHandler(&huart2);
+}
+
+// USART3 DMA and UART Interrupts
+void DMA1_Stream3_IRQHandler(void) {
     HAL_DMA_IRQHandler(&hdma_usart3_tx);
 }
 
-void DMA1_Stream6_IRQHandler(void)
-{
-    HAL_DMA_IRQHandler(&hdma_usart2_tx);
+void USART3_IRQHandler(void) {
+    HAL_UART_IRQHandler(&huart3);
 }
 
 void drv_uart_init(void)
@@ -241,7 +249,7 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
     huart->Init.Parity = UART_PARITY_ODD;
 
     if (huart->Instance == UART4) {
-    	huart->Init.Mode = UART_MODE_TX_RX;
+    	huart->Init.Mode = UART_MODE_RX;
     } else if (huart->Instance == UART5) {
     	huart->Init.Mode = UART_MODE_RX;
     } else {
@@ -268,9 +276,6 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 		if (HAL_UART_Receive_DMA(&huart4, UART4_DMA_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
 		    PANIC;
 		}
-
-		__HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
-		__HAL_UART_FLUSH_DRREGISTER(huart);
     } else if (huart->Instance == UART5) {
     	NVIC_SetPriority(UART5_IRQn, 9);
 		HAL_NVIC_EnableIRQ(UART5_IRQn);
@@ -281,9 +286,6 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 		if (HAL_UART_Receive_DMA(&huart5, UART5_DMA_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
 		    PANIC;
 		}
-
-		__HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
-		__HAL_UART_FLUSH_DRREGISTER(huart);
 	} else if (huart->Instance == USART2) {
     	NVIC_SetPriority(USART2_IRQn, 10);
 		HAL_NVIC_EnableIRQ(USART2_IRQn);
