@@ -47,7 +47,7 @@ static volatile uint16_t latest_valid_adc_data[8] = { 0 };
 
 volatile uint16_t latest_valid_amds_samples[2][8] = { 0 };
 
-volatile bool amds_samples_ready[4] = { 0 };
+volatile bool amds_samples_ready[2] = { 0 };
 
 void adc_init(void)
 {

@@ -13,7 +13,7 @@ extern UART_HandleTypeDef huart3;
 // 16-byte accumulator
 // Layout: [UART4 pkt0-3 | UART5 pkt0-3][UART4 pkt4-7 | UART5 pkt4-7]
 extern volatile uint16_t latest_valid_amds_samples[2][8];
-extern volatile bool amds_samples_ready[4];
+extern volatile bool amds_samples_ready[2];
 extern volatile uint8_t uart4_amds_sample_count;
 extern volatile uint8_t uart5_amds_sample_count;
 

@@ -76,13 +76,23 @@ void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id)
                 // Packet Complete: Reconstruct 16-bit value
                 uint16_t value = ((uint16_t)track->data[0] << 8) | track->data[1];
 
-                // Map to your global array logic from drv_uart.c
-                uint8_t offset = (track->header & 0x03) + (uart_id == 5 ? 4 : 0);
-                // uint8_t sample_set = (track->header & 0x0C) >> 2; // e.g., 0 for 0x90, 1 for 0x94
+                // 1. Calculate the absolute global channel index (e.g., 0 to 23)
+                uint8_t base_index = track->header & 0x03;
+                uint8_t sample_set = (track->header & 0x0C) >> 2;
 
-                latest_valid_amds_samples[uart_id == 4 ? 0 : 1][offset] = value;
+                // This gives a flat number from 0 up to 23 regardless of which UART it came from
+                uint8_t global_index = base_index + (uart_id == 5 ? 4 : 0) + (sample_set * 8);
 
-                amds_samples_ready[uart_id == 4 ? 0 : 1] = true;
+                // 2. Map the global index to your desired 2D array structure
+                // Assuming you want exactly 12 packets per bank (0-11 in bank 0, 12-23 in bank 1)
+                uint8_t bank = (global_index < 12) ? 0 : 1;
+                uint8_t local_index = (global_index < 12) ? global_index : (global_index - 12);
+
+                // 3. Store the value logically rather than physically
+                latest_valid_amds_samples[bank][local_index] = value;
+
+                // 4. Update the ready flag for the specific bank
+                amds_samples_ready[bank] = true;
 
                 track->state = STATE_IDLE;
                 break;

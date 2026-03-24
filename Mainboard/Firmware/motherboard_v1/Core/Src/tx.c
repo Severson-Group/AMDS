@@ -3,14 +3,28 @@
 #include "drv_uart.h"
 #include "platform.h"
 
+// clang-format off
+
+#define NOP1   asm("nop")
+#define NOP2   NOP1;NOP1
+#define NOP4   NOP2;NOP2
+#define NOP8   NOP4;NOP4
+#define NOP16  NOP8;NOP8
+#define NOP32  NOP16;NOP16
+#define NOP64  NOP32;NOP32
+#define NOP128 NOP64;NOP64
+#define NOP256 NOP128;NOP128
+
+// clang-format on
+
 // Called after ADC conversions have been completed,
 // to send sampled data back to AMDC
 //
 void transmit_samples(void)
 {
     // 2. Create a local buffer for this transmission "burst"
-    static uint8_t tx_data2[12];
-	static uint8_t tx_data3[12];
+    static uint8_t tx_data2[36];
+	static uint8_t tx_data3[36];
     uint8_t idx = 0;
 
     uint16_t bits[8];
@@ -33,14 +47,32 @@ void transmit_samples(void)
     }
 
     // 1. Process incoming UARTs first
-	process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
-	process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
+    NOP256;
+    NOP256;
+    NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+	NOP256;
+    process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
+    process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
 
     uint16_t amds[16] = {1};
     adc_latest_amds(amds);
 
     // ... Add AMDS data to tx_data if ready ...
-    if (amds_samples_ready[0] && amds_samples_ready[1]) {
+    if (amds_samples_ready[0]) {
     	for (int i = 0; i < 4; i++) {
 			uint8_t header = (i == 0) ? 0x94 : (0x94 | (0x07 & i));
 
@@ -55,9 +87,29 @@ void transmit_samples(void)
 			tx_data2[idx] = (uint8_t)(amds[i] & 0xFF); // LSB
 			tx_data3[idx] = (uint8_t)(amds[i + 4] & 0xFF); // LSB
 			idx++;
+		}
+
+    	// Clear flags for this set
+		amds_samples_ready[0] = false;
+
+		if (amds_samples_ready[1]) {
+			for (int i = 0; i < 4; i++) {
+				uint8_t header = (i == 0) ? 0x98 : (0x98 | (0x0B & i));
+
+				tx_data2[idx] = header;
+				tx_data3[idx] = header;
+				idx++;
+
+				tx_data2[idx] = (uint8_t)(amds[i] >> 8);   // MSB
+				tx_data3[idx] = (uint8_t)(amds[i + 4] >> 8);   // MSB
+				idx++;
+
+				tx_data2[idx] = (uint8_t)(amds[i] & 0xFF); // LSB
+				tx_data3[idx] = (uint8_t)(amds[i + 4] & 0xFF); // LSB
+				idx++;
+			}
 
 			// Clear flags for this set
-			amds_samples_ready[0] = false;
 			amds_samples_ready[1] = false;
 		}
     }
