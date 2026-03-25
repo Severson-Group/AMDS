@@ -16,7 +16,7 @@ This folder contains the compiled design outputs for the Daisy Chain Adapter. Th
 | Min Trace Spacing         | 0.127 mm (5 mil) |
 | Min Hole Size             | 0.36 mm (14 mil) |
 | Number of Holes           | 78               |
-| Solder Mask               | Black            |
+| Solder Mask               | Green            |
 | HASL or ENIG              | No               |
 | Finished Copper           | 1 oz             |
 
