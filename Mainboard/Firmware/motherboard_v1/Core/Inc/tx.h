@@ -1,6 +1,9 @@
 #ifndef TX_H
 #define TX_H
 
+#include "adc.h"
+#include "drv_uart.h"
+
 #include "platform.h"
 #include <stdint.h>
 #include <stdbool.h>

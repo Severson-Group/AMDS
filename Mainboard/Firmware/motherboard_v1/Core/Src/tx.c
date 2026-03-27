@@ -1,6 +1,4 @@
 #include "tx.h"
-#include "adc.h"
-#include "drv_uart.h"
 
 volatile packet_t tx_packets[NUM_SETS * PACKETS_PER_SET];
 volatile bool packet_ready[NUM_SETS * PACKETS_PER_SET];

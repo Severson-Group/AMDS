@@ -29,6 +29,7 @@ int main(void)
 
     // Infinite loop (all real work is done in ISRs)
     uint8_t led = 0;
+    uint32_t ledDelta = HAL_GetTick();
 
     // Disable the SysTick ISR
     //
@@ -37,12 +38,15 @@ int main(void)
     // we do not need it to run during operation!
     //
     // Set bit 0 to 0
-    SysTick->CTRL &= 0xFFFFFFFE;
+//    SysTick->CTRL &= 0xFFFFFFFE;
     
     while (1) {
-    	if (tracker4.read_index != ( AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))) {
+    	if (tracker4.read_index != ( AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))) { //update
     		process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
-    		process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
+		}
+
+    	if (tracker5.read_index != ( AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx))) { //update
+			process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
 		}
 
 		// 2. Transmit Event Triggered by EXTI Sync
@@ -53,18 +57,22 @@ int main(void)
 			process_transmissions();
 		}
 
-        drv_led_clear();
-        drv_led_on(1 << led);
-        drv_led_display();
+        if (HAL_GetTick() - ledDelta >= 250) {
+        	ledDelta = HAL_GetTick();
+        	drv_led_clear();
+			drv_led_on(1 << led);
+			drv_led_display();
 
-        if (++led >= DRV_LED_NUM_TOTAL) {
-            led = 0;
+			if (++led >= DRV_LED_NUM_TOTAL) {
+				led = 0;
+			}
         }
 
-        volatile int i;
-        for (i = 0; i < 10000000; i++) {
-            asm("nop");
-        }
+
+//        volatile int i;
+//        for (i = 0; i < 10000000; i++) {
+//            asm("nop");
+//        }
     }
 }
 

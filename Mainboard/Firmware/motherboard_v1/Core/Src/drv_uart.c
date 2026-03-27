@@ -19,23 +19,6 @@ UART_HandleTypeDef huart5;
 DMA_HandleTypeDef hdma_uart4_rx;
 DMA_HandleTypeDef hdma_uart5_rx;
 
-uint8_t usart2_tx_ring[TX_BUF_SIZE];
-uint8_t usart3_tx_ring[TX_BUF_SIZE];
-
-uint32_t usart2_tx_write_idx = 0;
-uint32_t usart3_tx_write_idx = 0;
-
-// 3-byte packet buffers for each UART
-#define PACKET_SIZE      3
-#define PACKETS_PER_UART 4
-#define TOTAL_PACKETS    (PACKETS_PER_UART * 2)   // 8 packets, 24 bytes total
-
-//static uint8_t uart4_packet_count = 0;
-//static uint8_t uart5_packet_count = 0;
-volatile uint8_t uart4_amds_sample_count = 0;
-volatile uint8_t uart5_amds_sample_count = 0;
-
-
 uart_rx_tracker_t tracker4 = {0};
 uart_rx_tracker_t tracker5 = {0};
 
@@ -105,6 +88,9 @@ void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id)
     }
 }
 
+void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len) {
+
+}
 
 void UART4_IRQHandler(void)
 {

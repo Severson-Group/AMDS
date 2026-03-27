@@ -179,8 +179,15 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 // this ISR, all the motherboard ADCs should be sampled.
 void EXTI3_IRQHandler(void)
 {
-    // Perform the actual SPI transactions
+
+	for (int i = 0; i < 24; i++) {
+		packet_sent[i] = false;
+		packet_ready[i] = false;
+	}
+
+	// alert daisy chained AMDSs to begin converting
 	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+	// Perform the actual SPI transactions
 	uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
 
