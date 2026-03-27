@@ -10,6 +10,15 @@ void drv_uart_init(void);
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
+extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart5;
+
+extern DMA_HandleTypeDef hdma_usart2_tx;
+extern DMA_HandleTypeDef hdma_usart3_tx;
+
+extern DMA_HandleTypeDef hdma_uart4_rx;
+extern DMA_HandleTypeDef hdma_uart5_rx;
+
 // 16-byte accumulator
 // Layout: [UART4 pkt0-3 | UART5 pkt0-3][UART4 pkt4-7 | UART5 pkt4-7]
 extern volatile uint16_t latest_valid_amds_samples[2][8];
@@ -21,7 +30,6 @@ extern volatile uint8_t uart5_amds_sample_count;
 typedef enum {
     STATE_IDLE,
     STATE_GOT_HEADER,
-    STATE_GOT_BYTE1
 } rx_state_t;
 
 typedef struct {

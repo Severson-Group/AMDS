@@ -184,21 +184,19 @@ void EXTI3_IRQHandler(void)
 	uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
 
-    // Copy data into write buffer destination
-    volatile uint16_t *dest = latest_valid_adc_data;
+    for (int i = 0; i < 8; i++) {
+		uint8_t header = (i % 4 == 0) ? 0x90 : (0x90 | (0x03 & (i % 4)));
 
-    // Unrolled loop for speed
-    dest[0] = new_data[0];
-    dest[1] = new_data[1];
-    dest[2] = new_data[2];
-    dest[3] = new_data[3];
-    dest[4] = new_data[4];
-    dest[5] = new_data[5];
-    dest[6] = new_data[6];
-    dest[7] = new_data[7];
+		tx_packets[i].header = header;
+		tx_packets[i].msb = (uint8_t)(new_data[i] >> 8);
+		tx_packets[i].lsb = (uint8_t)(new_data[i] & 0xFF);
 
-    // Call the function in tx.c to transmit the sampled data back to the AMDC
-    transmit_samples();
+		// Clear 'sent' before raising 'ready' to avoid race conditions
+		packet_sent[i] = false;
+		packet_ready[i] = true;
+	}
+
+	sync_event_flag = true;
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the

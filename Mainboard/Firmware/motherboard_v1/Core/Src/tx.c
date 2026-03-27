@@ -1,7 +1,84 @@
 #include "tx.h"
 #include "adc.h"
 #include "drv_uart.h"
-#include "platform.h"
+
+volatile packet_t tx_packets[NUM_SETS * PACKETS_PER_SET];
+volatile bool packet_ready[NUM_SETS * PACKETS_PER_SET];
+bool packet_sent[NUM_SETS * PACKETS_PER_SET];
+
+volatile bool sync_event_flag = false; // Set this to true in your EXTI ISR
+
+// Scans the state arrays, builds contiguous buffers, and fires DMA
+void process_transmissions(void) {
+    // We only need a tiny 3-byte static buffer for each UART now.
+    // (Static is still required so the memory persists while DMA is working in the background)
+    static uint8_t dma_tx2[3];
+    static uint8_t dma_tx3[3];
+
+    // Scan the array for ready/unsent packets
+    for (int pkt = 0; pkt < NUM_SETS * PACKETS_PER_SET; pkt++) {
+    	// Check hardware states once at the start
+		while (huart2.gState != HAL_UART_STATE_READY) {
+			asm("nop");
+		}
+
+		while (huart3.gState != HAL_UART_STATE_READY) {
+			asm("nop");
+		}
+
+        if (packet_ready[pkt] && !packet_sent[pkt]) {
+
+            // Route to UART2
+            if ((pkt >= 0 && pkt <= 3) || (pkt >= 8 && pkt <= 11) || (pkt >= 16 && pkt <= 19)) {
+
+                // Copy exactly 3 bytes into the UART2 DMA buffer
+                dma_tx2[0] = tx_packets[pkt].header;
+                dma_tx2[1] = tx_packets[pkt].msb;
+                dma_tx2[2] = tx_packets[pkt].lsb;
+
+                packet_sent[pkt] = true;
+
+                HAL_UART_Transmit_DMA(&huart2, dma_tx2, 3);
+            }
+
+            // Route to UART3
+            if ((pkt >= 4 && pkt <= 7) || (pkt >= 12 && pkt <= 15) || (pkt >= 20 && pkt <= 23)) {
+
+                // Copy exactly 3 bytes into the UART3 DMA buffer
+                dma_tx3[0] = tx_packets[pkt].header;
+                dma_tx3[1] = tx_packets[pkt].msb;
+                dma_tx3[2] = tx_packets[pkt].lsb;
+
+                packet_sent[pkt] = true;
+
+                HAL_UART_Transmit_DMA(&huart3, dma_tx3, 3);
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // clang-format off
 

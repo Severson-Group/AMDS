@@ -1,4 +1,5 @@
 #include "drv_uart.h"
+#include "tx.h"
 #include "defines.h"
 #include "drv_clock.h"
 #include "platform.h"
@@ -9,14 +10,14 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
-static DMA_HandleTypeDef hdma_usart2_tx;
-static DMA_HandleTypeDef hdma_usart3_tx;
+DMA_HandleTypeDef hdma_usart2_tx;
+DMA_HandleTypeDef hdma_usart3_tx;
 
-static UART_HandleTypeDef huart4;
-static UART_HandleTypeDef huart5;
+UART_HandleTypeDef huart4;
+UART_HandleTypeDef huart5;
 
-static DMA_HandleTypeDef hdma_uart4_rx;
-static DMA_HandleTypeDef hdma_uart5_rx;
+DMA_HandleTypeDef hdma_uart4_rx;
+DMA_HandleTypeDef hdma_uart5_rx;
 
 uint8_t usart2_tx_ring[TX_BUF_SIZE];
 uint8_t usart3_tx_ring[TX_BUF_SIZE];
@@ -67,32 +68,36 @@ void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id)
 
             case STATE_GOT_HEADER:
                 track->data[0] = byte;
-                track->state = STATE_GOT_BYTE1;
-                break;
 
-            case STATE_GOT_BYTE1:
+                byte = pool[track->read_index];
+                track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
                 track->data[1] = byte;
 
-                // Packet Complete: Reconstruct 16-bit value
-                uint16_t value = ((uint16_t)track->data[0] << 8) | track->data[1];
-
-                // 1. Calculate the absolute global channel index (e.g., 0 to 23)
+                // 1. Calculate the base index (0 to 3) within the 4-packet group
                 uint8_t base_index = track->header & 0x03;
-                uint8_t sample_set = (track->header & 0x0C) >> 2;
 
-                // This gives a flat number from 0 up to 23 regardless of which UART it came from
-                uint8_t global_index = base_index + (uart_id == 5 ? 4 : 0) + (sample_set * 8);
+                // 2. Determine the set (0 for 0x90-0x93, 1 for 0x94-0x97)
+                // Changed mask from 0x0C to 0x04, since we only care about bit 2.
+                uint8_t sample_set = (track->header & 0x04) >> 2;
 
-                // 2. Map the global index to your desired 2D array structure
-                // Assuming you want exactly 12 packets per bank (0-11 in bank 0, 12-23 in bank 1)
-                uint8_t bank = (global_index < 12) ? 0 : 1;
-                uint8_t local_index = (global_index < 12) ? global_index : (global_index - 12);
+                // 3. Calculate the absolute global channel index (8 to 23)
+                uint8_t global_index = 8 + (sample_set * 8) + (uart_id == 5 ? 4 : 0) + base_index;
 
-                // 3. Store the value logically rather than physically
-                latest_valid_amds_samples[bank][local_index] = value;
+//                // 3. Store the value logically rather than physically
+//                latest_valid_amds_samples[bank][local_index] = value;
+//
+//                // 4. Update the ready flag for the specific bank
+//                amds_samples_ready[bank] = true;
 
-                // 4. Update the ready flag for the specific bank
-                amds_samples_ready[bank] = true;
+                if (global_index < 24) {
+					tx_packets[global_index].header = track->header;
+					tx_packets[global_index].msb = track->data[0];
+					tx_packets[global_index].lsb = track->data[1];
+
+					// Clear 'sent' before raising 'ready'
+					packet_sent[global_index] = false;
+					packet_ready[global_index] = true;
+				}
 
                 track->state = STATE_IDLE;
                 break;
@@ -100,56 +105,6 @@ void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id)
     }
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-//    if (huart->Instance == UART4) {
-//    	if (uart4_packet_count < PACKETS_PER_UART) {
-//
-//    	    uint8_t offset = uart4_packet_count;
-//
-//    	    uint16_t value = ((uint16_t)UART4_RxBuf[1] << 8) | (uint16_t)UART4_RxBuf[2];
-//
-//    	    latest_valid_amds_samples[uart4_amds_sample_count][offset] = value;
-//
-//    	    uart4_packet_count++;
-//    	}
-//
-//        if (uart4_packet_count == PACKETS_PER_UART) {
-//        	amds_samples_ready[uart4_amds_sample_count] = true;
-//        	uart4_amds_sample_count++;
-//        	uart4_packet_count = 0;
-//        }
-//
-//        if (uart4_amds_sample_count == 2) {
-//        	amds_samples_ready[uart4_amds_sample_count + 1] = true;
-//        	uart4_amds_sample_count = 0;
-//        }
-////		HAL_UART_Receive_DMA(huart, UART4_RxBuf, PACKET_SIZE);
-//    } else if (huart->Instance == UART5) {
-//    	if (uart5_packet_count < PACKETS_PER_UART) {
-//
-//			uint8_t offset = uart5_packet_count + 4;
-//
-//			uint16_t value = ((uint16_t)UART5_RxBuf[1] << 8) | (uint16_t)UART5_RxBuf[2];
-//
-//			latest_valid_amds_samples[uart5_amds_sample_count][offset] = value;
-//
-//			uart5_packet_count++;
-//		}
-//
-//        if (uart5_packet_count == PACKETS_PER_UART) {
-//        	amds_samples_ready[uart5_amds_sample_count] = true;
-//        	uart5_amds_sample_count++;
-//			uart5_packet_count = 0;
-//		}
-//
-//		if (uart5_amds_sample_count == 2) {
-//			amds_samples_ready[uart5_amds_sample_count + 2] = true;
-//			uart5_amds_sample_count = 0;
-//		}
-////		HAL_UART_Receive_DMA(huart, UART5_RxBuf, PACKET_SIZE);
-//    }
-}
 
 void UART4_IRQHandler(void)
 {

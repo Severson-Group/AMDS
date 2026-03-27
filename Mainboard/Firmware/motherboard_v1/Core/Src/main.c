@@ -40,6 +40,19 @@ int main(void)
     SysTick->CTRL &= 0xFFFFFFFE;
     
     while (1) {
+    	if (tracker4.read_index != ( AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))) {
+    		process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
+    		process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
+		}
+
+		// 2. Transmit Event Triggered by EXTI Sync
+		if (sync_event_flag) {
+			sync_event_flag = false; // Acknowledge flag
+
+			// Package all ready sets and transmit
+			process_transmissions();
+		}
+
         drv_led_clear();
         drv_led_on(1 << led);
         drv_led_display();
