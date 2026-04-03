@@ -19,16 +19,10 @@ extern DMA_HandleTypeDef hdma_usart3_tx;
 extern DMA_HandleTypeDef hdma_uart4_rx;
 extern DMA_HandleTypeDef hdma_uart5_rx;
 
-// 16-byte accumulator
-// Layout: [UART4 pkt0-3 | UART5 pkt0-3][UART4 pkt4-7 | UART5 pkt4-7]
-extern volatile uint16_t latest_valid_amds_samples[2][8];
-extern volatile bool amds_samples_ready[2];
-extern volatile uint8_t uart4_amds_sample_count;
-extern volatile uint8_t uart5_amds_sample_count;
-
 typedef enum {
     STATE_IDLE,
     STATE_GOT_HEADER,
+    STATE_GOT_MSB
 } rx_state_t;
 
 typedef struct {
@@ -47,17 +41,17 @@ extern uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
 
 extern volatile uint8_t uart2_dma_queue[AMDS_RX_BUF_SIZE];
 extern volatile uint8_t uart3_dma_queue[AMDS_RX_BUF_SIZE];
-
 extern volatile uint8_t uart2_dma_buffer[AMDS_RX_BUF_SIZE];
 extern volatile uint8_t uart3_dma_buffer[AMDS_RX_BUF_SIZE];
 
+// Queue tracking indices
+extern volatile uint16_t u2_q_head;
+extern volatile uint16_t u2_q_tail;
+extern volatile uint16_t u3_q_head;
+extern volatile uint16_t u3_q_tail;
+
 void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id);
 void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len);
-
-static inline void dma_send(UART_HandleTypeDef *uart, uint8_t *data, uint8_t len)
-{
-
-}
 
 static inline void drv_uart_putc_fast(USART_TypeDef *uart, uint8_t data)
 {

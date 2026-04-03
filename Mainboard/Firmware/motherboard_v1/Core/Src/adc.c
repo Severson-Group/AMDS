@@ -179,31 +179,47 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 // this ISR, all the motherboard ADCs should be sampled.
 void EXTI3_IRQHandler(void)
 {
-
-	for (int i = 0; i < 24; i++) {
-		packet_sent[i] = false;
-		packet_ready[i] = false;
-	}
-
 	// alert daisy chained AMDSs to begin converting
 	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+	static uint8_t local_tx2[12] = {0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB};
+	static uint8_t local_tx3[12] = {0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB};
 	// Perform the actual SPI transactions
-	uint16_t new_data[8] = { 0 };
+	/*uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
 
-    for (int i = 0; i < 8; i++) {
-		uint8_t header = (i % 4 == 0) ? 0x90 : (0x90 | (0x03 & (i % 4)));
+    // 3. Bypass the circular queue and write straight to local linear buffers
+        // We use static buffers so they persist in memory while the DMA sends them in the background
+	static uint8_t local_tx2[12];
+	static uint8_t local_tx3[12];
+	uint8_t idx = 0;
 
-		tx_packets[i].header = header;
-		tx_packets[i].msb = (uint8_t)(new_data[i] >> 8);
-		tx_packets[i].lsb = (uint8_t)(new_data[i] & 0xFF);
+    for (int i = 0; i < 4; i++) {
+		// Ultra-fast header generation (0x90, 0x91, 0x92, 0x93)
+		uint8_t header = 0x90 | i;
 
-		// Clear 'sent' before raising 'ready' to avoid race conditions
-		packet_sent[i] = false;
-		packet_ready[i] = true;
+		// Pack UART2 data (Channels 0-3)
+		local_tx2[idx] = header;
+		local_tx2[idx+1] = (uint8_t)(new_data[i] >> 8);
+		local_tx2[idx+2] = (uint8_t)(new_data[i] & 0xFF);
+
+		// Pack UART3 data (Channels 4-7)
+		local_tx3[idx] = header;
+		local_tx3[idx+1] = (uint8_t)(new_data[i + 4] >> 8);
+		local_tx3[idx+2] = (uint8_t)(new_data[i + 4] & 0xFF);
+
+		idx += 3;
+	}*/
+
+	// 4. Fire the DMA immediately, back-to-back!
+	// No waiting for the main loop. As soon as the CPU hits these lines, the bits hit the wire.
+	if (huart2.gState == HAL_UART_STATE_READY) {
+		HAL_UART_Transmit_DMA(&huart2, local_tx2, 12);
+	}
+	if (huart3.gState == HAL_UART_STATE_READY) {
+		HAL_UART_Transmit_DMA(&huart3, local_tx3, 12);
 	}
 
-	sync_event_flag = true;
+//	sync_event_flag = true;
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the

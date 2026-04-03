@@ -41,20 +41,17 @@ int main(void)
 //    SysTick->CTRL &= 0xFFFFFFFE;
     
     while (1) {
+    	if ((u2_q_tail != u2_q_head) || u3_q_tail != u3_q_head) {
+			// Package all ready sets and transmit
+			process_transmissions();
+		}
+
     	if (tracker4.read_index != ( AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))) { //update
     		process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
 		}
 
     	if (tracker5.read_index != ( AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx))) { //update
 			process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
-		}
-
-		// 2. Transmit Event Triggered by EXTI Sync
-		if (sync_event_flag) {
-			sync_event_flag = false; // Acknowledge flag
-
-			// Package all ready sets and transmit
-			process_transmissions();
 		}
 
         if (HAL_GetTick() - ledDelta >= 250) {
@@ -67,12 +64,6 @@ int main(void)
 				led = 0;
 			}
         }
-
-
-//        volatile int i;
-//        for (i = 0; i < 10000000; i++) {
-//            asm("nop");
-//        }
     }
 }
 

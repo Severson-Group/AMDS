@@ -6,52 +6,35 @@ bool packet_sent[NUM_SETS * PACKETS_PER_SET];
 
 volatile bool sync_event_flag = false; // Set this to true in your EXTI ISR
 
-// Scans the state arrays, builds contiguous buffers, and fires DMA
 void process_transmissions(void) {
-    // We only need a tiny 3-byte static buffer for each UART now.
-    // (Static is still required so the memory persists while DMA is working in the background)
-    static uint8_t dma_tx2[3];
-    static uint8_t dma_tx3[3];
+    uint16_t count2 = 0;
+    uint16_t count3 = 0;
 
-    // Scan the array for ready/unsent packets
-    for (int pkt = 0; pkt < NUM_SETS * PACKETS_PER_SET; pkt++) {
-    	// Check hardware states once at the start
-		while (huart2.gState != HAL_UART_STATE_READY) {
-			asm("nop");
-		}
-
-		while (huart3.gState != HAL_UART_STATE_READY) {
-			asm("nop");
-		}
-
-        if (packet_ready[pkt] && !packet_sent[pkt]) {
-
-            // Route to UART2
-            if ((pkt >= 0 && pkt <= 3) || (pkt >= 8 && pkt <= 11) || (pkt >= 16 && pkt <= 19)) {
-
-                // Copy exactly 3 bytes into the UART2 DMA buffer
-                dma_tx2[0] = tx_packets[pkt].header;
-                dma_tx2[1] = tx_packets[pkt].msb;
-                dma_tx2[2] = tx_packets[pkt].lsb;
-
-                packet_sent[pkt] = true;
-
-                HAL_UART_Transmit_DMA(&huart2, dma_tx2, 3);
-            }
-
-            // Route to UART3
-            if ((pkt >= 4 && pkt <= 7) || (pkt >= 12 && pkt <= 15) || (pkt >= 20 && pkt <= 23)) {
-
-                // Copy exactly 3 bytes into the UART3 DMA buffer
-                dma_tx3[0] = tx_packets[pkt].header;
-                dma_tx3[1] = tx_packets[pkt].msb;
-                dma_tx3[2] = tx_packets[pkt].lsb;
-
-                packet_sent[pkt] = true;
-
-                HAL_UART_Transmit_DMA(&huart3, dma_tx3, 3);
-            }
+    // Prepare UART 2 Data
+    if (huart2.gState == HAL_UART_STATE_READY && u2_q_tail != u2_q_head) {
+        // Pop all available bytes from the circular queue into the linear DMA buffer
+        while (u2_q_tail != u2_q_head) {
+            uart2_dma_buffer[count2++] = uart2_dma_queue[u2_q_tail];
+            u2_q_tail = (u2_q_tail + 1) % AMDS_RX_BUF_SIZE;
         }
+    }
+
+    // Prepare UART 3 Data
+    if (huart3.gState == HAL_UART_STATE_READY && u3_q_tail != u3_q_head) {
+        // Pop all available bytes from the circular queue into the linear DMA buffer
+        while (u3_q_tail != u3_q_head) {
+            uart3_dma_buffer[count3++] = uart3_dma_queue[u3_q_tail];
+            u3_q_tail = (u3_q_tail + 1) % AMDS_RX_BUF_SIZE;
+        }
+    }
+
+    // Fire them back-to-back as fast as the CPU can execute the instructions
+    if (count2 > 0) {
+        HAL_UART_Transmit_DMA(&huart2, (uint8_t*)uart2_dma_buffer, count2);
+    }
+
+    if (count3 > 0) {
+        HAL_UART_Transmit_DMA(&huart3, (uint8_t*)uart3_dma_buffer, count3);
     }
 }
 
@@ -92,110 +75,110 @@ void process_transmissions(void) {
 
 // clang-format on
 
-// Called after ADC conversions have been completed,
-// to send sampled data back to AMDC
+//// Called after ADC conversions have been completed,
+//// to send sampled data back to AMDC
+////
+//void transmit_samples(void)
+//{
+//    // 2. Create a local buffer for this transmission "burst"
+//    static uint8_t tx_data2[36];
+//	static uint8_t tx_data3[36];
+//    uint8_t idx = 0;
 //
-void transmit_samples(void)
-{
-    // 2. Create a local buffer for this transmission "burst"
-    static uint8_t tx_data2[36];
-	static uint8_t tx_data3[36];
-    uint8_t idx = 0;
-
-    uint16_t bits[8];
-    adc_latest_bits(bits);
-
-    for (int i = 0; i < 4; i++) {
-    	uint8_t header = (i == 0) ? 0x90 : (0x90 | (0x03 & i));
-
-    	tx_data2[idx] = header;
-    	tx_data3[idx] = header;
-		idx++;
-
-        tx_data2[idx] = (uint8_t)(bits[i] >> 8);   // MSB
-        tx_data3[idx] = (uint8_t)(bits[i + 4] >> 8);   // MSB
-        idx++;
-
-        tx_data2[idx] = (uint8_t)(bits[i] & 0xFF); // LSB
-        tx_data3[idx] = (uint8_t)(bits[i + 4] & 0xFF); // LSB
-        idx++;
-    }
-
-    // 1. Process incoming UARTs first
-    NOP256;
-    NOP256;
-    NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-    process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
-    process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
-
-    uint16_t amds[16] = {1};
-    adc_latest_amds(amds);
-
-    // ... Add AMDS data to tx_data if ready ...
-    if (amds_samples_ready[0]) {
-    	for (int i = 0; i < 4; i++) {
-			uint8_t header = (i == 0) ? 0x94 : (0x94 | (0x07 & i));
-
-			tx_data2[idx] = header;
-			tx_data3[idx] = header;
-			idx++;
-
-			tx_data2[idx] = (uint8_t)(amds[i] >> 8);   // MSB
-			tx_data3[idx] = (uint8_t)(amds[i + 4] >> 8);   // MSB
-			idx++;
-
-			tx_data2[idx] = (uint8_t)(amds[i] & 0xFF); // LSB
-			tx_data3[idx] = (uint8_t)(amds[i + 4] & 0xFF); // LSB
-			idx++;
-		}
-
-    	// Clear flags for this set
-		amds_samples_ready[0] = false;
-
-		if (amds_samples_ready[1]) {
-			for (int i = 0; i < 4; i++) {
-				uint8_t header = (i == 0) ? 0x98 : (0x98 | (0x0B & i));
-
-				tx_data2[idx] = header;
-				tx_data3[idx] = header;
-				idx++;
-
-				tx_data2[idx] = (uint8_t)(amds[i] >> 8);   // MSB
-				tx_data3[idx] = (uint8_t)(amds[i + 4] >> 8);   // MSB
-				idx++;
-
-				tx_data2[idx] = (uint8_t)(amds[i] & 0xFF); // LSB
-				tx_data3[idx] = (uint8_t)(amds[i + 4] & 0xFF); // LSB
-				idx++;
-			}
-
-			// Clear flags for this set
-			amds_samples_ready[1] = false;
-		}
-    }
-
-    // 4. Trigger the DMA to send exactly 'idx' bytes
-    // This function returns immediately while the hardware sends the data
-    if (huart2.gState == HAL_UART_STATE_READY && huart3.gState == HAL_UART_STATE_READY) {
-		HAL_UART_Transmit_DMA(&huart2, tx_data2, idx);
-		HAL_UART_Transmit_DMA(&huart3, tx_data3, idx);
-	}
-}
+//    uint16_t bits[8];
+//    adc_latest_bits(bits);
+//
+//    for (int i = 0; i < 4; i++) {
+//    	uint8_t header = (i == 0) ? 0x90 : (0x90 | (0x03 & i));
+//
+//    	tx_data2[idx] = header;
+//    	tx_data3[idx] = header;
+//		idx++;
+//
+//        tx_data2[idx] = (uint8_t)(bits[i] >> 8);   // MSB
+//        tx_data3[idx] = (uint8_t)(bits[i + 4] >> 8);   // MSB
+//        idx++;
+//
+//        tx_data2[idx] = (uint8_t)(bits[i] & 0xFF); // LSB
+//        tx_data3[idx] = (uint8_t)(bits[i + 4] & 0xFF); // LSB
+//        idx++;
+//    }
+//
+//    // 1. Process incoming UARTs first
+//    NOP256;
+//    NOP256;
+//    NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//    process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
+//    process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
+//
+//    uint16_t amds[16] = {1};
+//    adc_latest_amds(amds);
+//
+//    // ... Add AMDS data to tx_data if ready ...
+//    if (amds_samples_ready[0]) {
+//    	for (int i = 0; i < 4; i++) {
+//			uint8_t header = (i == 0) ? 0x94 : (0x94 | (0x07 & i));
+//
+//			tx_data2[idx] = header;
+//			tx_data3[idx] = header;
+//			idx++;
+//
+//			tx_data2[idx] = (uint8_t)(amds[i] >> 8);   // MSB
+//			tx_data3[idx] = (uint8_t)(amds[i + 4] >> 8);   // MSB
+//			idx++;
+//
+//			tx_data2[idx] = (uint8_t)(amds[i] & 0xFF); // LSB
+//			tx_data3[idx] = (uint8_t)(amds[i + 4] & 0xFF); // LSB
+//			idx++;
+//		}
+//
+//    	// Clear flags for this set
+//		amds_samples_ready[0] = false;
+//
+//		if (amds_samples_ready[1]) {
+//			for (int i = 0; i < 4; i++) {
+//				uint8_t header = (i == 0) ? 0x98 : (0x98 | (0x0B & i));
+//
+//				tx_data2[idx] = header;
+//				tx_data3[idx] = header;
+//				idx++;
+//
+//				tx_data2[idx] = (uint8_t)(amds[i] >> 8);   // MSB
+//				tx_data3[idx] = (uint8_t)(amds[i + 4] >> 8);   // MSB
+//				idx++;
+//
+//				tx_data2[idx] = (uint8_t)(amds[i] & 0xFF); // LSB
+//				tx_data3[idx] = (uint8_t)(amds[i + 4] & 0xFF); // LSB
+//				idx++;
+//			}
+//
+//			// Clear flags for this set
+//			amds_samples_ready[1] = false;
+//		}
+//    }
+//
+//    // 4. Trigger the DMA to send exactly 'idx' bytes
+//    // This function returns immediately while the hardware sends the data
+//    if (huart2.gState == HAL_UART_STATE_READY && huart3.gState == HAL_UART_STATE_READY) {
+//		HAL_UART_Transmit_DMA(&huart2, tx_data2, idx);
+//		HAL_UART_Transmit_DMA(&huart3, tx_data3, idx);
+//	}
+//}
 
 
 

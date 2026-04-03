@@ -25,6 +25,16 @@ uart_rx_tracker_t tracker5 = {0};
 uint8_t UART4_DMA_Pool[AMDS_RX_BUF_SIZE];
 uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
 
+volatile uint8_t uart2_dma_queue[AMDS_RX_BUF_SIZE];
+volatile uint8_t uart3_dma_queue[AMDS_RX_BUF_SIZE];
+volatile uint8_t uart2_dma_buffer[AMDS_RX_BUF_SIZE];
+volatile uint8_t uart3_dma_buffer[AMDS_RX_BUF_SIZE];
+
+volatile uint16_t u2_q_head = 0;
+volatile uint16_t u2_q_tail = 0;
+volatile uint16_t u3_q_head = 0;
+volatile uint16_t u3_q_tail = 0;
+
 void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id) {
     // Calculate current DMA write position (NDTR counts down)
 	UART_HandleTypeDef *huart;
@@ -36,60 +46,52 @@ void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id)
 
 	uint32_t dma_write_ptr = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart->hdmarx);
 
-    while (track->read_index != dma_write_ptr) {
-        uint8_t byte = pool[track->read_index];
-        track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
+	while (track->read_index != dma_write_ptr) {
+		uint8_t byte = pool[track->read_index];
+		track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
 
-        switch (track->state) {
-            case STATE_IDLE:
-                // Look for any valid header (0x90, 0x94, 0x98 ranges)
-                if ((byte & 0xF0) == 0x90) {
-                    track->header = byte;
-                    track->state = STATE_GOT_HEADER;
-                }
-                break;
+		switch (track->state) {
+			case STATE_IDLE:
+				// Look for any valid header (0x90, 0x94, 0x98 ranges)
+				if ((byte & 0xF0) == 0x90) {
+					track->header = byte;
+					track->state = STATE_GOT_HEADER;
+				}
+				break;
 
-            case STATE_GOT_HEADER:
-                track->data[0] = byte;
+			case STATE_GOT_HEADER:
+				track->data[0] = byte;
+				track->state = STATE_GOT_MSB; // Wait for the next loop iteration to get LSB!
+				break;
 
-                byte = pool[track->read_index];
-                track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
-                track->data[1] = byte;
+			case STATE_GOT_MSB:
+				track->data[1] = byte;
 
-                // 1. Calculate the base index (0 to 3) within the 4-packet group
-                uint8_t base_index = track->header & 0x03;
-
-                // 2. Determine the set (0 for 0x90-0x93, 1 for 0x94-0x97)
-                // Changed mask from 0x0C to 0x04, since we only care about bit 2.
-                uint8_t sample_set = (track->header & 0x04) >> 2;
-
-                // 3. Calculate the absolute global channel index (8 to 23)
-                uint8_t global_index = 8 + (sample_set * 8) + (uart_id == 5 ? 4 : 0) + base_index;
-
-//                // 3. Store the value logically rather than physically
-//                latest_valid_amds_samples[bank][local_index] = value;
-//
-//                // 4. Update the ready flag for the specific bank
-//                amds_samples_ready[bank] = true;
-
-                if (global_index < 24) {
-					tx_packets[global_index].header = track->header;
-					tx_packets[global_index].msb = track->data[0];
-					tx_packets[global_index].lsb = track->data[1];
-
-					// Clear 'sent' before raising 'ready'
-					packet_sent[global_index] = false;
-					packet_ready[global_index] = true;
+				uint8_t packet_to_send[3] = {track->header + 4, track->data[0], track->data[1]};
+				if (uart_id == 4) {
+					dma_queue(2, packet_to_send, 3);
+				} else {
+					dma_queue(3, packet_to_send, 3);
 				}
 
-                track->state = STATE_IDLE;
-                break;
-        }
-    }
+				track->state = STATE_IDLE;
+				break;
+		}
+	}
 }
 
 void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len) {
-
+    if (uart_id == 2) {
+        for (int i = 0; i < len; i++) {
+            uart2_dma_queue[u2_q_head] = data[i];
+            u2_q_head = (u2_q_head + 1) % AMDS_RX_BUF_SIZE;
+        }
+    } else if (uart_id == 3) {
+        for (int i = 0; i < len; i++) {
+            uart3_dma_queue[u3_q_head] = data[i];
+            u3_q_head = (u3_q_head + 1) % AMDS_RX_BUF_SIZE;
+        }
+    }
 }
 
 void UART4_IRQHandler(void)
