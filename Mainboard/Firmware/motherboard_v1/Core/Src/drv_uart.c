@@ -87,6 +87,7 @@ void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef 
             if ((byte & 0xF0) == 0x90) {
                 track->header = byte;
                 track->state = STATE_GOT_HEADER;
+                drv_uart_putc_fast(target_uart, track->header + 4);
             }
             break;
 
@@ -100,7 +101,6 @@ void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef 
 
             // --- CUT-THROUGH TRANSMISSION ---
             // The exact microsecond the packet is complete, blast it out
-            drv_uart_putc_fast(target_uart, track->header + 4);
             drv_uart_putc_fast(target_uart, track->data[0]);
             drv_uart_putc_fast(target_uart, track->data[1]);
 

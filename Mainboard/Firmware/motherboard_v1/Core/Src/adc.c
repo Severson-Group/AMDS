@@ -186,7 +186,6 @@ void EXTI3_IRQHandler(void)
     adc_sample_all_daughtercards(new_data);
 
     for (int i = 0; i < 4; i++) {
-		// Ultra-fast header generation (0x90, 0x91, 0x92, 0x93)
 		uint8_t header = 0x90 | i;
 
 		// Pack UART2 data (Channels 0-3)
@@ -201,6 +200,9 @@ void EXTI3_IRQHandler(void)
 		drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
 		drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
     }
+
+    drv_uart_wait_TC(USART2);
+	drv_uart_wait_TC(USART3);
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the
