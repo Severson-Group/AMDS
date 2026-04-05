@@ -37,48 +37,105 @@ volatile uint16_t u3_q_tail = 0;
 
 void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id) {
     // Calculate current DMA write position (NDTR counts down)
-	UART_HandleTypeDef *huart;
-	if (uart_id == 4) {
-		huart = &huart4;
-    } else {
-    	huart = &huart5;
+    UART_HandleTypeDef *huart = (uart_id == 4) ? &huart4 : &huart5;
+    uint32_t dma_write_ptr = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart->hdmarx);
+
+    while (track->read_index != dma_write_ptr) {
+        uint8_t byte = pool[track->read_index];
+        track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
+
+        switch (track->state) {
+            case STATE_IDLE:
+                // Look for any valid header (0x90, 0x94, 0x98 ranges)
+                if ((byte & 0xF0) == 0x90) {
+                    track->header = byte;
+                    track->state = STATE_GOT_HEADER;
+                }
+                break;
+
+            case STATE_GOT_HEADER:
+                track->data[0] = byte;
+                track->state = STATE_GOT_MSB;
+                break;
+
+            case STATE_GOT_MSB:
+                track->data[1] = byte;
+
+                // --- CUT-THROUGH TRANSMISSION ---
+                // Determine our target hardware register
+                USART_TypeDef *target_uart = (uart_id == 4) ? USART2 : USART3;
+
+                // Fire the 3 bytes instantly
+                drv_uart_putc_fast(target_uart, track->header + 4);
+                drv_uart_putc_fast(target_uart, track->data[0]);
+                drv_uart_putc_fast(target_uart, track->data[1]);
+
+                track->state = STATE_IDLE;
+                break;
+        }
     }
-
-	uint32_t dma_write_ptr = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart->hdmarx);
-
-	while (track->read_index != dma_write_ptr) {
-		uint8_t byte = pool[track->read_index];
-		track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
-
-		switch (track->state) {
-			case STATE_IDLE:
-				// Look for any valid header (0x90, 0x94, 0x98 ranges)
-				if ((byte & 0xF0) == 0x90) {
-					track->header = byte;
-					track->state = STATE_GOT_HEADER;
-				}
-				break;
-
-			case STATE_GOT_HEADER:
-				track->data[0] = byte;
-				track->state = STATE_GOT_MSB; // Wait for the next loop iteration to get LSB!
-				break;
-
-			case STATE_GOT_MSB:
-				track->data[1] = byte;
-
-				uint8_t packet_to_send[3] = {track->header + 4, track->data[0], track->data[1]};
-				if (uart_id == 4) {
-					dma_queue(2, packet_to_send, 3);
-				} else {
-					dma_queue(3, packet_to_send, 3);
-				}
-
-				track->state = STATE_IDLE;
-				break;
-		}
-	}
 }
+
+
+void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef *target_uart) {
+    uint8_t byte = pool[track->read_index];
+    track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
+
+    switch (track->state) {
+        case STATE_IDLE:
+            // Look for any valid header (0x90, 0x94, 0x98 ranges)
+            if ((byte & 0xF0) == 0x90) {
+                track->header = byte;
+                track->state = STATE_GOT_HEADER;
+            }
+            break;
+
+        case STATE_GOT_HEADER:
+            track->data[0] = byte;
+            track->state = STATE_GOT_MSB;
+            break;
+
+        case STATE_GOT_MSB:
+            track->data[1] = byte;
+
+            // --- CUT-THROUGH TRANSMISSION ---
+            // The exact microsecond the packet is complete, blast it out
+            drv_uart_putc_fast(target_uart, track->header + 4);
+            drv_uart_putc_fast(target_uart, track->data[0]);
+            drv_uart_putc_fast(target_uart, track->data[1]);
+
+            track->state = STATE_IDLE;
+            break;
+    }
+}
+
+void process_routing(void) {
+    // Get the current write head for both DMA channels
+    uint32_t dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
+    uint32_t dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
+
+    // Loop as long as EITHER buffer has unread data
+    while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5)) {
+
+        // Process exactly ONE byte for UART4
+        if (tracker4.read_index != dma_ptr4) {
+            process_single_byte(UART4_DMA_Pool, &tracker4, USART2);
+        }
+
+        // Process exactly ONE byte for UART5
+        if (tracker5.read_index != dma_ptr5) {
+            process_single_byte(UART5_DMA_Pool, &tracker5, USART3);
+        }
+
+        // Re-read the DMA counters at the end of the loop in case
+        // new bytes physically arrived while we were parsing the last ones!
+        dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
+        dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
+    }
+}
+
+
+
 
 void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len) {
     if (uart_id == 2) {

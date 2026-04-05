@@ -53,6 +53,11 @@ extern volatile uint16_t u3_q_tail;
 void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id);
 void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len);
 
+
+void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef *target_uart);
+void process_routing(void);
+
+
 static inline void drv_uart_putc_fast(USART_TypeDef *uart, uint8_t data)
 {
     // Wait until UART is ready to accept next character
@@ -81,6 +86,38 @@ static inline void drv_uart_send_fast(USART_TypeDef *uart, uint8_t *data, uint16
     }
 
     drv_uart_wait_TC(uart);
+}
+
+static inline void drv_uart_dma_send_fast(UART_HandleTypeDef *huart, uint8_t *data, uint16_t len)
+{
+    DMA_Stream_TypeDef *dma = (DMA_Stream_TypeDef *)huart->hdmatx->Instance;
+
+    // 1. Disable the DMA channel
+    dma->CR &= ~DMA_SxCR_EN;
+
+    // 2. CRITICAL FIX: Wait for the hardware to actually halt.
+    // Writing to address registers while EN is still high causes a silent failure.
+    while ((dma->CR & DMA_SxCR_EN) != 0) {
+        asm("nop");
+    }
+
+    // 3. Clear the DMA Transfer Complete and Half Transfer flags
+    __HAL_DMA_CLEAR_FLAG(huart->hdmatx, __HAL_DMA_GET_TC_FLAG_INDEX(huart->hdmatx));
+    __HAL_DMA_CLEAR_FLAG(huart->hdmatx, __HAL_DMA_GET_HT_FLAG_INDEX(huart->hdmatx));
+
+    // 4. CRITICAL FIX: Tell the DMA exactly *where* to push the bytes.
+    // It must point directly to the UART's Transmit Data Register.
+    dma->PAR = (uint32_t)&huart->Instance->TDR;
+
+    // 5. Load the Memory Address and Length registers
+    dma->M0AR = (uint32_t)data;
+    dma->NDTR = len;
+
+    // 6. Clear UART Transmission Complete flag to ensure it's ready for a fresh burst
+    huart->Instance->ICR = USART_ICR_TCCF;
+
+    // 7. Fire!
+    dma->CR |= DMA_SxCR_EN;
 }
 
 #endif // DRV_UART_H

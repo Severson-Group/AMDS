@@ -181,45 +181,26 @@ void EXTI3_IRQHandler(void)
 {
 	// alert daisy chained AMDSs to begin converting
 	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-	static uint8_t local_tx2[12] = {0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB};
-	static uint8_t local_tx3[12] = {0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB};
 	// Perform the actual SPI transactions
-	/*uint16_t new_data[8] = { 0 };
+	uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
-
-    // 3. Bypass the circular queue and write straight to local linear buffers
-        // We use static buffers so they persist in memory while the DMA sends them in the background
-	static uint8_t local_tx2[12];
-	static uint8_t local_tx3[12];
-	uint8_t idx = 0;
 
     for (int i = 0; i < 4; i++) {
 		// Ultra-fast header generation (0x90, 0x91, 0x92, 0x93)
 		uint8_t header = 0x90 | i;
 
 		// Pack UART2 data (Channels 0-3)
-		local_tx2[idx] = header;
-		local_tx2[idx+1] = (uint8_t)(new_data[i] >> 8);
-		local_tx2[idx+2] = (uint8_t)(new_data[i] & 0xFF);
+		drv_uart_putc_fast(USART2, header);
+		drv_uart_putc_fast(USART3, header);
 
-		// Pack UART3 data (Channels 4-7)
-		local_tx3[idx] = header;
-		local_tx3[idx+1] = (uint8_t)(new_data[i + 4] >> 8);
-		local_tx3[idx+2] = (uint8_t)(new_data[i + 4] & 0xFF);
+		 // Send ADC sample data MSBs
+		drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+		drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
 
-		idx += 3;
-	}*/
-
-	// 4. Fire the DMA immediately, back-to-back!
-	// No waiting for the main loop. As soon as the CPU hits these lines, the bits hit the wire.
-	if (huart2.gState == HAL_UART_STATE_READY) {
-		HAL_UART_Transmit_DMA(&huart2, local_tx2, 12);
-	}
-	if (huart3.gState == HAL_UART_STATE_READY) {
-		HAL_UART_Transmit_DMA(&huart3, local_tx3, 12);
-	}
-
-//	sync_event_flag = true;
+		// Send ADC sample data LSBs
+		drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
+		drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
+    }
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the

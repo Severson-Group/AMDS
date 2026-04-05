@@ -7,34 +7,20 @@ bool packet_sent[NUM_SETS * PACKETS_PER_SET];
 volatile bool sync_event_flag = false; // Set this to true in your EXTI ISR
 
 void process_transmissions(void) {
-    uint16_t count2 = 0;
-    uint16_t count3 = 0;
+    // Loop as long as there is data in EITHER queue
+    while ((u2_q_tail != u2_q_head) || (u3_q_tail != u3_q_head)) {
 
-    // Prepare UART 2 Data
-    if (huart2.gState == HAL_UART_STATE_READY && u2_q_tail != u2_q_head) {
-        // Pop all available bytes from the circular queue into the linear DMA buffer
-        while (u2_q_tail != u2_q_head) {
-            uart2_dma_buffer[count2++] = uart2_dma_queue[u2_q_tail];
+        // If UART2 has data, pop one byte and push it straight to the hardware
+        if (u2_q_tail != u2_q_head) {
+            drv_uart_putc_fast(USART2, uart2_dma_queue[u2_q_tail]);
             u2_q_tail = (u2_q_tail + 1) % AMDS_RX_BUF_SIZE;
         }
-    }
 
-    // Prepare UART 3 Data
-    if (huart3.gState == HAL_UART_STATE_READY && u3_q_tail != u3_q_head) {
-        // Pop all available bytes from the circular queue into the linear DMA buffer
-        while (u3_q_tail != u3_q_head) {
-            uart3_dma_buffer[count3++] = uart3_dma_queue[u3_q_tail];
+        // If UART3 has data, pop one byte and push it straight to the hardware
+        if (u3_q_tail != u3_q_head) {
+            drv_uart_putc_fast(USART3, uart3_dma_queue[u3_q_tail]);
             u3_q_tail = (u3_q_tail + 1) % AMDS_RX_BUF_SIZE;
         }
-    }
-
-    // Fire them back-to-back as fast as the CPU can execute the instructions
-    if (count2 > 0) {
-        HAL_UART_Transmit_DMA(&huart2, (uint8_t*)uart2_dma_buffer, count2);
-    }
-
-    if (count3 > 0) {
-        HAL_UART_Transmit_DMA(&huart3, (uint8_t*)uart3_dma_buffer, count3);
     }
 }
 

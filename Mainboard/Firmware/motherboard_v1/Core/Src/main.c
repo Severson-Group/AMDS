@@ -24,6 +24,10 @@ int main(void)
     drv_uart_init();
     drv_led_init();
 
+    // Tell the UART to constantly route TX requests to the DMA controller
+//    huart2.Instance->CR3 |= USART_CR3_DMAT;
+//    huart3.Instance->CR3 |= USART_CR3_DMAT;
+
     // Initialize the main modules
     adc_init();
 
@@ -41,30 +45,31 @@ int main(void)
 //    SysTick->CTRL &= 0xFFFFFFFE;
     
     while (1) {
-    	if ((u2_q_tail != u2_q_head) || u3_q_tail != u3_q_head) {
-			// Package all ready sets and transmit
-			process_transmissions();
+//	// 1. Process and instantly forward UART4 data -> UART2
+//	if (tracker4.read_index != (AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))) {
+//		process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
+//	}
+//
+//	// 2. Process and instantly forward UART5 data -> UART3
+//	if (tracker5.read_index != (AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx))) {
+//		process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
+//	}
+
+	// Interleave the parsing and routing for both lines simultaneously
+	process_routing();
+
+	// 3. Handle slow UI tasks (LEDs)
+	if (HAL_GetTick() - ledDelta >= 250) {
+		ledDelta = HAL_GetTick();
+		drv_led_clear();
+		drv_led_on(1 << led);
+		drv_led_display();
+
+		if (++led >= DRV_LED_NUM_TOTAL) {
+			led = 0;
 		}
-
-    	if (tracker4.read_index != ( AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))) { //update
-    		process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
-		}
-
-    	if (tracker5.read_index != ( AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx))) { //update
-			process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
-		}
-
-        if (HAL_GetTick() - ledDelta >= 250) {
-        	ledDelta = HAL_GetTick();
-        	drv_led_clear();
-			drv_led_on(1 << led);
-			drv_led_display();
-
-			if (++led >= DRV_LED_NUM_TOTAL) {
-				led = 0;
-			}
-        }
-    }
+	}
+}
 }
 
 void HAL_MspInit(void)
