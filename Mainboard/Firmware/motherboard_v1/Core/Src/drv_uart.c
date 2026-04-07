@@ -86,22 +86,21 @@ void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef 
             // Look for any valid header (0x90, 0x94, 0x98 ranges)
             if ((byte & 0xF0) == 0x90) {
                 track->header = byte;
-                track->state = STATE_GOT_HEADER;
                 drv_uart_putc_fast(target_uart, track->header + 4);
+                track->state = STATE_GOT_HEADER;
             }
             break;
 
         case STATE_GOT_HEADER:
             track->data[0] = byte;
+            drv_uart_putc_fast(target_uart, track->data[0]);
             track->state = STATE_GOT_MSB;
             break;
 
         case STATE_GOT_MSB:
             track->data[1] = byte;
-
             // --- CUT-THROUGH TRANSMISSION ---
             // The exact microsecond the packet is complete, blast it out
-            drv_uart_putc_fast(target_uart, track->data[0]);
             drv_uart_putc_fast(target_uart, track->data[1]);
 
             track->state = STATE_IDLE;
@@ -134,6 +133,31 @@ void process_routing(void) {
     }
 }
 
+void process_routing_flipped(void) {
+    // Get the current write head for both DMA channels
+    uint32_t dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
+    uint32_t dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
+
+    // Loop as long as EITHER buffer has unread data
+    while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5)) {
+
+    	// Process exactly ONE byte for UART5
+		if (tracker5.read_index != dma_ptr5) {
+			process_single_byte(UART5_DMA_Pool, &tracker5, USART3);
+		}
+
+    	// Process exactly ONE byte for UART4
+        if (tracker4.read_index != dma_ptr4) {
+            process_single_byte(UART4_DMA_Pool, &tracker4, USART2);
+        }
+
+        // Re-read the DMA counters at the end of the loop in case
+        // new bytes physically arrived while we were parsing the last ones!
+        dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
+        dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
+    }
+}
+
 
 
 
@@ -153,18 +177,21 @@ void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len) {
 
 void UART4_IRQHandler(void)
 {
-    // Check for Overrun, Noise, or Frame errors
-    if (__HAL_UART_GET_FLAG(&huart4, UART_FLAG_ORE) ||
+    // Check for Parity, Overrun, Noise, or Frame errors
+    if (__HAL_UART_GET_FLAG(&huart4, UART_FLAG_PE)  ||
+        __HAL_UART_GET_FLAG(&huart4, UART_FLAG_ORE) ||
         __HAL_UART_GET_FLAG(&huart4, UART_FLAG_NE)  ||
         __HAL_UART_GET_FLAG(&huart4, UART_FLAG_FE))
     {
-        // 1. Clear the error flags
-        __HAL_UART_CLEAR_IT(&huart4, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
+        // 1. Clear the error flags (Added UART_CLEAR_PEF)
+        __HAL_UART_CLEAR_IT(&huart4, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
         // 2. IMPORTANT: Re-enable DMA receiver request
-        // Sometimes HAL disables this bit (DMAR) on error.
+        // The hardware/HAL drops this bit on error, halting the DMA stream.
         SET_BIT(huart4.Instance->CR3, USART_CR3_DMAR);
     }
+
+    // Process normal RX/TX interrupts via the HAL
     HAL_UART_IRQHandler(&huart4);
 }
 
@@ -176,12 +203,13 @@ void DMA1_Stream2_IRQHandler(void)
 void UART5_IRQHandler(void)
 {
 	// Check for Overrun, Noise, or Frame errors
-	if (__HAL_UART_GET_FLAG(&huart5, UART_FLAG_ORE) ||
+	if (__HAL_UART_GET_FLAG(&huart4, UART_FLAG_PE)  ||
+		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_ORE) ||
 		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_NE)  ||
 		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_FE))
 	{
 		// 1. Clear the error flags
-		__HAL_UART_CLEAR_IT(&huart5, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
+		__HAL_UART_CLEAR_IT(&huart5, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
 		// 2. IMPORTANT: Re-enable DMA receiver request
 		// Sometimes HAL disables this bit (DMAR) on error.
@@ -337,6 +365,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
         // DMA config - check your device's DMA request mapping table
 		// for the correct stream/channel for USART2_TX
         hdma_usart2_tx.Instance = DMA1_Stream6;
+        hdma_usart2_tx.Instance->CR |= USART_CR3_DDRE;
         hdma_usart2_tx.Init.Channel = DMA_CHANNEL_4;
         hdma_usart2_tx.Init.Direction = DMA_MEMORY_TO_PERIPH; // Memory -> UART
         hdma_usart2_tx.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -375,6 +404,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
         // DMA config - check your device's DMA request mapping table
 		// for the correct stream/channel for USART3_TX
 		hdma_usart3_tx.Instance = DMA1_Stream3;
+		hdma_usart3_tx.Instance->CR |= USART_CR3_DDRE;
 		hdma_usart3_tx.Init.Channel = DMA_CHANNEL_4;
 		hdma_usart3_tx.Init.Direction = DMA_MEMORY_TO_PERIPH; // Memory -> UART
 		hdma_usart3_tx.Init.PeriphInc = DMA_PINC_DISABLE;

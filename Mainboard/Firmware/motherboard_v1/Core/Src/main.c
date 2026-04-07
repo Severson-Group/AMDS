@@ -45,16 +45,6 @@ int main(void)
 //    SysTick->CTRL &= 0xFFFFFFFE;
     
     while (1) {
-//	// 1. Process and instantly forward UART4 data -> UART2
-//	if (tracker4.read_index != (AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))) {
-//		process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
-//	}
-//
-//	// 2. Process and instantly forward UART5 data -> UART3
-//	if (tracker5.read_index != (AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx))) {
-//		process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
-//	}
-
 	// Interleave the parsing and routing for both lines simultaneously
 	process_routing();
 

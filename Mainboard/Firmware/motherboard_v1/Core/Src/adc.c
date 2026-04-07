@@ -45,9 +45,10 @@ static void setup_pin_CONVST(void);
 // Buffer of latest samples
 static volatile uint16_t latest_valid_adc_data[8] = { 0 };
 
-volatile uint16_t latest_valid_amds_samples[2][8] = { 0 };
 
-volatile bool amds_samples_ready[2] = { 0 };
+// Global bitmask: 1 = Active, 0 = Inactive.
+// For example: 0b00010001 (0x0F) means channels 1-4 are active, 5-8 are disabled.
+volatile uint8_t active_sensor_mask = 0x11;
 
 void adc_init(void)
 {
@@ -72,33 +73,6 @@ void adc_latest_bits(uint16_t *output)
     output[5] = data[5];
     output[6] = data[6];
     output[7] = data[7];
-}
-
-// NOTE: this function is called from the transmit function
-void adc_latest_amds(uint16_t *output)
-{
-    volatile uint16_t *data1 = latest_valid_amds_samples[0];
-    volatile uint16_t *data2 = latest_valid_amds_samples[1];
-
-	// Give user their data (unrolled for speed)
-	output[0] = data1[0];
-	output[1] = data1[1];
-	output[2] = data1[2];
-	output[3] = data1[3];
-	output[4] = data1[4];
-	output[5] = data1[5];
-	output[6] = data1[6];
-	output[7] = data1[7];
-
-	// Give user their data (unrolled for speed)
-	output[8]  = data2[0];
-	output[9]  = data2[1];
-	output[10] = data2[2];
-	output[11] = data2[3];
-	output[12] = data2[4];
-	output[13] = data2[5];
-	output[14] = data2[6];
-	output[15] = data2[7];
 }
 
 static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
@@ -185,24 +159,24 @@ void EXTI3_IRQHandler(void)
 	uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
 
-    for (int i = 0; i < 4; i++) {
+    // Conditionally Transmit
+	for (int i = 0; i < 4; i++) {
 		uint8_t header = 0x90 | i;
 
-		// Pack UART2 data (Channels 0-3)
-		drv_uart_putc_fast(USART2, header);
-		drv_uart_putc_fast(USART3, header);
+		// Check Channel 0-3 (UART2)
+		if (active_sensor_mask & (1 << i)) {
+			drv_uart_putc_fast(USART2, header);
+			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
+		}
 
-		 // Send ADC sample data MSBs
-		drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-		drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-
-		// Send ADC sample data LSBs
-		drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
-		drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
-    }
-
-    drv_uart_wait_TC(USART2);
-	drv_uart_wait_TC(USART3);
+		// Check Channel 4-7 (UART3)
+		if (active_sensor_mask & (1 << (i + 4))) {
+			drv_uart_putc_fast(USART3, header);
+			drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+			drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
+		}
+	}
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the
