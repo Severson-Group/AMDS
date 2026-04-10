@@ -48,7 +48,7 @@ static volatile uint16_t latest_valid_adc_data[8] = { 0 };
 
 // Global bitmask: 1 = Active, 0 = Inactive.
 // For example: 0b00010001 (0x0F) means channels 1-4 are active, 5-8 are disabled.
-volatile uint8_t active_sensor_mask = 0x11;
+volatile uint8_t active_sensor_mask = 0xFF;
 
 void adc_init(void)
 {
@@ -167,13 +167,20 @@ void EXTI3_IRQHandler(void)
 		if (active_sensor_mask & (1 << i)) {
 			drv_uart_putc_fast(USART2, header);
 			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
 		}
 
 		// Check Channel 4-7 (UART3)
 		if (active_sensor_mask & (1 << (i + 4))) {
 			drv_uart_putc_fast(USART3, header);
 			drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+		}
+
+		if (active_sensor_mask & (1 << i)) {
+			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
+		}
+
+		// Check Channel 4-7 (UART3)
+		if (active_sensor_mask & (1 << (i + 4))) {
 			drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
 		}
 	}
