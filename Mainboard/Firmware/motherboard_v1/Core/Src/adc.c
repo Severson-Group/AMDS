@@ -180,12 +180,12 @@ void EXTI3_IRQHandler(void)
 		}
 
 		if (u2) {
-			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
+			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFE));
 		}
 
 		// Check Channel 4-7 (UART3)
 		if (u3) {
-			drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
+			drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFE));
 		}
 	}
 
