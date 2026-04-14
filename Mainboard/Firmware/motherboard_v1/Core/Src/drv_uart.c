@@ -77,7 +77,7 @@ void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id)
 }
 
 
-void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef *target_uart) {
+static inline void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef *target_uart) {
     uint8_t byte = pool[track->read_index];
     track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
 
@@ -133,33 +133,6 @@ void process_routing(void) {
     }
 }
 
-void process_routing_flipped(void) {
-    // Get the current write head for both DMA channels
-    uint32_t dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
-    uint32_t dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
-
-    // Loop as long as EITHER buffer has unread data
-    while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5)) {
-
-    	// Process exactly ONE byte for UART5
-		if (tracker5.read_index != dma_ptr5) {
-			process_single_byte(UART5_DMA_Pool, &tracker5, USART3);
-		}
-
-    	// Process exactly ONE byte for UART4
-        if (tracker4.read_index != dma_ptr4) {
-            process_single_byte(UART4_DMA_Pool, &tracker4, USART2);
-        }
-
-        // Re-read the DMA counters at the end of the loop in case
-        // new bytes physically arrived while we were parsing the last ones!
-        dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
-        dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
-    }
-}
-
-
-
 
 void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len) {
     if (uart_id == 2) {
@@ -189,6 +162,8 @@ void UART4_IRQHandler(void)
         // 2. IMPORTANT: Re-enable DMA receiver request
         // The hardware/HAL drops this bit on error, halting the DMA stream.
         SET_BIT(huart4.Instance->CR3, USART_CR3_DMAR);
+
+        return;
     }
 
     // Process normal RX/TX interrupts via the HAL
@@ -214,6 +189,8 @@ void UART5_IRQHandler(void)
 		// 2. IMPORTANT: Re-enable DMA receiver request
 		// Sometimes HAL disables this bit (DMAR) on error.
 		SET_BIT(huart5.Instance->CR3, USART_CR3_DMAR);
+
+		return;
 	}
 	HAL_UART_IRQHandler(&huart5);
 }

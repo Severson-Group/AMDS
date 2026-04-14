@@ -53,10 +53,7 @@ extern volatile uint16_t u3_q_tail;
 void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id);
 void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len);
 
-
-void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef *target_uart);
 void process_routing(void);
-void process_routing_flipped(void);
 
 
 static inline void drv_uart_putc_fast(USART_TypeDef *uart, uint8_t data)
