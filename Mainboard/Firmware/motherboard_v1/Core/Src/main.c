@@ -46,7 +46,7 @@ int main(void)
     
     while (1) {
 	// Interleave the parsing and routing for both lines simultaneously
-	process_routing();
+//	process_routing();
 
 	// 3. Handle slow UI tasks (LEDs)
 	if (HAL_GetTick() - ledDelta >= 250) {

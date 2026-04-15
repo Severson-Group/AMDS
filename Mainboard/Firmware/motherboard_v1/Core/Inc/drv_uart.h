@@ -29,7 +29,7 @@ typedef struct {
     rx_state_t state;
     uint8_t header;
     uint8_t data[2];
-    uint32_t read_index;
+    uint8_t read_index;
 } uart_rx_tracker_t;
 
 extern uart_rx_tracker_t tracker4;

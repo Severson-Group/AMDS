@@ -189,6 +189,8 @@ void EXTI3_IRQHandler(void)
 		}
 	}
 
+	process_routing();
+
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the
     // ADC conversions with the SYNC signal from the AMDC.

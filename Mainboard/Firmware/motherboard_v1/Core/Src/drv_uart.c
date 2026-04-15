@@ -79,30 +79,25 @@ void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id)
 
 static inline void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef *target_uart) {
     uint8_t byte = pool[track->read_index];
-    track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
+
+    // read_index is 8 bits long so it will already wrap after 256
+    track->read_index++;
 
     switch (track->state) {
         case STATE_IDLE:
-            // Look for any valid header (0x90, 0x94, 0x98 ranges)
             if ((byte & 0xF0) == 0x90) {
-                track->header = byte;
-                drv_uart_putc_fast(target_uart, track->header + 4);
+                drv_uart_putc_fast(target_uart, byte + 4);
                 track->state = STATE_GOT_HEADER;
             }
             break;
 
         case STATE_GOT_HEADER:
-            track->data[0] = byte;
-            drv_uart_putc_fast(target_uart, track->data[0]);
+            drv_uart_putc_fast(target_uart, byte);
             track->state = STATE_GOT_MSB;
             break;
 
         case STATE_GOT_MSB:
-            track->data[1] = byte;
-            // --- CUT-THROUGH TRANSMISSION ---
-            // The exact microsecond the packet is complete, blast it out
-            drv_uart_putc_fast(target_uart, track->data[1]);
-
+            drv_uart_putc_fast(target_uart, byte);
             track->state = STATE_IDLE;
             break;
     }
@@ -113,24 +108,33 @@ void process_routing(void) {
     uint32_t dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
     uint32_t dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
 
-    // Loop as long as EITHER buffer has unread data
-    while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5)) {
+    uint8_t i = 0;
+    while ((tracker4.read_index == dma_ptr4) || (tracker5.read_index == dma_ptr5)) {
+    	asm("nop");
+    	if (i++ >= 10)
+    		return;
 
-        // Process exactly ONE byte for UART4
-        if (tracker4.read_index != dma_ptr4) {
-            process_single_byte(UART4_DMA_Pool, &tracker4, USART2);
-        }
-
-        // Process exactly ONE byte for UART5
-        if (tracker5.read_index != dma_ptr5) {
-            process_single_byte(UART5_DMA_Pool, &tracker5, USART3);
-        }
-
-        // Re-read the DMA counters at the end of the loop in case
-        // new bytes physically arrived while we were parsing the last ones!
-        dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
-        dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
+    	dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
+		dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
     }
+
+    // Loop as long as EITHER buffer has unread data
+    do {
+		while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5)) {
+			if (tracker4.read_index != dma_ptr4) {
+				process_single_byte(UART4_DMA_Pool, &tracker4, USART2);
+			}
+
+			if (tracker5.read_index != dma_ptr5) {
+				process_single_byte(UART5_DMA_Pool, &tracker5, USART3);
+			}
+		}
+
+		// Check one last time before returning to see if bytes arrived while parsing
+		dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
+		dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
+
+	} while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5));
 }
 
 
