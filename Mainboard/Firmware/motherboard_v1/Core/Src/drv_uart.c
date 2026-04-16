@@ -103,20 +103,107 @@ static inline void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, 
     }
 }
 
+static inline void process_bytes_parallel(uint8_t len) {
+	bool send2 = false;
+	bool send3 = false;
+	for (uint8_t i = 0; i < len; i++) {
+        // Fetch bytes and increment indices (relies on 8-bit wrap around)
+        uint8_t byte4 = UART4_DMA_Pool[tracker4.read_index++];
+        uint8_t byte5 = UART5_DMA_Pool[tracker5.read_index++];
+
+        // Evaluate Tracker 4 (UART4 -> USART2)
+        switch (tracker4.state) {
+            case STATE_IDLE:
+                if ((byte4 & 0xF0) == 0x90) {
+                    byte4 += 4;
+                    send2 = true;
+                    tracker4.state = STATE_GOT_HEADER;
+                }
+                break;
+            case STATE_GOT_HEADER:
+                send2 = true;
+                tracker4.state = STATE_GOT_MSB;
+                break;
+            case STATE_GOT_MSB:
+                send2 = true;
+                tracker4.state = STATE_IDLE;
+                break;
+        }
+
+        // Evaluate Tracker 5 (UART5 -> USART3)
+        switch (tracker5.state) {
+            case STATE_IDLE:
+                if ((byte5 & 0xF0) == 0x90) {
+                    byte5 += 4;
+                    send3 = true;
+                    tracker5.state = STATE_GOT_HEADER;
+                }
+                break;
+            case STATE_GOT_HEADER:
+                send3 = true;
+                tracker5.state = STATE_GOT_MSB;
+                break;
+            case STATE_GOT_MSB:
+                send3 = true;
+                tracker5.state = STATE_IDLE;
+                break;
+        }
+
+        // Interleave the hardware writes to minimize blocking
+        if (send2) {
+            drv_uart_putc_fast(USART2, byte4 & 0xFE);
+        }
+        if (send3) {
+            drv_uart_putc_fast(USART3, byte5 & 0xFE);
+        }
+        send2 = false;
+        send3 = false;
+    }
+}
+
 void process_routing(void) {
+    uint8_t dma_ptr4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
+    uint8_t dma_ptr5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));;
+    uint8_t pending4;
+    uint8_t pending5;
+
+    do {
+        // Calculate how many unread bytes exist in each buffer
+        pending4 = (uint8_t)(dma_ptr4 - tracker4.read_index);
+        pending5 = (uint8_t)(dma_ptr5 - tracker5.read_index);
+
+        // Process the overlapping chunk in parallel
+        uint8_t common_len = (pending4 < pending5) ? pending4 : pending5;
+        if (common_len > 0) {
+            process_bytes_parallel(common_len);
+        }
+
+        // Handle remaining bytes for UART4 if it received more
+        uint8_t remainder4 = pending4 - common_len;
+        while (remainder4--) {
+            process_single_byte(UART4_DMA_Pool, &tracker4, USART2);
+        }
+
+        // Handle remaining bytes for UART5 if it received more
+        uint8_t remainder5 = pending5 - common_len;
+        while (remainder5--) {
+            process_single_byte(UART5_DMA_Pool, &tracker5, USART3);
+        }
+
+        // Check one last time to see if new bytes arrived during the parsing loops
+        dma_ptr4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
+        dma_ptr5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
+
+    } while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5));
+}
+
+
+
+
+void process_routing_old(void) {
     // Get the current write head for both DMA channels
     uint32_t dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
     uint32_t dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
-
-    uint8_t i = 0;
-    while ((tracker4.read_index == dma_ptr4) || (tracker5.read_index == dma_ptr5)) {
-    	asm("nop");
-    	if (i++ >= 10)
-    		return;
-
-    	dma_ptr4 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx);
-		dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
-    }
 
     // Loop as long as EITHER buffer has unread data
     do {
