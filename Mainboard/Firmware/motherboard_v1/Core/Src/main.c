@@ -24,10 +24,6 @@ int main(void)
     drv_uart_init();
     drv_led_init();
 
-    // Tell the UART to constantly route TX requests to the DMA controller
-//    huart2.Instance->CR3 |= USART_CR3_DMAT;
-//    huart3.Instance->CR3 |= USART_CR3_DMAT;
-
     // Initialize the main modules
     adc_init();
 
@@ -46,9 +42,9 @@ int main(void)
     
     while (1) {
 	// Interleave the parsing and routing for both lines simultaneously
-	process_routing();
+	process_routing_old();
 
-	// 3. Handle slow UI tasks (LEDs)
+	// 3. Handle LEDs
 	if (HAL_GetTick() - ledDelta >= 250) {
 		ledDelta = HAL_GetTick();
 		drv_led_clear();

@@ -25,145 +25,63 @@ uart_rx_tracker_t tracker5 = {0};
 uint8_t UART4_DMA_Pool[AMDS_RX_BUF_SIZE];
 uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
 
-volatile uint8_t uart2_dma_queue[AMDS_RX_BUF_SIZE];
-volatile uint8_t uart3_dma_queue[AMDS_RX_BUF_SIZE];
-volatile uint8_t uart2_dma_buffer[AMDS_RX_BUF_SIZE];
-volatile uint8_t uart3_dma_buffer[AMDS_RX_BUF_SIZE];
+uint8_t count4 = 0;
+uint8_t count5 = 0;
 
-volatile uint16_t u2_q_head = 0;
-volatile uint16_t u2_q_tail = 0;
-volatile uint16_t u3_q_head = 0;
-volatile uint16_t u3_q_tail = 0;
-
-void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id) {
-    // Calculate current DMA write position (NDTR counts down)
-    UART_HandleTypeDef *huart = (uart_id == 4) ? &huart4 : &huart5;
-    uint32_t dma_write_ptr = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart->hdmarx);
-
-    while (track->read_index != dma_write_ptr) {
-        uint8_t byte = pool[track->read_index];
-        track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
-
-        switch (track->state) {
-            case STATE_IDLE:
-                // Look for any valid header (0x90, 0x94, 0x98 ranges)
-                if ((byte & 0xF0) == 0x90) {
-                    track->header = byte;
-                    track->state = STATE_GOT_HEADER;
-                }
-                break;
-
-            case STATE_GOT_HEADER:
-                track->data[0] = byte;
-                track->state = STATE_GOT_MSB;
-                break;
-
-            case STATE_GOT_MSB:
-                track->data[1] = byte;
-
-                // --- CUT-THROUGH TRANSMISSION ---
-                // Determine our target hardware register
-                USART_TypeDef *target_uart = (uart_id == 4) ? USART2 : USART3;
-
-                // Fire the 3 bytes instantly
-                drv_uart_putc_fast(target_uart, track->header + 4);
-                drv_uart_putc_fast(target_uart, track->data[0]);
-                drv_uart_putc_fast(target_uart, track->data[1]);
-
-                track->state = STATE_IDLE;
-                break;
-        }
-    }
-}
-
-
-static inline void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef *target_uart) {
+static inline void process_single_byte(uint8_t *pool, uart_rx_tracker_t *track, USART_TypeDef *target_uart, uint8_t count) {
     uint8_t byte = pool[track->read_index];
 
     // read_index is 8 bits long so it will already wrap after 256
     track->read_index++;
 
-    switch (track->state) {
-        case STATE_IDLE:
-            if ((byte & 0xF0) == 0x90) {
-                drv_uart_putc_fast(target_uart, byte + 4);
-                track->state = STATE_GOT_HEADER;
-            }
-            break;
+//    switch (track->state) {
+//        case STATE_IDLE:
+//            if ((byte & 0xF0) == 0x90) {
+//                drv_uart_putc_fast(target_uart, byte + 4);
+//                track->state = STATE_GOT_HEADER;
+//            }
+//            break;
+//
+//        case STATE_GOT_HEADER:
+//            drv_uart_putc_fast(target_uart, byte);
+//            track->state = STATE_GOT_MSB;
+//            break;
+//
+//        case STATE_GOT_MSB:
+//            drv_uart_putc_fast(target_uart, byte);
+//            track->state = STATE_IDLE;
+//            break;
+//    }
+    if (count == 0)
+    	byte += 4;
 
-        case STATE_GOT_HEADER:
-            drv_uart_putc_fast(target_uart, byte);
-            track->state = STATE_GOT_MSB;
-            break;
+    drv_uart_putc_fast(target_uart, byte);
 
-        case STATE_GOT_MSB:
-            drv_uart_putc_fast(target_uart, byte);
-            track->state = STATE_IDLE;
-            break;
-    }
 }
 
 static inline void process_bytes_parallel(uint8_t len) {
-	bool send2 = false;
-	bool send3 = false;
 	for (uint8_t i = 0; i < len; i++) {
         // Fetch bytes and increment indices (relies on 8-bit wrap around)
         uint8_t byte4 = UART4_DMA_Pool[tracker4.read_index++];
         uint8_t byte5 = UART5_DMA_Pool[tracker5.read_index++];
 
-        // Evaluate Tracker 4 (UART4 -> USART2)
-        switch (tracker4.state) {
-            case STATE_IDLE:
-                if ((byte4 & 0xF0) == 0x90) {
-                    byte4 += 4;
-                    send2 = true;
-                    tracker4.state = STATE_GOT_HEADER;
-                }
-                break;
-            case STATE_GOT_HEADER:
-                send2 = true;
-                tracker4.state = STATE_GOT_MSB;
-                break;
-            case STATE_GOT_MSB:
-                send2 = true;
-                tracker4.state = STATE_IDLE;
-                break;
-        }
+        if ((byte4 & 0xF0) == 0x90) {
+			byte4 += 4;
+		}
 
-        // Evaluate Tracker 5 (UART5 -> USART3)
-        switch (tracker5.state) {
-            case STATE_IDLE:
-                if ((byte5 & 0xF0) == 0x90) {
-                    byte5 += 4;
-                    send3 = true;
-                    tracker5.state = STATE_GOT_HEADER;
-                }
-                break;
-            case STATE_GOT_HEADER:
-                send3 = true;
-                tracker5.state = STATE_GOT_MSB;
-                break;
-            case STATE_GOT_MSB:
-                send3 = true;
-                tracker5.state = STATE_IDLE;
-                break;
-        }
+        if ((byte5 & 0xF0) == 0x90) {
+			byte5 += 4;
+		}
 
         // Interleave the hardware writes to minimize blocking
-        if (send2) {
-            drv_uart_putc_fast(USART2, byte4 & 0xFE);
-        }
-        if (send3) {
-            drv_uart_putc_fast(USART3, byte5 & 0xFE);
-        }
-        send2 = false;
-        send3 = false;
+		drv_uart_putc_fast(USART2, byte4 & 0xFE);
+		drv_uart_putc_fast(USART3, byte5 & 0xFE);
     }
 }
 
 void process_routing(void) {
     uint8_t dma_ptr4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
-    uint8_t dma_ptr5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));;
+    uint8_t dma_ptr5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
     uint8_t pending4;
     uint8_t pending5;
 
@@ -178,17 +96,21 @@ void process_routing(void) {
             process_bytes_parallel(common_len);
         }
 
-        // Handle remaining bytes for UART4 if it received more
-        uint8_t remainder4 = pending4 - common_len;
-        while (remainder4--) {
-            process_single_byte(UART4_DMA_Pool, &tracker4, USART2);
-        }
+        while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5)) {
+			if (tracker4.read_index != dma_ptr4) {
+				process_single_byte(UART4_DMA_Pool, &tracker4, USART2, count4);
+				count4++;
+				if (count4 > 2)
+					count4 = 0;
+			}
 
-        // Handle remaining bytes for UART5 if it received more
-        uint8_t remainder5 = pending5 - common_len;
-        while (remainder5--) {
-            process_single_byte(UART5_DMA_Pool, &tracker5, USART3);
-        }
+			if (tracker5.read_index != dma_ptr5) {
+				process_single_byte(UART5_DMA_Pool, &tracker5, USART3, count5);
+				count5++;
+				if (count5 > 2)
+					count5 = 0;
+			}
+		}
 
         // Check one last time to see if new bytes arrived during the parsing loops
         dma_ptr4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
@@ -196,9 +118,6 @@ void process_routing(void) {
 
     } while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5));
 }
-
-
-
 
 void process_routing_old(void) {
     // Get the current write head for both DMA channels
@@ -209,11 +128,11 @@ void process_routing_old(void) {
     do {
 		while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5)) {
 			if (tracker4.read_index != dma_ptr4) {
-				process_single_byte(UART4_DMA_Pool, &tracker4, USART2);
+				process_single_byte(UART4_DMA_Pool, &tracker4, USART2, count4);
 			}
 
 			if (tracker5.read_index != dma_ptr5) {
-				process_single_byte(UART5_DMA_Pool, &tracker5, USART3);
+				process_single_byte(UART5_DMA_Pool, &tracker5, USART3, count5);
 			}
 		}
 
@@ -222,21 +141,6 @@ void process_routing_old(void) {
 		dma_ptr5 = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx);
 
 	} while ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5));
-}
-
-
-void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len) {
-    if (uart_id == 2) {
-        for (int i = 0; i < len; i++) {
-            uart2_dma_queue[u2_q_head] = data[i];
-            u2_q_head = (u2_q_head + 1) % AMDS_RX_BUF_SIZE;
-        }
-    } else if (uart_id == 3) {
-        for (int i = 0; i < len; i++) {
-            uart3_dma_queue[u3_q_head] = data[i];
-            u3_q_head = (u3_q_head + 1) % AMDS_RX_BUF_SIZE;
-        }
-    }
 }
 
 void UART4_IRQHandler(void)

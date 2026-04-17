@@ -189,7 +189,7 @@ void EXTI3_IRQHandler(void)
 		}
 	}
 
-	process_routing();
+	process_routing_old();
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the
