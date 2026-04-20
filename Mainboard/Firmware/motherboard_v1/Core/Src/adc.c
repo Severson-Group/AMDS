@@ -154,6 +154,8 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 void EXTI3_IRQHandler(void)
 {
 	// alert daisy chained AMDSs to begin converting
+	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
+	try_reset_routing_state();
 	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 	// Perform the actual SPI transactions
 	uint16_t new_data[8] = { 0 };
@@ -189,7 +191,8 @@ void EXTI3_IRQHandler(void)
 		}
 	}
 
-	process_routing_old();
+    //Handle any DMA data that has been received from daisy chain
+	try_process_routing(); // This try function is thread safe
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the

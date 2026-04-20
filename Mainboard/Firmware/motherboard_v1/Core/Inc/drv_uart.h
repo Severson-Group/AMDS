@@ -35,24 +35,80 @@ typedef struct {
 extern uart_rx_tracker_t tracker4;
 extern uart_rx_tracker_t tracker5;
 
-#define AMDS_RX_BUF_SIZE 256
+#define AMDS_RX_BUF_SIZE 256 // Must be 256 for uint8_t indexing and wrap-around logic to work correctly
 extern uint8_t UART4_DMA_Pool[AMDS_RX_BUF_SIZE];
 extern uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
+
+extern volatile uint8_t uart2_dma_queue[AMDS_RX_BUF_SIZE];
+extern volatile uint8_t uart3_dma_queue[AMDS_RX_BUF_SIZE];
+extern volatile uint8_t uart2_dma_buffer[AMDS_RX_BUF_SIZE];
+extern volatile uint8_t uart3_dma_buffer[AMDS_RX_BUF_SIZE];
+
+// Queue tracking indices
+extern volatile uint16_t u2_q_head;
+extern volatile uint16_t u2_q_tail;
+extern volatile uint16_t u3_q_head;
+extern volatile uint16_t u3_q_tail;
+
+// Declare the global flag so all .c files know it exists
+extern volatile bool is_routing_active;
 
 void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id);
 void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len);
 
 void process_routing(void);
-void process_routing_old(void);
 
-static inline bool data_ready()
-{
-	uint8_t dma_ptr4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
-	uint8_t dma_ptr5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));;
+/**
+ * Thread-safe, non-blocking wrapper for process_routing().
+ * Uses an atomic try-lock to prevent reentrancy without 
+ * stalling the CPU or blinding interrupts for too long.
+ */
+static inline void try_process_routing(void) {
+    // 1. Enter brief critical section (approx. 3 CPU cycles)
+    __disable_irq();
+    
+    // 2. Check if the lock is already claimed
+    if (is_routing_active) {
+        // Someone else is already routing. Safely abort.
+        __enable_irq();
+        return; 
+    }
+    
+    // 3. Claim the lock
+    is_routing_active = true;
+    
+    // 4. Exit critical section BEFORE the heavy lifting
+    __enable_irq(); 
 
-	return ((tracker4.read_index != dma_ptr4) || (tracker5.read_index != dma_ptr5));
+    // 5. Perform the actual routing with interrupts perfectly active
+    process_routing();
+
+    // 6. Release the lock when finished
+    // (This single write is inherently atomic on a 32-bit ARM core, 
+    // so we don't need to disable interrupts just to clear it).
+    is_routing_active = false;
 }
 
+/**
+ * Attempt to instantly reset the routing state machine and flush buffers.
+ * To be called ONLY from the very beginning of EXTI3_IRQHandler.
+ */
+static inline void try_reset_routing_state(void) {
+    // Because we are inside an IRQ, we preempted main(). 
+    // We do NOT need to disable interrupts here to check the flag safely.
+    if (!is_routing_active) {
+        
+        // 1. Reset state machines to gracefully await the next packet
+        tracker4.state = STATE_IDLE;
+        tracker5.state = STATE_IDLE;
+        
+        // 2. Soft-flush the DMA buffers.
+        // We advance our read pointers to exactly where the DMA hardware 
+        // is currently writing. All old, unprocessed bytes are instantly discarded.
+        tracker4.read_index = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
+        tracker5.read_index = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
+    }
+}
 
 static inline void drv_uart_putc_fast(USART_TypeDef *uart, uint8_t data)
 {
