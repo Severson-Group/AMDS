@@ -67,7 +67,7 @@ void process_routing(void) {
         // =====================================================================
         // If BOTH streams have at least a full 3-byte packet, process them completely
         // interleaved to keep both hardware lines saturated simultaneously.
-        if ((s4 == STATE_IDLE && avail4 >= 3) && (s5 == STATE_IDLE && avail5 >= 3)) {
+        while ((s4 == STATE_IDLE && avail4 >= 3) && (s5 == STATE_IDLE && avail5 >= 3)) {
             uint8_t h4 = UART4_DMA_Pool[r4];
             uint8_t h5 = UART5_DMA_Pool[r5];
             
@@ -86,12 +86,10 @@ void process_routing(void) {
                 
                 r4 += 3;
                 r5 += 3;
-                
-                if ((r4 == w4) && (r5 == w5)) {
-                    w4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
-                    w5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
-                }
-                continue; // Skip the rest of the loop and keep fast-pathing!
+                avail4 -= 3;
+                avail5 -= 3;
+            } else {
+                break; // Misaligned or corrupted header, break to let the slow-path handle it
             }
         }
 
@@ -99,35 +97,31 @@ void process_routing(void) {
         // OPTIMIZATION 2: SINGLE-STREAM FAST PATHS 
         // =====================================================================
         // If one UART receives data slightly faster than the other, process it.
-        if (s4 == STATE_IDLE && avail4 >= 3) {
+        while (s4 == STATE_IDLE && avail4 >= 3) {
             uint8_t h4 = UART4_DMA_Pool[r4];
             if ((h4 & 0xF0) == 0x90) {
                 drv_uart_putc_fast(USART2, h4 + 4);
                 drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 1)]);
                 drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 2)]);
-                r4 += 3;
                 
-                if ((r4 == w4) && (r5 == w5)) {
-                    w4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
-                    w5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
-                }
-                continue;
+                r4 += 3;
+                avail4 -= 3;
+            } else {
+                break;
             }
         }
 
-        if (s5 == STATE_IDLE && avail5 >= 3) {
+        while (s5 == STATE_IDLE && avail5 >= 3) {
             uint8_t h5 = UART5_DMA_Pool[r5];
             if ((h5 & 0xF0) == 0x90) {
                 drv_uart_putc_fast(USART3, h5 + 4);
                 drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 1)]);
                 drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 2)]);
-                r5 += 3;
                 
-                if ((r4 == w4) && (r5 == w5)) {
-                    w4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
-                    w5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
-                }
-                continue;
+                r5 += 3;
+                avail5 -= 3;
+            } else {
+                break;
             }
         }
 
@@ -169,6 +163,9 @@ void process_routing(void) {
             }
         }
 
+        // Check if we caught up to our cached write pointers.
+        // If so, re-sample the DMA registers to see if new data arrived 
+        // while we were actively processing the previous bytes.
         if ((r4 == w4) && (r5 == w5)) {
             w4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
             w5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
