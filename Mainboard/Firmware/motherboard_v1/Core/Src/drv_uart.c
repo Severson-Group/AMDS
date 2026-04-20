@@ -41,16 +41,19 @@ volatile bool is_routing_active = false;
 
 
 void process_routing(void) {
-    // 1. Load tracking state into local CPU registers
+    // 1. Load tracking state into local CPU registers for zero-wait-state access
     uint8_t r4 = tracker4.read_index;
     uint8_t r5 = tracker5.read_index;
     uint8_t s4 = tracker4.state;
     uint8_t s5 = tracker5.state;
 
-    // 2. Read DMA hardware pointers ONCE
+    // 2. Read DMA hardware pointers ONCE at the start. 
+    // NDTR counts down, so the write head is (SIZE - NDTR).
+    // Casting to uint8_t naturally handles the modulo wrap-around at 256.
     uint8_t w4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
     uint8_t w5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
 
+    // Process instantly as long as either buffer has data. No NOP delays!
     while ((r4 != w4) || (r5 != w5)) {
         
         // Calculate exactly how many bytes are sitting unread in the DMA buffer.
