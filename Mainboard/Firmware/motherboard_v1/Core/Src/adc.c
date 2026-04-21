@@ -45,9 +45,10 @@ static void setup_pin_CONVST(void);
 // Buffer of latest samples
 static volatile uint16_t latest_valid_adc_data[8] = { 0 };
 
-volatile uint16_t latest_valid_amds_samples[2][8] = { 0 };
 
-volatile bool amds_samples_ready[2] = { 0 };
+// Global bitmask: 1 = Active, 0 = Inactive.
+// For example: 0b00010001 (0x0F) means channels 1-4 are active, 5-8 are disabled.
+volatile uint8_t active_sensor_mask = 0xFF;
 
 void adc_init(void)
 {
@@ -72,33 +73,6 @@ void adc_latest_bits(uint16_t *output)
     output[5] = data[5];
     output[6] = data[6];
     output[7] = data[7];
-}
-
-// NOTE: this function is called from the transmit function
-void adc_latest_amds(uint16_t *output)
-{
-    volatile uint16_t *data1 = latest_valid_amds_samples[0];
-    volatile uint16_t *data2 = latest_valid_amds_samples[1];
-
-	// Give user their data (unrolled for speed)
-	output[0] = data1[0];
-	output[1] = data1[1];
-	output[2] = data1[2];
-	output[3] = data1[3];
-	output[4] = data1[4];
-	output[5] = data1[5];
-	output[6] = data1[6];
-	output[7] = data1[7];
-
-	// Give user their data (unrolled for speed)
-	output[8]  = data2[0];
-	output[9]  = data2[1];
-	output[10] = data2[2];
-	output[11] = data2[3];
-	output[12] = data2[4];
-	output[13] = data2[5];
-	output[14] = data2[6];
-	output[15] = data2[7];
 }
 
 static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
@@ -179,26 +153,91 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 // this ISR, all the motherboard ADCs should be sampled.
 void EXTI3_IRQHandler(void)
 {
-    // Perform the actual SPI transactions
+	// alert daisy chained AMDSs to begin converting
+	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
+	try_reset_routing_state();
 	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+    //reset DMA routing state machine to ensure robust operation in case bytes were dropped
+    try_reset_routing_state();
+
+#ifdef BENCHMARK_MODE
+    // =========================================================================
+    // INJECT MOCK DMA DATA FOR BENCHMARKING
+    // Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
+    // =========================================================================
+    uint8_t current_head = mock_dma_write_head;
+    for (int i = 0; i < 24; i++) {
+        uint8_t idx = (uint8_t)(current_head + i); 
+        if (i % 3 == 0) {
+            UART4_DMA_Pool[idx] = 0x90; // Valid Header
+            UART5_DMA_Pool[idx] = 0x90;
+        } else {
+            UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
+            UART5_DMA_Pool[idx] = 0xBB;
+        }
+    }
+    // Instantly advance the mock hardware write head
+    mock_dma_write_head = (uint8_t)(current_head + 24);
+#endif
+
+	// Perform the actual SPI transactions
 	uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
 
-    // Copy data into write buffer destination
-    volatile uint16_t *dest = latest_valid_adc_data;
+    // Send the data we sampled out as fast as possible
+    //
+    // =========================================================================
+    // OPTIMIZATION: "Tight Loop" Fast Path
+    // Tiny code footprint (fits in I-Cache) + Zero bitwise conditional branching
+    // =========================================================================
+    if (active_sensor_mask == 0xFF) {
+        for (uint32_t i = 0; i < 4; i++) {
+            drv_uart_putc_fast(USART2, 0x90 | i);
+            drv_uart_putc_fast(USART3, 0x90 | i);
+            
+            drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+            drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+            
+            drv_uart_putc_fast(USART2, (uint8_t)new_data[i]);
+            drv_uart_putc_fast(USART3, (uint8_t)new_data[i + 4]);
+        }
+    } 
+    // =========================================================================
+    // SLOW PATH: Safe loop for Partial Masks
+    // =========================================================================
+    else {
+        for (uint32_t i = 0; i < 4; i++) {
+            uint8_t header = 0x90 | i;
 
-    // Unrolled loop for speed
-    dest[0] = new_data[0];
-    dest[1] = new_data[1];
-    dest[2] = new_data[2];
-    dest[3] = new_data[3];
-    dest[4] = new_data[4];
-    dest[5] = new_data[5];
-    dest[6] = new_data[6];
-    dest[7] = new_data[7];
+            if ((active_sensor_mask & (1 << i)) && (active_sensor_mask & (1 << (i + 4)))) {
+                drv_uart_putc_fast(USART2, header);
+                drv_uart_putc_fast(USART3, header);
+                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
+                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
+            } else { 
+                bool u3 = false;
+                bool u2 = false;
+                
+                if (active_sensor_mask & (1 << i)) {
+                    drv_uart_putc_fast(USART2, header);
+                    u2 = true;
+                    drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+                }
+                if (active_sensor_mask & (1 << (i + 4))) {
+                    drv_uart_putc_fast(USART3, header);
+                    u3 = true;
+                    drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+                }
+                if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
+                if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
+            }
+        }
+    }
 
-    // Call the function in tx.c to transmit the sampled data back to the AMDC
-    transmit_samples();
+    //Handle any DMA data that has been received from daisy chain
+	try_process_routing(); // This try function is thread safe
 
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the

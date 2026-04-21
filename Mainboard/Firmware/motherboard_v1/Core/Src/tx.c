@@ -1,7 +1,51 @@
 #include "tx.h"
-#include "adc.h"
-#include "drv_uart.h"
-#include "platform.h"
+
+volatile packet_t tx_packets[NUM_SETS * PACKETS_PER_SET];
+volatile bool packet_ready[NUM_SETS * PACKETS_PER_SET];
+bool packet_sent[NUM_SETS * PACKETS_PER_SET];
+
+volatile bool sync_event_flag = false; // Set this to true in your EXTI ISR
+
+void process_transmissions(void) {
+    // Loop as long as there is data in EITHER queue
+    while ((u2_q_tail != u2_q_head) || (u3_q_tail != u3_q_head)) {
+
+        // If UART2 has data, pop one byte and push it straight to the hardware
+        if (u2_q_tail != u2_q_head) {
+            drv_uart_putc_fast(USART2, uart2_dma_queue[u2_q_tail]);
+            u2_q_tail = (u2_q_tail + 1) % AMDS_RX_BUF_SIZE;
+        }
+
+        // If UART3 has data, pop one byte and push it straight to the hardware
+        if (u3_q_tail != u3_q_head) {
+            drv_uart_putc_fast(USART3, uart3_dma_queue[u3_q_tail]);
+            u3_q_tail = (u3_q_tail + 1) % AMDS_RX_BUF_SIZE;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // clang-format off
 
@@ -17,110 +61,110 @@
 
 // clang-format on
 
-// Called after ADC conversions have been completed,
-// to send sampled data back to AMDC
+//// Called after ADC conversions have been completed,
+//// to send sampled data back to AMDC
+////
+//void transmit_samples(void)
+//{
+//    // 2. Create a local buffer for this transmission "burst"
+//    static uint8_t tx_data2[36];
+//	static uint8_t tx_data3[36];
+//    uint8_t idx = 0;
 //
-void transmit_samples(void)
-{
-    // 2. Create a local buffer for this transmission "burst"
-    static uint8_t tx_data2[36];
-	static uint8_t tx_data3[36];
-    uint8_t idx = 0;
-
-    uint16_t bits[8];
-    adc_latest_bits(bits);
-
-    for (int i = 0; i < 4; i++) {
-    	uint8_t header = (i == 0) ? 0x90 : (0x90 | (0x03 & i));
-
-    	tx_data2[idx] = header;
-    	tx_data3[idx] = header;
-		idx++;
-
-        tx_data2[idx] = (uint8_t)(bits[i] >> 8);   // MSB
-        tx_data3[idx] = (uint8_t)(bits[i + 4] >> 8);   // MSB
-        idx++;
-
-        tx_data2[idx] = (uint8_t)(bits[i] & 0xFF); // LSB
-        tx_data3[idx] = (uint8_t)(bits[i + 4] & 0xFF); // LSB
-        idx++;
-    }
-
-    // 1. Process incoming UARTs first
-    NOP256;
-    NOP256;
-    NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-	NOP256;
-    process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
-    process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
-
-    uint16_t amds[16] = {1};
-    adc_latest_amds(amds);
-
-    // ... Add AMDS data to tx_data if ready ...
-    if (amds_samples_ready[0]) {
-    	for (int i = 0; i < 4; i++) {
-			uint8_t header = (i == 0) ? 0x94 : (0x94 | (0x07 & i));
-
-			tx_data2[idx] = header;
-			tx_data3[idx] = header;
-			idx++;
-
-			tx_data2[idx] = (uint8_t)(amds[i] >> 8);   // MSB
-			tx_data3[idx] = (uint8_t)(amds[i + 4] >> 8);   // MSB
-			idx++;
-
-			tx_data2[idx] = (uint8_t)(amds[i] & 0xFF); // LSB
-			tx_data3[idx] = (uint8_t)(amds[i + 4] & 0xFF); // LSB
-			idx++;
-		}
-
-    	// Clear flags for this set
-		amds_samples_ready[0] = false;
-
-		if (amds_samples_ready[1]) {
-			for (int i = 0; i < 4; i++) {
-				uint8_t header = (i == 0) ? 0x98 : (0x98 | (0x0B & i));
-
-				tx_data2[idx] = header;
-				tx_data3[idx] = header;
-				idx++;
-
-				tx_data2[idx] = (uint8_t)(amds[i] >> 8);   // MSB
-				tx_data3[idx] = (uint8_t)(amds[i + 4] >> 8);   // MSB
-				idx++;
-
-				tx_data2[idx] = (uint8_t)(amds[i] & 0xFF); // LSB
-				tx_data3[idx] = (uint8_t)(amds[i + 4] & 0xFF); // LSB
-				idx++;
-			}
-
-			// Clear flags for this set
-			amds_samples_ready[1] = false;
-		}
-    }
-
-    // 4. Trigger the DMA to send exactly 'idx' bytes
-    // This function returns immediately while the hardware sends the data
-    if (huart2.gState == HAL_UART_STATE_READY && huart3.gState == HAL_UART_STATE_READY) {
-		HAL_UART_Transmit_DMA(&huart2, tx_data2, idx);
-		HAL_UART_Transmit_DMA(&huart3, tx_data3, idx);
-	}
-}
+//    uint16_t bits[8];
+//    adc_latest_bits(bits);
+//
+//    for (int i = 0; i < 4; i++) {
+//    	uint8_t header = (i == 0) ? 0x90 : (0x90 | (0x03 & i));
+//
+//    	tx_data2[idx] = header;
+//    	tx_data3[idx] = header;
+//		idx++;
+//
+//        tx_data2[idx] = (uint8_t)(bits[i] >> 8);   // MSB
+//        tx_data3[idx] = (uint8_t)(bits[i + 4] >> 8);   // MSB
+//        idx++;
+//
+//        tx_data2[idx] = (uint8_t)(bits[i] & 0xFF); // LSB
+//        tx_data3[idx] = (uint8_t)(bits[i + 4] & 0xFF); // LSB
+//        idx++;
+//    }
+//
+//    // 1. Process incoming UARTs first
+//    NOP256;
+//    NOP256;
+//    NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//	NOP256;
+//    process_uart_fifo(UART4_DMA_Pool, &tracker4, 4);
+//    process_uart_fifo(UART5_DMA_Pool, &tracker5, 5);
+//
+//    uint16_t amds[16] = {1};
+//    adc_latest_amds(amds);
+//
+//    // ... Add AMDS data to tx_data if ready ...
+//    if (amds_samples_ready[0]) {
+//    	for (int i = 0; i < 4; i++) {
+//			uint8_t header = (i == 0) ? 0x94 : (0x94 | (0x07 & i));
+//
+//			tx_data2[idx] = header;
+//			tx_data3[idx] = header;
+//			idx++;
+//
+//			tx_data2[idx] = (uint8_t)(amds[i] >> 8);   // MSB
+//			tx_data3[idx] = (uint8_t)(amds[i + 4] >> 8);   // MSB
+//			idx++;
+//
+//			tx_data2[idx] = (uint8_t)(amds[i] & 0xFF); // LSB
+//			tx_data3[idx] = (uint8_t)(amds[i + 4] & 0xFF); // LSB
+//			idx++;
+//		}
+//
+//    	// Clear flags for this set
+//		amds_samples_ready[0] = false;
+//
+//		if (amds_samples_ready[1]) {
+//			for (int i = 0; i < 4; i++) {
+//				uint8_t header = (i == 0) ? 0x98 : (0x98 | (0x0B & i));
+//
+//				tx_data2[idx] = header;
+//				tx_data3[idx] = header;
+//				idx++;
+//
+//				tx_data2[idx] = (uint8_t)(amds[i] >> 8);   // MSB
+//				tx_data3[idx] = (uint8_t)(amds[i + 4] >> 8);   // MSB
+//				idx++;
+//
+//				tx_data2[idx] = (uint8_t)(amds[i] & 0xFF); // LSB
+//				tx_data3[idx] = (uint8_t)(amds[i + 4] & 0xFF); // LSB
+//				idx++;
+//			}
+//
+//			// Clear flags for this set
+//			amds_samples_ready[1] = false;
+//		}
+//    }
+//
+//    // 4. Trigger the DMA to send exactly 'idx' bytes
+//    // This function returns immediately while the hardware sends the data
+//    if (huart2.gState == HAL_UART_STATE_READY && huart3.gState == HAL_UART_STATE_READY) {
+//		HAL_UART_Transmit_DMA(&huart2, tx_data2, idx);
+//		HAL_UART_Transmit_DMA(&huart3, tx_data3, idx);
+//	}
+//}
 
 
 

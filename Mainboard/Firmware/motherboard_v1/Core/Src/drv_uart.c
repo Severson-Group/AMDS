@@ -1,4 +1,5 @@
 #include "drv_uart.h"
+#include "tx.h"
 #include "defines.h"
 #include "drv_clock.h"
 #include "platform.h"
@@ -9,31 +10,15 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
-static DMA_HandleTypeDef hdma_usart2_tx;
-static DMA_HandleTypeDef hdma_usart3_tx;
+DMA_HandleTypeDef hdma_usart2_tx;
+DMA_HandleTypeDef hdma_usart3_tx;
 
-static UART_HandleTypeDef huart4;
-static UART_HandleTypeDef huart5;
+// AMDS Daisy Chain RX Peripherals
+UART_HandleTypeDef huart4;
+UART_HandleTypeDef huart5;
 
-static DMA_HandleTypeDef hdma_uart4_rx;
-static DMA_HandleTypeDef hdma_uart5_rx;
-
-uint8_t usart2_tx_ring[TX_BUF_SIZE];
-uint8_t usart3_tx_ring[TX_BUF_SIZE];
-
-uint32_t usart2_tx_write_idx = 0;
-uint32_t usart3_tx_write_idx = 0;
-
-// 3-byte packet buffers for each UART
-#define PACKET_SIZE      3
-#define PACKETS_PER_UART 4
-#define TOTAL_PACKETS    (PACKETS_PER_UART * 2)   // 8 packets, 24 bytes total
-
-//static uint8_t uart4_packet_count = 0;
-//static uint8_t uart5_packet_count = 0;
-volatile uint8_t uart4_amds_sample_count = 0;
-volatile uint8_t uart5_amds_sample_count = 0;
-
+DMA_HandleTypeDef hdma_uart4_rx;
+DMA_HandleTypeDef hdma_uart5_rx;
 
 uart_rx_tracker_t tracker4 = {0};
 uart_rx_tracker_t tracker5 = {0};
@@ -42,142 +27,208 @@ uint8_t UART4_DMA_Pool[AMDS_RX_BUF_SIZE];
 uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
 
 // FBC Daisy Chain RX Peripherals
-static UART_HandleTypeDef huart1;
 static UART_HandleTypeDef huart6;
+static UART_HandleTypeDef huart1;
 
-static DMA_HandleTypeDef hdma_uart1_rx;
 static DMA_HandleTypeDef hdma_uart6_rx;
+static DMA_HandleTypeDef hdma_uart1_rx;
 
-uart_rx_tracker_t tracker1 = {0};
 uart_rx_tracker_t tracker6 = {0};
+uart_rx_tracker_t tracker1 = {0};
 
-uint8_t UART1_DMA_Pool[AMDS_RX_BUF_SIZE];
 uint8_t UART6_DMA_Pool[AMDS_RX_BUF_SIZE];
+uint8_t UART1_DMA_Pool[AMDS_RX_BUF_SIZE];
 
-void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id) {
-    // Calculate current DMA write position (NDTR counts down)
-	UART_HandleTypeDef *huart;
-	if (uart_id == 4) {
-		huart = &huart4;
-    } else {
-    	huart = &huart5;
+// Global flag to track if routing is actively occurring.
+// Must be volatile so the compiler knows it can change inside an IRQ.
+volatile bool is_routing_active = false;
+
+#ifdef BENCHMARK_MODE
+    volatile uint8_t mock_dma_write_head = 0;
+    #define GET_W4() mock_dma_write_head
+    #define GET_W5() mock_dma_write_head
+#else
+    // NDTR counts down, so the write head is (SIZE - NDTR).
+    // Casting to uint8_t naturally handles the modulo wrap-around at 256.
+    // AMDS_RX_BUF_SIZE MUST BE 256 FOR THIS MATH TO WORK PROPERLY!
+    #define GET_W4() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))
+    #define GET_W5() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx))
+#endif
+
+
+void process_routing(void) {
+    // 1. Load tracking state into local CPU registers for zero-wait-state access
+    uint8_t r4 = tracker4.read_index;
+    uint8_t r5 = tracker5.read_index;
+    uint8_t s4 = tracker4.state;
+    uint8_t s5 = tracker5.state;
+
+    // 2. Read DMA hardware pointers ONCE at the start. 
+    // NDTR counts down, so the write head is (SIZE - NDTR).
+    // Casting to uint8_t naturally handles the modulo wrap-around at 256.
+    uint8_t w4 = GET_W4();
+    uint8_t w5 = GET_W5();
+
+    // Process instantly as long as either buffer has data. No NOP delays!
+    while ((r4 != w4) || (r5 != w5)) {
+        
+        // Calculate exactly how many bytes are sitting unread in the DMA buffer.
+        // Because everything is cast to uint8_t, this math safely handles 
+        // circular buffer wrap-around natively (e.g. w4=2, r4=254 -> avail=4)
+        uint8_t avail4 = (uint8_t)(w4 - r4);
+        uint8_t avail5 = (uint8_t)(w5 - r5);
+
+        // =====================================================================
+        // OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
+        // =====================================================================
+        // If BOTH streams have at least a full 3-byte packet, process them completely
+        // interleaved to keep both hardware lines saturated simultaneously.
+        while ((s4 == STATE_IDLE && avail4 >= 3) && (s5 == STATE_IDLE && avail5 >= 3)) {
+            uint8_t h4 = UART4_DMA_Pool[r4];
+            uint8_t h5 = UART5_DMA_Pool[r5];
+            
+            if (((h4 & 0xF0) == 0x90) && ((h5 & 0xF0) == 0x90)) {
+                // Byte 1: Headers (Incremented)
+                drv_uart_putc_fast(USART2, h4 + 4);
+                drv_uart_putc_fast(USART3, h5 + 4);
+                
+                // Byte 2: MSB
+                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 1)]);
+                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 1)]);
+                
+                // Byte 3: LSB
+                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 2)]);
+                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 2)]);
+                
+                r4 += 3;
+                r5 += 3;
+                avail4 -= 3;
+                avail5 -= 3;
+            } else {
+                break; // Misaligned or corrupted header, break to let the slow-path handle it
+            }
+        }
+
+        // =====================================================================
+        // OPTIMIZATION 2: SINGLE-STREAM FAST PATHS 
+        // =====================================================================
+        // If one UART receives data slightly faster than the other, process it.
+        while (s4 == STATE_IDLE && avail4 >= 3) {
+            uint8_t h4 = UART4_DMA_Pool[r4];
+            if ((h4 & 0xF0) == 0x90) {
+                drv_uart_putc_fast(USART2, h4 + 4);
+                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 1)]);
+                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 2)]);
+                
+                r4 += 3;
+                avail4 -= 3;
+            } else {
+                break;
+            }
+        }
+
+        while (s5 == STATE_IDLE && avail5 >= 3) {
+            uint8_t h5 = UART5_DMA_Pool[r5];
+            if ((h5 & 0xF0) == 0x90) {
+                drv_uart_putc_fast(USART3, h5 + 4);
+                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 1)]);
+                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 2)]);
+                
+                r5 += 3;
+                avail5 -= 3;
+            } else {
+                break;
+            }
+        }
+
+        // =====================================================================
+        // SLOW PATH: Fragmentation / State Recovery
+        // =====================================================================
+        // We only fall down here if a packet is fragmented across a DMA update
+        // boundary or if data is corrupted. We can safely revert to the simple 
+        // 1-byte-at-a-time logic.
+        if (r4 != w4) {
+            uint8_t b4 = UART4_DMA_Pool[r4++];
+            if (s4 == STATE_IDLE) {
+                if ((b4 & 0xF0) == 0x90) {
+                    drv_uart_putc_fast(USART2, b4 + 4);
+                    s4 = STATE_GOT_HEADER;
+                }
+            } else if (s4 == STATE_GOT_HEADER) {
+                drv_uart_putc_fast(USART2, b4);
+                s4 = STATE_GOT_MSB;
+            } else { // STATE_GOT_MSB
+                drv_uart_putc_fast(USART2, b4);
+                s4 = STATE_IDLE;
+            }
+        }
+
+        if (r5 != w5) {
+            uint8_t b5 = UART5_DMA_Pool[r5++];
+            if (s5 == STATE_IDLE) {
+                if ((b5 & 0xF0) == 0x90) {
+                    drv_uart_putc_fast(USART3, b5 + 4);
+                    s5 = STATE_GOT_HEADER;
+                }
+            } else if (s5 == STATE_GOT_HEADER) {
+                drv_uart_putc_fast(USART3, b5);
+                s5 = STATE_GOT_MSB;
+            } else { // STATE_GOT_MSB
+                drv_uart_putc_fast(USART3, b5);
+                s5 = STATE_IDLE;
+            }
+        }
+
+        // Check if we caught up to our cached write pointers.
+        // If so, re-sample the DMA registers to see if new data arrived 
+        // while we were actively processing the previous bytes.
+        if ((r4 == w4) && (r5 == w5)) {
+            w4 = GET_W4();
+            w5 = GET_W5();
+        }
     }
 
-	uint32_t dma_write_ptr = AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart->hdmarx);
+    // 5. Store states back
+    tracker4.read_index = r4;
+    tracker5.read_index = r5;
+    tracker4.state = s4;
+    tracker5.state = s5;
+}
 
-    while (track->read_index != dma_write_ptr) {
-        uint8_t byte = pool[track->read_index];
-        track->read_index = (track->read_index + 1) % AMDS_RX_BUF_SIZE;
 
-        switch (track->state) {
-            case STATE_IDLE:
-                // Look for any valid header (0x90, 0x94, 0x98 ranges)
-                if ((byte & 0xF0) == 0x90) {
-                    track->header = byte;
-                    track->state = STATE_GOT_HEADER;
-                }
-                break;
-
-            case STATE_GOT_HEADER:
-                track->data[0] = byte;
-                track->state = STATE_GOT_BYTE1;
-                break;
-
-            case STATE_GOT_BYTE1:
-                track->data[1] = byte;
-
-                // Packet Complete: Reconstruct 16-bit value
-                uint16_t value = ((uint16_t)track->data[0] << 8) | track->data[1];
-
-                // 1. Calculate the absolute global channel index (e.g., 0 to 23)
-                uint8_t base_index = track->header & 0x03;
-                uint8_t sample_set = (track->header & 0x0C) >> 2;
-
-                // This gives a flat number from 0 up to 23 regardless of which UART it came from
-                uint8_t global_index = base_index + (uart_id == 5 ? 4 : 0) + (sample_set * 8);
-
-                // 2. Map the global index to your desired 2D array structure
-                // Assuming you want exactly 12 packets per bank (0-11 in bank 0, 12-23 in bank 1)
-                uint8_t bank = (global_index < 12) ? 0 : 1;
-                uint8_t local_index = (global_index < 12) ? global_index : (global_index - 12);
-
-                // 3. Store the value logically rather than physically
-                latest_valid_amds_samples[bank][local_index] = value;
-
-                // 4. Update the ready flag for the specific bank
-                amds_samples_ready[bank] = true;
-
-                track->state = STATE_IDLE;
-                break;
+void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len) {
+    if (uart_id == 2) {
+        for (int i = 0; i < len; i++) {
+            uart2_dma_queue[u2_q_head] = data[i];
+            u2_q_head = (u2_q_head + 1) % AMDS_RX_BUF_SIZE;
+        }
+    } else if (uart_id == 3) {
+        for (int i = 0; i < len; i++) {
+            uart3_dma_queue[u3_q_head] = data[i];
+            u3_q_head = (u3_q_head + 1) % AMDS_RX_BUF_SIZE;
         }
     }
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-//    if (huart->Instance == UART4) {
-//    	if (uart4_packet_count < PACKETS_PER_UART) {
-//
-//    	    uint8_t offset = uart4_packet_count;
-//
-//    	    uint16_t value = ((uint16_t)UART4_RxBuf[1] << 8) | (uint16_t)UART4_RxBuf[2];
-//
-//    	    latest_valid_amds_samples[uart4_amds_sample_count][offset] = value;
-//
-//    	    uart4_packet_count++;
-//    	}
-//
-//        if (uart4_packet_count == PACKETS_PER_UART) {
-//        	amds_samples_ready[uart4_amds_sample_count] = true;
-//        	uart4_amds_sample_count++;
-//        	uart4_packet_count = 0;
-//        }
-//
-//        if (uart4_amds_sample_count == 2) {
-//        	amds_samples_ready[uart4_amds_sample_count + 1] = true;
-//        	uart4_amds_sample_count = 0;
-//        }
-////		HAL_UART_Receive_DMA(huart, UART4_RxBuf, PACKET_SIZE);
-//    } else if (huart->Instance == UART5) {
-//    	if (uart5_packet_count < PACKETS_PER_UART) {
-//
-//			uint8_t offset = uart5_packet_count + 4;
-//
-//			uint16_t value = ((uint16_t)UART5_RxBuf[1] << 8) | (uint16_t)UART5_RxBuf[2];
-//
-//			latest_valid_amds_samples[uart5_amds_sample_count][offset] = value;
-//
-//			uart5_packet_count++;
-//		}
-//
-//        if (uart5_packet_count == PACKETS_PER_UART) {
-//        	amds_samples_ready[uart5_amds_sample_count] = true;
-//        	uart5_amds_sample_count++;
-//			uart5_packet_count = 0;
-//		}
-//
-//		if (uart5_amds_sample_count == 2) {
-//			amds_samples_ready[uart5_amds_sample_count + 2] = true;
-//			uart5_amds_sample_count = 0;
-//		}
-////		HAL_UART_Receive_DMA(huart, UART5_RxBuf, PACKET_SIZE);
-//    }
-}
-
 void UART4_IRQHandler(void)
 {
-    // Check for Overrun, Noise, or Frame errors
-    if (__HAL_UART_GET_FLAG(&huart4, UART_FLAG_ORE) ||
+    // Check for Parity, Overrun, Noise, or Frame errors
+    if (__HAL_UART_GET_FLAG(&huart4, UART_FLAG_PE)  ||
+        __HAL_UART_GET_FLAG(&huart4, UART_FLAG_ORE) ||
         __HAL_UART_GET_FLAG(&huart4, UART_FLAG_NE)  ||
         __HAL_UART_GET_FLAG(&huart4, UART_FLAG_FE))
     {
-        // 1. Clear the error flags
-        __HAL_UART_CLEAR_IT(&huart4, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
+        // 1. Clear the error flags (Added UART_CLEAR_PEF)
+        __HAL_UART_CLEAR_IT(&huart4, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
         // 2. IMPORTANT: Re-enable DMA receiver request
-        // Sometimes HAL disables this bit (DMAR) on error.
+        // The hardware/HAL drops this bit on error, halting the DMA stream.
         SET_BIT(huart4.Instance->CR3, USART_CR3_DMAR);
+
+        return;
     }
+
+    // Process normal RX/TX interrupts via the HAL
     HAL_UART_IRQHandler(&huart4);
 }
 
@@ -189,16 +240,19 @@ void DMA1_Stream2_IRQHandler(void)
 void UART5_IRQHandler(void)
 {
 	// Check for Overrun, Noise, or Frame errors
-	if (__HAL_UART_GET_FLAG(&huart5, UART_FLAG_ORE) ||
+	if (__HAL_UART_GET_FLAG(&huart4, UART_FLAG_PE)  ||
+		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_ORE) ||
 		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_NE)  ||
 		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_FE))
 	{
 		// 1. Clear the error flags
-		__HAL_UART_CLEAR_IT(&huart5, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
+		__HAL_UART_CLEAR_IT(&huart5, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
 		// 2. IMPORTANT: Re-enable DMA receiver request
 		// Sometimes HAL disables this bit (DMAR) on error.
 		SET_BIT(huart5.Instance->CR3, USART_CR3_DMAR);
+
+		return;
 	}
 	HAL_UART_IRQHandler(&huart5);
 }
@@ -376,6 +430,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
         // DMA config - check your device's DMA request mapping table
 		// for the correct stream/channel for USART2_TX
         hdma_usart2_tx.Instance = DMA1_Stream6;
+        hdma_usart2_tx.Instance->CR |= USART_CR3_DDRE;
         hdma_usart2_tx.Init.Channel = DMA_CHANNEL_4;
         hdma_usart2_tx.Init.Direction = DMA_MEMORY_TO_PERIPH; // Memory -> UART
         hdma_usart2_tx.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -414,6 +469,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
         // DMA config - check your device's DMA request mapping table
 		// for the correct stream/channel for USART3_TX
 		hdma_usart3_tx.Instance = DMA1_Stream3;
+		hdma_usart3_tx.Instance->CR |= USART_CR3_DDRE;
 		hdma_usart3_tx.Init.Channel = DMA_CHANNEL_4;
 		hdma_usart3_tx.Init.Direction = DMA_MEMORY_TO_PERIPH; // Memory -> UART
 		hdma_usart3_tx.Init.PeriphInc = DMA_PINC_DISABLE;
