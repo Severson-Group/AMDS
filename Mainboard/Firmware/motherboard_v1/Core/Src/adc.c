@@ -185,46 +185,26 @@ void EXTI3_IRQHandler(void)
     // Send the data we sampled out as fast as possible
     //
     // =========================================================================
-    // OPTIMIZATION: Zero-Branch Fast Path for Nominal Operation
+    // OPTIMIZATION: "Tight Loop" Fast Path
+    // Tiny code footprint (fits in I-Cache) + Zero bitwise conditional branching
     // =========================================================================
     if (active_sensor_mask == 0xFF) {
-        // Channel 0 & 4
-        drv_uart_putc_fast(USART2, 0x90);
-        drv_uart_putc_fast(USART3, 0x90);
-        drv_uart_putc_fast(USART2, (uint8_t)(new_data[0] >> 8));
-        drv_uart_putc_fast(USART3, (uint8_t)(new_data[4] >> 8));
-        drv_uart_putc_fast(USART2, (uint8_t)new_data[0]);
-        drv_uart_putc_fast(USART3, (uint8_t)new_data[4]);
-
-        // Channel 1 & 5
-        drv_uart_putc_fast(USART2, 0x91);
-        drv_uart_putc_fast(USART3, 0x91);
-        drv_uart_putc_fast(USART2, (uint8_t)(new_data[1] >> 8));
-        drv_uart_putc_fast(USART3, (uint8_t)(new_data[5] >> 8));
-        drv_uart_putc_fast(USART2, (uint8_t)new_data[1]);
-        drv_uart_putc_fast(USART3, (uint8_t)new_data[5]);
-
-        // Channel 2 & 6
-        drv_uart_putc_fast(USART2, 0x92);
-        drv_uart_putc_fast(USART3, 0x92);
-        drv_uart_putc_fast(USART2, (uint8_t)(new_data[2] >> 8));
-        drv_uart_putc_fast(USART3, (uint8_t)(new_data[6] >> 8));
-        drv_uart_putc_fast(USART2, (uint8_t)new_data[2]);
-        drv_uart_putc_fast(USART3, (uint8_t)new_data[6]);
-
-        // Channel 3 & 7
-        drv_uart_putc_fast(USART2, 0x93);
-        drv_uart_putc_fast(USART3, 0x93);
-        drv_uart_putc_fast(USART2, (uint8_t)(new_data[3] >> 8));
-        drv_uart_putc_fast(USART3, (uint8_t)(new_data[7] >> 8));
-        drv_uart_putc_fast(USART2, (uint8_t)new_data[3]);
-        drv_uart_putc_fast(USART3, (uint8_t)new_data[7]);
+        for (uint32_t i = 0; i < 4; i++) {
+            drv_uart_putc_fast(USART2, 0x90 | i);
+            drv_uart_putc_fast(USART3, 0x90 | i);
+            
+            drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+            drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+            
+            drv_uart_putc_fast(USART2, (uint8_t)new_data[i]);
+            drv_uart_putc_fast(USART3, (uint8_t)new_data[i + 4]);
+        }
     } 
     // =========================================================================
-    // SLOW PATH: Loop for Partial Masks
+    // SLOW PATH: Safe loop for Partial Masks
     // =========================================================================
-    else { 
-        for (int i = 0; i < 4; i++) {
+    else {
+        for (uint32_t i = 0; i < 4; i++) {
             uint8_t header = 0x90 | i;
 
             if ((active_sensor_mask & (1 << i)) && (active_sensor_mask & (1 << (i + 4)))) {
@@ -248,8 +228,8 @@ void EXTI3_IRQHandler(void)
                     u3 = true;
                     drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
                 }
-                if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
-                if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
+                if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
+                if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
             }
         }
     }
