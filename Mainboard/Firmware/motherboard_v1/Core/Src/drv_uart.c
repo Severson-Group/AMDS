@@ -27,11 +27,11 @@ uint8_t UART4_DMA_Pool[AMDS_RX_BUF_SIZE];
 uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
 
 // FBC Daisy Chain RX Peripherals
-static UART_HandleTypeDef huart6;
-static UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart6;
+UART_HandleTypeDef huart1;
 
-static DMA_HandleTypeDef hdma_uart6_rx;
-static DMA_HandleTypeDef hdma_uart1_rx;
+DMA_HandleTypeDef hdma_uart6_rx;
+DMA_HandleTypeDef hdma_uart1_rx;
 
 uart_rx_tracker_t tracker6 = {0};
 uart_rx_tracker_t tracker1 = {0};
@@ -47,12 +47,16 @@ volatile bool is_routing_active = false;
     volatile uint8_t mock_dma_write_head = 0;
     #define GET_W4() mock_dma_write_head
     #define GET_W5() mock_dma_write_head
+	#define GET_W6() mock_dma_write_head
+    #define GET_W1() mock_dma_write_head
 #else
     // NDTR counts down, so the write head is (SIZE - NDTR).
     // Casting to uint8_t naturally handles the modulo wrap-around at 256.
     // AMDS_RX_BUF_SIZE MUST BE 256 FOR THIS MATH TO WORK PROPERLY!
     #define GET_W4() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))
     #define GET_W5() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx))
+	#define GET_W6() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart6.hdmarx))
+    #define GET_W1() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart1.hdmarx))
 #endif
 
 
@@ -63,20 +67,29 @@ void process_routing(void) {
     uint8_t s4 = tracker4.state;
     uint8_t s5 = tracker5.state;
 
+    uint8_t r6 = tracker6.read_index;
+	uint8_t r1 = tracker1.read_index;
+    uint8_t s6 = tracker6.state;
+    uint8_t s1 = tracker1.state;
+
     // 2. Read DMA hardware pointers ONCE at the start. 
     // NDTR counts down, so the write head is (SIZE - NDTR).
     // Casting to uint8_t naturally handles the modulo wrap-around at 256.
     uint8_t w4 = GET_W4();
     uint8_t w5 = GET_W5();
+    uint8_t w6 = GET_W6();
+	uint8_t w1 = GET_W1();
 
     // Process instantly as long as either buffer has data. No NOP delays!
-    while ((r4 != w4) || (r5 != w5)) {
+    while ((r4 != w4) || (r5 != w5) || (r6 != w6) || (r1 != w1)) {
         
         // Calculate exactly how many bytes are sitting unread in the DMA buffer.
         // Because everything is cast to uint8_t, this math safely handles 
         // circular buffer wrap-around natively (e.g. w4=2, r4=254 -> avail=4)
         uint8_t avail4 = (uint8_t)(w4 - r4);
         uint8_t avail5 = (uint8_t)(w5 - r5);
+        uint8_t avail6 = (uint8_t)(w6 - r6);
+		uint8_t avail1 = (uint8_t)(w1 - r1);
 
         // =====================================================================
         // OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
@@ -109,6 +122,32 @@ void process_routing(void) {
             }
         }
 
+        while ((s6 == STATE_IDLE && avail6 >= 3) && (s1 == STATE_IDLE && avail1 >= 3)) {
+			uint8_t h6 = UART6_DMA_Pool[r6];
+			uint8_t h1 = UART1_DMA_Pool[r1];
+
+			if (((h6 & 0xF0) == 0x90) && ((h1 & 0xF0) == 0x90)) {
+				// Byte 1: Headers (Incremented)
+				drv_uart_putc_fast(USART6, h6 + 4);
+				drv_uart_putc_fast(USART1, h1 + 4);
+
+				// Byte 2: MSB
+				drv_uart_putc_fast(USART6, UART6_DMA_Pool[(uint8_t)(r6 + 1)]);
+				drv_uart_putc_fast(USART1, UART1_DMA_Pool[(uint8_t)(r1 + 1)]);
+
+				// Byte 3: LSB
+				drv_uart_putc_fast(USART6, UART6_DMA_Pool[(uint8_t)(r6 + 2)]);
+				drv_uart_putc_fast(USART1, UART1_DMA_Pool[(uint8_t)(r1 + 2)]);
+
+				r6 += 3;
+				r1 += 3;
+				avail6 -= 3;
+				avail1 -= 3;
+			} else {
+				break; // Misaligned or corrupted header, break to let the slow-path handle it
+			}
+		}
+
         // =====================================================================
         // OPTIMIZATION 2: SINGLE-STREAM FAST PATHS 
         // =====================================================================
@@ -140,6 +179,34 @@ void process_routing(void) {
                 break;
             }
         }
+
+        while (s6 == STATE_IDLE && avail6 >= 3) {
+			uint8_t h6 = UART6_DMA_Pool[r6];
+			if ((h6 & 0xF0) == 0x90) {
+				drv_uart_putc_fast(USART6, h6 + 4);
+				drv_uart_putc_fast(USART6, UART6_DMA_Pool[(uint8_t)(r6 + 1)]);
+				drv_uart_putc_fast(USART6, UART6_DMA_Pool[(uint8_t)(r6 + 2)]);
+
+				r6 += 3;
+				avail6 -= 3;
+			} else {
+				break;
+			}
+		}
+
+		while (s1 == STATE_IDLE && avail1 >= 3) {
+			uint8_t h1 = UART1_DMA_Pool[r1];
+			if ((h1 & 0xF0) == 0x90) {
+				drv_uart_putc_fast(USART1, h1 + 4);
+				drv_uart_putc_fast(USART1, UART1_DMA_Pool[(uint8_t)(r1 + 1)]);
+				drv_uart_putc_fast(USART1, UART1_DMA_Pool[(uint8_t)(r1 + 2)]);
+
+				r1 += 3;
+				avail1 -= 3;
+			} else {
+				break;
+			}
+		}
 
         // =====================================================================
         // SLOW PATH: Fragmentation / State Recovery
@@ -179,6 +246,38 @@ void process_routing(void) {
             }
         }
 
+        if (r6 != w6) {
+			uint8_t b6 = UART6_DMA_Pool[r6++];
+			if (s6 == STATE_IDLE) {
+				if ((b6 & 0xF0) == 0x90) {
+					drv_uart_putc_fast(USART6, b6 + 4);
+					s6 = STATE_GOT_HEADER;
+				}
+			} else if (s6 == STATE_GOT_HEADER) {
+				drv_uart_putc_fast(USART6, b6);
+				s6 = STATE_GOT_MSB;
+			} else { // STATE_GOT_MSB
+				drv_uart_putc_fast(USART6, b6);
+				s6 = STATE_IDLE;
+			}
+		}
+
+		if (r1 != w1) {
+			uint8_t b1 = UART1_DMA_Pool[r1++];
+			if (s1 == STATE_IDLE) {
+				if ((b1 & 0xF0) == 0x90) {
+					drv_uart_putc_fast(USART1, b1 + 4);
+					s1 = STATE_GOT_HEADER;
+				}
+			} else if (s1 == STATE_GOT_HEADER) {
+				drv_uart_putc_fast(USART1, b1);
+				s1 = STATE_GOT_MSB;
+			} else { // STATE_GOT_MSB
+				drv_uart_putc_fast(USART1, b1);
+				s1 = STATE_IDLE;
+			}
+		}
+
         // Check if we caught up to our cached write pointers.
         // If so, re-sample the DMA registers to see if new data arrived 
         // while we were actively processing the previous bytes.
@@ -186,6 +285,11 @@ void process_routing(void) {
             w4 = GET_W4();
             w5 = GET_W5();
         }
+
+        if ((r6 == w6) && (r1 == w1)) {
+			w6 = GET_W6();
+			w1 = GET_W1();
+		}
     }
 
     // 5. Store states back
@@ -193,6 +297,11 @@ void process_routing(void) {
     tracker5.read_index = r5;
     tracker4.state = s4;
     tracker5.state = s5;
+
+    tracker6.read_index = r6;
+	tracker1.read_index = r1;
+	tracker6.state = s6;
+	tracker1.state = s1;
 }
 
 

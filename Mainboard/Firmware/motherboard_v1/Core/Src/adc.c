@@ -48,7 +48,7 @@ static volatile uint16_t latest_valid_adc_data[8] = { 0 };
 
 // Global bitmask: 1 = Active, 0 = Inactive.
 // For example: 0b00010001 (0x0F) means channels 1-4 are active, 5-8 are disabled.
-volatile uint8_t active_sensor_mask = 0xFF;
+volatile uint8_t active_sensor_mask = 0x11;
 
 void adc_init(void)
 {
@@ -148,14 +148,59 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
     drv_spi_get_DR(SPI6, &sample_data_out[6]);
 }
 
+static void adc_sample_1_5_daughtercards(uint16_t *sample_data_out)
+{
+    // This function has been optimized for very
+    // fast operation of SPI5 interface
+    // to cards 1 and 5.
+    //
+    // It directly manipulates the SPI peripherals'
+    // registers to read in data from the ADCs. The ordering
+    // of operations may look strange, but this is to minimize
+    // wait time of the various APB interconnects in the MCU.
+    //
+    // The ADC devices support a max of 400ksps. Looking at
+    // the waveforms from this function, the CONVST line is
+    // asserted for effectively 280kHz... It could be faster,
+    // but its not terrible...
+
+    // Start all ADC conversions.
+    // ADC conversion triggered by CONVST56 connects to SPI5
+    SET_PIN_CONVST56_HIGH;
+
+    // Wait for ADC conversion to complete (per datasheet, >= 1300ns
+    // Each NOP takes 5ns, unrolled so branches don't affect timing...
+    //
+    // We need 260 NOPs
+    NOP256;
+    NOP4;
+
+    // Smartly read all data from ADC.
+    // This starts the SPI peripheral,then waits for it to
+    // complete and gets the resulting data.
+
+    // Start the SCLKs
+    drv_spi_start_read_two_16bits(SPI5);
+
+    // Wait and read first ADC data
+    drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
+
+    // Wait for second ADC data to complete
+    drv_spi_wait_for_RX(SPI5);
+
+    // End conversion
+    SET_PIN_CONVST56_LOW;
+
+    // Read second ADC data
+    drv_spi_get_DR(SPI5, &sample_data_out[4]);
+}
+
 // This ISR is triggered by the AMDC to sync the ADC
 // conversions to the AMDC PWM carrier waveform. In
 // this ISR, all the motherboard ADCs should be sampled.
 void EXTI3_IRQHandler(void)
 {
 	// alert daisy chained AMDSs to begin converting
-	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
-	try_reset_routing_state();
 	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
     //reset DMA routing state machine to ensure robust operation in case bytes were dropped
     try_reset_routing_state();
@@ -201,7 +246,16 @@ void EXTI3_IRQHandler(void)
             drv_uart_putc_fast(USART2, (uint8_t)new_data[i]);
             drv_uart_putc_fast(USART3, (uint8_t)new_data[i + 4]);
         }
-    } 
+    } else if (active_sensor_mask == 0x11) {
+		drv_uart_putc_fast(USART2, 0x90);
+		drv_uart_putc_fast(USART3, 0x94);
+
+		drv_uart_putc_fast(USART2, (uint8_t)(new_data[0] >> 8));
+		drv_uart_putc_fast(USART3, (uint8_t)(new_data[4] >> 8));
+
+		drv_uart_putc_fast(USART2, (uint8_t)new_data[0]);
+		drv_uart_putc_fast(USART3, (uint8_t)new_data[4]);
+	}
     // =========================================================================
     // SLOW PATH: Safe loop for Partial Masks
     // =========================================================================
@@ -249,6 +303,95 @@ void EXTI3_IRQHandler(void)
     NVIC_ClearPendingIRQ(EXTI3_IRQn);
 }
 
+// This ISR is for the FBC and is triggered by the
+// AMDC to sync the ADCconversions to the AMDC PWM
+// carrier waveform. In this ISR, on 2 ADCs should be sampled.
+//void EXTI15_10_IRQHandler(void)
+void EXTI15_10_IRQHandler(void)
+{
+	// alert daisy chained AMDSs to begin converting
+	GPIO_TOGGLE_PIN(GPIOG, GPIO_PIN_14);
+	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
+	try_reset_routing_state();
+
+#ifdef BENCHMARK_MODE
+	// =========================================================================
+	// INJECT MOCK DMA DATA FOR BENCHMARKING
+	// Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
+	// =========================================================================
+	uint8_t current_head = mock_dma_write_head;
+	for (int i = 0; i < 6; i++) {
+		uint8_t idx = (uint8_t)(current_head + i);
+		if (i == 0) {
+			UART4_DMA_Pool[idx] = 0x90; // Valid Header
+			UART5_DMA_Pool[idx] = 0x90;
+		} else if (i == 3) {
+			UART4_DMA_Pool[idx] = 0x94; // Valid Header
+			UART5_DMA_Pool[idx] = 0x94;
+		} else {
+			UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
+			UART5_DMA_Pool[idx] = 0xBB;
+		}
+	}
+	// Instantly advance the mock hardware write head
+	mock_dma_write_head = (uint8_t)(current_head + 6);
+#endif
+
+	// Perform the actual SPI transactions
+	uint16_t new_data[8] = { 0 };
+	adc_sample_1_5_daughtercards(new_data);
+
+	// Send the data we sampled out as fast as possible
+	//
+	// =========================================================================
+	// OPTIMIZATION: "Tight Loop" Fast Path
+	// Tiny code footprint (fits in I-Cache) + Zero bitwise conditional branching
+	// =========================================================================
+	if (active_sensor_mask == 0x11) {
+		drv_uart_putc_fast(USART2, 0x90);
+		drv_uart_putc_fast(USART3, 0x94);
+
+		drv_uart_putc_fast(USART2, (uint8_t)(new_data[0] >> 8));
+		drv_uart_putc_fast(USART3, (uint8_t)(new_data[4] >> 8));
+
+		drv_uart_putc_fast(USART2, (uint8_t)new_data[0]);
+		drv_uart_putc_fast(USART3, (uint8_t)new_data[4]);
+	}
+	// =========================================================================
+	// SLOW PATH: Safe loop for Partial Masks
+	// =========================================================================
+	else {
+		bool u3 = false;
+		bool u2 = false;
+		uint8_t header = 0x90;
+
+		if (active_sensor_mask & (1 << 0)) {
+			drv_uart_putc_fast(USART2, header);
+			u2 = true;
+			drv_uart_putc_fast(USART2, (uint8_t)(new_data[0] >> 8));
+		}
+		if (active_sensor_mask & (1 << 4)) {
+			drv_uart_putc_fast(USART3, header);
+			u3 = true;
+			drv_uart_putc_fast(USART3, (uint8_t)(new_data[4] >> 8));
+		}
+		if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[0]));
+		if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[4]));
+	}
+
+	//Handle any DMA data that has been received from daisy chain
+	try_process_routing(); // This try function is thread safe
+
+	// Clear all pending IRQs for ADC conversions at the
+	// end of this ISR so that the system realigns the
+	// ADC conversions with the SYNC signal from the AMDC.
+	//
+	// For some reason, this only works if we call both of these:
+	NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
+	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_11);
+	NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
+}
+
 static void setup_pin_CONVST(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = { 0 };
@@ -292,8 +435,6 @@ static void setup_pin_SYNC_ADC(void)
 
     __HAL_RCC_GPIOB_CLK_ENABLE();
 	__HAL_RCC_GPIOG_CLK_ENABLE();
-    B11
-    G14
 
     // Configure GPIO pin Output Level
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
