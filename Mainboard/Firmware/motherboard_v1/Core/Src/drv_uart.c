@@ -39,6 +39,18 @@ volatile uint16_t u3_q_tail = 0;
 // Must be volatile so the compiler knows it can change inside an IRQ.
 volatile bool is_routing_active = false;
 
+#ifdef BENCHMARK_MODE
+    volatile uint8_t mock_dma_write_head = 0;
+    #define GET_W4() mock_dma_write_head
+    #define GET_W5() mock_dma_write_head
+#else
+    // NDTR counts down, so the write head is (SIZE - NDTR).
+    // Casting to uint8_t naturally handles the modulo wrap-around at 256.
+    // AMDS_RX_BUF_SIZE MUST BE 256 FOR THIS MATH TO WORK PROPERLY!
+    #define GET_W4() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))
+    #define GET_W5() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx))
+#endif
+
 
 void process_routing(void) {
     // 1. Load tracking state into local CPU registers for zero-wait-state access
@@ -167,8 +179,8 @@ void process_routing(void) {
         // If so, re-sample the DMA registers to see if new data arrived 
         // while we were actively processing the previous bytes.
         if ((r4 == w4) && (r5 == w5)) {
-            w4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
-            w5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
+            w4 = GET_W4();
+            w5 = GET_W5();
         }
     }
 
