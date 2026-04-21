@@ -157,39 +157,84 @@ void EXTI3_IRQHandler(void)
 	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
 	try_reset_routing_state();
 	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+    //reset DMA routing state machine to ensure robust operation in case bytes were dropped
+    try_reset_routing_state();
+
+#ifdef BENCHMARK_MODE
+    // =========================================================================
+    // INJECT MOCK DMA DATA FOR BENCHMARKING
+    // Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
+    // =========================================================================
+    uint8_t current_head = mock_dma_write_head;
+    for (int i = 0; i < 24; i++) {
+        uint8_t idx = (uint8_t)(current_head + i); 
+        if (i % 3 == 0) {
+            UART4_DMA_Pool[idx] = 0x90; // Valid Header
+            UART5_DMA_Pool[idx] = 0x90;
+        } else {
+            UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
+            UART5_DMA_Pool[idx] = 0xBB;
+        }
+    }
+    // Instantly advance the mock hardware write head
+    mock_dma_write_head = (uint8_t)(current_head + 24);
+#endif
+
 	// Perform the actual SPI transactions
 	uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
 
-    // Conditionally Transmit
-	for (int i = 0; i < 4; i++) {
-		uint8_t header = 0x90 | i;
-		bool u3 = false;
-		bool u2 = false;
+    // Send the data we sampled out as fast as possible
+    //
+    // =========================================================================
+    // OPTIMIZATION: "Tight Loop" Fast Path
+    // Tiny code footprint (fits in I-Cache) + Zero bitwise conditional branching
+    // =========================================================================
+    if (active_sensor_mask == 0xFF) {
+        for (uint32_t i = 0; i < 4; i++) {
+            drv_uart_putc_fast(USART2, 0x90 | i);
+            drv_uart_putc_fast(USART3, 0x90 | i);
+            
+            drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+            drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+            
+            drv_uart_putc_fast(USART2, (uint8_t)new_data[i]);
+            drv_uart_putc_fast(USART3, (uint8_t)new_data[i + 4]);
+        }
+    } 
+    // =========================================================================
+    // SLOW PATH: Safe loop for Partial Masks
+    // =========================================================================
+    else {
+        for (uint32_t i = 0; i < 4; i++) {
+            uint8_t header = 0x90 | i;
 
-		// Check Channel 0-3 (UART2)
-		if (active_sensor_mask & (1 << i)) {
-			drv_uart_putc_fast(USART2, header);
-			u2 = true;
-			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-		}
-
-		// Check Channel 4-7 (UART3)
-		if (active_sensor_mask & (1 << (i + 4))) {
-			drv_uart_putc_fast(USART3, header);
-			u3 = true;
-			drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-		}
-
-		if (u2) {
-			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
-		}
-
-		// Check Channel 4-7 (UART3)
-		if (u3) {
-			drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
-		}
-	}
+            if ((active_sensor_mask & (1 << i)) && (active_sensor_mask & (1 << (i + 4)))) {
+                drv_uart_putc_fast(USART2, header);
+                drv_uart_putc_fast(USART3, header);
+                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
+                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
+            } else { 
+                bool u3 = false;
+                bool u2 = false;
+                
+                if (active_sensor_mask & (1 << i)) {
+                    drv_uart_putc_fast(USART2, header);
+                    u2 = true;
+                    drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+                }
+                if (active_sensor_mask & (1 << (i + 4))) {
+                    drv_uart_putc_fast(USART3, header);
+                    u3 = true;
+                    drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+                }
+                if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
+                if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
+            }
+        }
+    }
 
     //Handle any DMA data that has been received from daisy chain
 	try_process_routing(); // This try function is thread safe

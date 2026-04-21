@@ -39,6 +39,18 @@ volatile uint16_t u3_q_tail = 0;
 // Must be volatile so the compiler knows it can change inside an IRQ.
 volatile bool is_routing_active = false;
 
+#ifdef BENCHMARK_MODE
+    volatile uint8_t mock_dma_write_head = 0;
+    #define GET_W4() mock_dma_write_head
+    #define GET_W5() mock_dma_write_head
+#else
+    // NDTR counts down, so the write head is (SIZE - NDTR).
+    // Casting to uint8_t naturally handles the modulo wrap-around at 256.
+    // AMDS_RX_BUF_SIZE MUST BE 256 FOR THIS MATH TO WORK PROPERLY!
+    #define GET_W4() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))
+    #define GET_W5() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx))
+#endif
+
 
 void process_routing(void) {
     // 1. Load tracking state into local CPU registers for zero-wait-state access
@@ -50,110 +62,129 @@ void process_routing(void) {
     // 2. Read DMA hardware pointers ONCE at the start. 
     // NDTR counts down, so the write head is (SIZE - NDTR).
     // Casting to uint8_t naturally handles the modulo wrap-around at 256.
-    uint8_t w4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
-    uint8_t w5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
+    uint8_t w4 = GET_W4();
+    uint8_t w5 = GET_W5();
 
-    // 3. Process instantly as long as either buffer has data. No NOP delays!
+    // Process instantly as long as either buffer has data. No NOP delays!
     while ((r4 != w4) || (r5 != w5)) {
         
-        // --- Process ONE byte from UART4 ---
+        // Calculate exactly how many bytes are sitting unread in the DMA buffer.
+        // Because everything is cast to uint8_t, this math safely handles 
+        // circular buffer wrap-around natively (e.g. w4=2, r4=254 -> avail=4)
+        uint8_t avail4 = (uint8_t)(w4 - r4);
+        uint8_t avail5 = (uint8_t)(w5 - r5);
+
+        // =====================================================================
+        // OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
+        // =====================================================================
+        // If BOTH streams have at least a full 3-byte packet, process them completely
+        // interleaved to keep both hardware lines saturated simultaneously.
+        while ((s4 == STATE_IDLE && avail4 >= 3) && (s5 == STATE_IDLE && avail5 >= 3)) {
+            uint8_t h4 = UART4_DMA_Pool[r4];
+            uint8_t h5 = UART5_DMA_Pool[r5];
+            
+            if (((h4 & 0xF0) == 0x90) && ((h5 & 0xF0) == 0x90)) {
+                // Byte 1: Headers (Incremented)
+                drv_uart_putc_fast(USART2, h4 + 4);
+                drv_uart_putc_fast(USART3, h5 + 4);
+                
+                // Byte 2: MSB
+                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 1)]);
+                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 1)]);
+                
+                // Byte 3: LSB
+                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 2)]);
+                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 2)]);
+                
+                r4 += 3;
+                r5 += 3;
+                avail4 -= 3;
+                avail5 -= 3;
+            } else {
+                break; // Misaligned or corrupted header, break to let the slow-path handle it
+            }
+        }
+
+        // =====================================================================
+        // OPTIMIZATION 2: SINGLE-STREAM FAST PATHS 
+        // =====================================================================
+        // If one UART receives data slightly faster than the other, process it.
+        while (s4 == STATE_IDLE && avail4 >= 3) {
+            uint8_t h4 = UART4_DMA_Pool[r4];
+            if ((h4 & 0xF0) == 0x90) {
+                drv_uart_putc_fast(USART2, h4 + 4);
+                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 1)]);
+                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 2)]);
+                
+                r4 += 3;
+                avail4 -= 3;
+            } else {
+                break;
+            }
+        }
+
+        while (s5 == STATE_IDLE && avail5 >= 3) {
+            uint8_t h5 = UART5_DMA_Pool[r5];
+            if ((h5 & 0xF0) == 0x90) {
+                drv_uart_putc_fast(USART3, h5 + 4);
+                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 1)]);
+                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 2)]);
+                
+                r5 += 3;
+                avail5 -= 3;
+            } else {
+                break;
+            }
+        }
+
+        // =====================================================================
+        // SLOW PATH: Fragmentation / State Recovery
+        // =====================================================================
+        // We only fall down here if a packet is fragmented across a DMA update
+        // boundary or if data is corrupted. We can safely revert to the simple 
+        // 1-byte-at-a-time logic.
         if (r4 != w4) {
             uint8_t b4 = UART4_DMA_Pool[r4++];
-            
             if (s4 == STATE_IDLE) {
                 if ((b4 & 0xF0) == 0x90) {
-                    drv_uart_putc_fast(USART2, b4 + 4); // Increment ID
-                    //If we have another byte, do the next state (this MCU can send 2 bytes fast)
-                    if (r4 != w4) {
-                        b4 = UART4_DMA_Pool[r4++];
-                        drv_uart_putc_fast(USART2, b4);
-                        s4 = STATE_GOT_MSB;
-                    }
-                    else
-                        s4 = STATE_GOT_HEADER;
+                    drv_uart_putc_fast(USART2, b4 + 4);
+                    s4 = STATE_GOT_HEADER;
                 }
             } else if (s4 == STATE_GOT_HEADER) {
                 drv_uart_putc_fast(USART2, b4);
-                //If we have another byte, do the next state (this MCU can send 2 bytes fast)
-                if (r4 != w4) { 
-                        b4 = UART4_DMA_Pool[r4++];
-                        drv_uart_putc_fast(USART2, b4);
-                        s4 = STATE_IDLE;
-                    }
-                    else
-                        s4 = STATE_GOT_MSB;
+                s4 = STATE_GOT_MSB;
             } else { // STATE_GOT_MSB
                 drv_uart_putc_fast(USART2, b4);
-                //If we have another byte, do the next state (this MCU can send 2 bytes fast)
-                if (r4 != w4) { 
-                    b4 = UART4_DMA_Pool[r4++];
-                    if ((b4 & 0xF0) == 0x90) {
-                        drv_uart_putc_fast(USART2, b4 + 4); // Increment ID
-                        s4 = STATE_GOT_HEADER;
-                    }
-                    else
-                        s4 = STATE_IDLE;    
-                }
-                else
-                    s4 = STATE_IDLE;
+                s4 = STATE_IDLE;
             }
         }
 
-        // --- Process ONE byte from UART5 ---
-        // By interleaving this right after USART2, we give USART2 hardware 
-        // time to shift bits onto the wire, preventing the 3rd byte from blocking!
         if (r5 != w5) {
             uint8_t b5 = UART5_DMA_Pool[r5++];
-            
             if (s5 == STATE_IDLE) {
                 if ((b5 & 0xF0) == 0x90) {
-                    drv_uart_putc_fast(USART3, b5 + 4); // Increment ID
-                    //If we have another byte, do the next state (this MCU can send 2 bytes fast)
-                    if (r5 != w5) {
-                        b5 = UART5_DMA_Pool[r5++];
-                        drv_uart_putc_fast(USART3, b5);
-                        s5 = STATE_GOT_MSB;
-                    }
-                    else
-                        s5 = STATE_GOT_HEADER;
+                    drv_uart_putc_fast(USART3, b5 + 4);
+                    s5 = STATE_GOT_HEADER;
                 }
             } else if (s5 == STATE_GOT_HEADER) {
                 drv_uart_putc_fast(USART3, b5);
-                //If we have another byte, do the next state (this MCU can send 2 bytes fast)
-                if (r5 != w5) { 
-                        b5 = UART5_DMA_Pool[r5++];
-                        drv_uart_putc_fast(USART3, b5);
-                        s5 = STATE_IDLE;
-                    }
-                    else
-                        s5 = STATE_GOT_MSB;
+                s5 = STATE_GOT_MSB;
             } else { // STATE_GOT_MSB
                 drv_uart_putc_fast(USART3, b5);
-                //If we have another byte, do the next state (this MCU can send 2 bytes fast)
-                if (r5 != w5) { 
-                    b5 = UART5_DMA_Pool[r5++];
-                    if ((b5 & 0xF0) == 0x90) {
-                        drv_uart_putc_fast(USART3, b5 + 4); // Increment ID
-                        s5 = STATE_GOT_HEADER;
-                    }
-                    else
-                        s5 = STATE_IDLE;    
-                }
-                else
-                    s5 = STATE_IDLE;
+                s5 = STATE_IDLE;
             }
         }
 
-        // 4. Check if we caught up to our cached write pointers.
+        // Check if we caught up to our cached write pointers.
         // If so, re-sample the DMA registers to see if new data arrived 
         // while we were actively processing the previous bytes.
         if ((r4 == w4) && (r5 == w5)) {
-            w4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
-            w5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
+            w4 = GET_W4();
+            w5 = GET_W5();
         }
     }
 
-    // 5. Store the local CPU register states back to global memory before exiting
+    // 5. Store states back
     tracker4.read_index = r4;
     tracker5.read_index = r5;
     tracker4.state = s4;

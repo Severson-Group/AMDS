@@ -50,6 +50,17 @@ extern volatile uint16_t u2_q_tail;
 extern volatile uint16_t u3_q_head;
 extern volatile uint16_t u3_q_tail;
 
+// =========================================================================
+// BENCHMARK MODE FLAG for DMA
+// Comment out this line to return to real hardware DMA operation!
+// =========================================================================
+//#define BENCHMARK_MODE
+// =========================================================================
+
+#ifdef BENCHMARK_MODE
+extern volatile uint8_t mock_dma_write_head;
+#endif
+
 // Declare the global flag so all .c files know it exists
 extern volatile bool is_routing_active;
 
@@ -105,8 +116,13 @@ static inline void try_reset_routing_state(void) {
         // 2. Soft-flush the DMA buffers.
         // We advance our read pointers to exactly where the DMA hardware 
         // is currently writing. All old, unprocessed bytes are instantly discarded.
+#ifdef BENCHMARK_MODE
+        tracker4.read_index = mock_dma_write_head;
+        tracker5.read_index = mock_dma_write_head;
+#else
         tracker4.read_index = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
         tracker5.read_index = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
+#endif
     }
 }
 
