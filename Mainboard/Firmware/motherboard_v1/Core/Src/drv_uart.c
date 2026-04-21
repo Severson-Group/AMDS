@@ -128,16 +128,16 @@ void process_routing(void) {
 
 			if (((h6 & 0xF0) == 0x90) && ((h1 & 0xF0) == 0x90)) {
 				// Byte 1: Headers (Incremented)
-				drv_uart_putc_fast(USART6, h6 + 4);
-				drv_uart_putc_fast(USART1, h1 + 4);
+				drv_uart_putc_fast(USART2, h6 + 4);
+				drv_uart_putc_fast(USART3, h1 + 4);
 
 				// Byte 2: MSB
-				drv_uart_putc_fast(USART6, UART6_DMA_Pool[(uint8_t)(r6 + 1)]);
-				drv_uart_putc_fast(USART1, UART1_DMA_Pool[(uint8_t)(r1 + 1)]);
+				drv_uart_putc_fast(USART2, UART6_DMA_Pool[(uint8_t)(r6 + 1)]);
+				drv_uart_putc_fast(USART3, UART1_DMA_Pool[(uint8_t)(r1 + 1)]);
 
 				// Byte 3: LSB
-				drv_uart_putc_fast(USART6, UART6_DMA_Pool[(uint8_t)(r6 + 2)]);
-				drv_uart_putc_fast(USART1, UART1_DMA_Pool[(uint8_t)(r1 + 2)]);
+				drv_uart_putc_fast(USART2, UART6_DMA_Pool[(uint8_t)(r6 + 2)]);
+				drv_uart_putc_fast(USART3, UART1_DMA_Pool[(uint8_t)(r1 + 2)]);
 
 				r6 += 3;
 				r1 += 3;
@@ -183,9 +183,9 @@ void process_routing(void) {
         while (s6 == STATE_IDLE && avail6 >= 3) {
 			uint8_t h6 = UART6_DMA_Pool[r6];
 			if ((h6 & 0xF0) == 0x90) {
-				drv_uart_putc_fast(USART6, h6 + 4);
-				drv_uart_putc_fast(USART6, UART6_DMA_Pool[(uint8_t)(r6 + 1)]);
-				drv_uart_putc_fast(USART6, UART6_DMA_Pool[(uint8_t)(r6 + 2)]);
+				drv_uart_putc_fast(USART2, h6 + 4);
+				drv_uart_putc_fast(USART2, UART6_DMA_Pool[(uint8_t)(r6 + 1)]);
+				drv_uart_putc_fast(USART2, UART6_DMA_Pool[(uint8_t)(r6 + 2)]);
 
 				r6 += 3;
 				avail6 -= 3;
@@ -197,9 +197,9 @@ void process_routing(void) {
 		while (s1 == STATE_IDLE && avail1 >= 3) {
 			uint8_t h1 = UART1_DMA_Pool[r1];
 			if ((h1 & 0xF0) == 0x90) {
-				drv_uart_putc_fast(USART1, h1 + 4);
-				drv_uart_putc_fast(USART1, UART1_DMA_Pool[(uint8_t)(r1 + 1)]);
-				drv_uart_putc_fast(USART1, UART1_DMA_Pool[(uint8_t)(r1 + 2)]);
+				drv_uart_putc_fast(USART3, h1 + 4);
+				drv_uart_putc_fast(USART3, UART1_DMA_Pool[(uint8_t)(r1 + 1)]);
+				drv_uart_putc_fast(USART3, UART1_DMA_Pool[(uint8_t)(r1 + 2)]);
 
 				r1 += 3;
 				avail1 -= 3;
@@ -250,14 +250,14 @@ void process_routing(void) {
 			uint8_t b6 = UART6_DMA_Pool[r6++];
 			if (s6 == STATE_IDLE) {
 				if ((b6 & 0xF0) == 0x90) {
-					drv_uart_putc_fast(USART6, b6 + 4);
+					drv_uart_putc_fast(USART2, b6 + 4);
 					s6 = STATE_GOT_HEADER;
 				}
 			} else if (s6 == STATE_GOT_HEADER) {
-				drv_uart_putc_fast(USART6, b6);
+				drv_uart_putc_fast(USART2, b6);
 				s6 = STATE_GOT_MSB;
 			} else { // STATE_GOT_MSB
-				drv_uart_putc_fast(USART6, b6);
+				drv_uart_putc_fast(USART2, b6);
 				s6 = STATE_IDLE;
 			}
 		}
@@ -266,14 +266,14 @@ void process_routing(void) {
 			uint8_t b1 = UART1_DMA_Pool[r1++];
 			if (s1 == STATE_IDLE) {
 				if ((b1 & 0xF0) == 0x90) {
-					drv_uart_putc_fast(USART1, b1 + 4);
+					drv_uart_putc_fast(USART3, b1 + 4);
 					s1 = STATE_GOT_HEADER;
 				}
 			} else if (s1 == STATE_GOT_HEADER) {
-				drv_uart_putc_fast(USART1, b1);
+				drv_uart_putc_fast(USART3, b1);
 				s1 = STATE_GOT_MSB;
 			} else { // STATE_GOT_MSB
-				drv_uart_putc_fast(USART1, b1);
+				drv_uart_putc_fast(USART3, b1);
 				s1 = STATE_IDLE;
 			}
 		}
@@ -375,6 +375,60 @@ void DMA1_Stream0_IRQHandler(void)
 void DMA1_Stream6_IRQHandler(void) {
     HAL_DMA_IRQHandler(&hdma_usart2_tx);
 }
+
+void USART6_IRQHandler(void)
+{
+    // Check for Parity, Overrun, Noise, or Frame errors
+    if (__HAL_UART_GET_FLAG(&huart6, UART_FLAG_PE)  ||
+        __HAL_UART_GET_FLAG(&huart6, UART_FLAG_ORE) ||
+        __HAL_UART_GET_FLAG(&huart6, UART_FLAG_NE)  ||
+        __HAL_UART_GET_FLAG(&huart6, UART_FLAG_FE))
+    {
+        // 1. Clear the error flags (Added UART_CLEAR_PEF)
+        __HAL_UART_CLEAR_IT(&huart6, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
+
+        // 2. IMPORTANT: Re-enable DMA receiver request
+        // The hardware/HAL drops this bit on error, halting the DMA stream.
+        SET_BIT(huart6.Instance->CR3, USART_CR3_DMAR);
+
+        return;
+    }
+
+    // Process normal RX/TX interrupts via the HAL
+    HAL_UART_IRQHandler(&huart6);
+}
+
+void DMA2_Stream2_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&hdma_uart6_rx);
+}
+
+void USART1_IRQHandler(void)
+{
+	// Check for Overrun, Noise, or Frame errors
+	if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_PE)  ||
+		__HAL_UART_GET_FLAG(&huart1, UART_FLAG_ORE) ||
+		__HAL_UART_GET_FLAG(&huart1, UART_FLAG_NE)  ||
+		__HAL_UART_GET_FLAG(&huart1, UART_FLAG_FE))
+	{
+		// 1. Clear the error flags
+		__HAL_UART_CLEAR_IT(&huart1, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
+
+		// 2. IMPORTANT: Re-enable DMA receiver request
+		// Sometimes HAL disables this bit (DMAR) on error.
+		SET_BIT(huart1.Instance->CR3, USART_CR3_DMAR);
+
+		return;
+	}
+	HAL_UART_IRQHandler(&huart1);
+}
+
+void DMA2_Stream5_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&hdma_uart1_rx);
+}
+
+
 
 void USART2_IRQHandler(void) {
     HAL_UART_IRQHandler(&huart2);
@@ -812,9 +866,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
 
 		/**USART3 GPIO Configuration
 		PG9     ------> USART6_RX
-		PG10    ------> USART6_TX
+		PG14    ------> USART6_TX
 		*/
-		HAL_GPIO_DeInit(GPIOG, GPIO_PIN_9 | GPIO_PIN_10);
+		HAL_GPIO_DeInit(GPIOG, GPIO_PIN_9 | GPIO_PIN_14);
 	}
 
 	else if (uartHandle->Instance == USART1) {
