@@ -24,11 +24,16 @@ int main(void)
     drv_uart_init();
     drv_led_init();
 
+    // Tell the UART to constantly route TX requests to the DMA controller
+//    huart2.Instance->CR3 |= USART_CR3_DMAT;
+//    huart3.Instance->CR3 |= USART_CR3_DMAT;
+
     // Initialize the main modules
     adc_init();
 
     // Infinite loop (all real work is done in ISRs)
     uint8_t led = 0;
+    uint32_t ledDelta = HAL_GetTick();
 
     // Disable the SysTick ISR
     //
@@ -37,20 +42,23 @@ int main(void)
     // we do not need it to run during operation!
     //
     // Set bit 0 to 0
-    SysTick->CTRL &= 0xFFFFFFFE;
+//    SysTick->CTRL &= 0xFFFFFFFE;
     
     while (1) {
-        drv_led_clear();
-        drv_led_on(1 << led);
-        drv_led_display();
 
-        if (++led >= DRV_LED_NUM_TOTAL) {
-            led = 0;
-        }
+        // Handle DMA data from UARTs and route to correct destination
+        try_process_routing(); // This try function is thread safe
 
-        volatile int i;
-        for (i = 0; i < 10000000; i++) {
-            asm("nop");
+        // Handle LEDs
+        if (HAL_GetTick() - ledDelta >= 250) {
+            ledDelta = HAL_GetTick();
+            drv_led_clear();
+            drv_led_on(1 << led);
+            drv_led_display();
+
+            if (++led >= DRV_LED_NUM_TOTAL) {
+                led = 0;
+            }
         }
     }
 }
