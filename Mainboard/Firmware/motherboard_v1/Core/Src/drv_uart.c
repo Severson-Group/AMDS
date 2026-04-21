@@ -41,6 +41,19 @@ uart_rx_tracker_t tracker5 = {0};
 uint8_t UART4_DMA_Pool[AMDS_RX_BUF_SIZE];
 uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
 
+// FBC Daisy Chain RX Peripherals
+static UART_HandleTypeDef huart1;
+static UART_HandleTypeDef huart6;
+
+static DMA_HandleTypeDef hdma_uart1_rx;
+static DMA_HandleTypeDef hdma_uart6_rx;
+
+uart_rx_tracker_t tracker1 = {0};
+uart_rx_tracker_t tracker6 = {0};
+
+uint8_t UART1_DMA_Pool[AMDS_RX_BUF_SIZE];
+uint8_t UART6_DMA_Pool[AMDS_RX_BUF_SIZE];
+
 void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id) {
     // Calculate current DMA write position (NDTR counts down)
 	UART_HandleTypeDef *huart;
@@ -228,11 +241,17 @@ void drv_uart_init(void)
     __HAL_RCC_UART4_CONFIG(RCC_UART4CLKSOURCE_SYSCLK);
 	__HAL_RCC_UART5_CONFIG(RCC_UART5CLKSOURCE_SYSCLK);
 
+	__HAL_RCC_USART1_CONFIG(RCC_USART1CLKSOURCE_SYSCLK);
+	__HAL_RCC_USART6_CONFIG(RCC_USART6CLKSOURCE_SYSCLK);
+
     MX_USART_UART_Init(&huart2, USART2);
     MX_USART_UART_Init(&huart3, USART3);
 
     MX_USART_UART_Init(&huart4, UART4);
 	MX_USART_UART_Init(&huart5, UART5);
+
+    MX_USART_UART_Init(&huart1, USART1);
+	MX_USART_UART_Init(&huart6, USART6);
 }
 
 static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
@@ -258,9 +277,9 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
     huart->Init.StopBits = UART_STOPBITS_2;
     huart->Init.Parity = UART_PARITY_ODD;
 
-    if (huart->Instance == UART4) {
+    if (huart->Instance == UART4 || huart->Instance == USART6) {
     	huart->Init.Mode = UART_MODE_RX;
-    } else if (huart->Instance == UART5) {
+    } else if (huart->Instance == UART5 || huart->Instance == USART1) {
     	huart->Init.Mode = UART_MODE_RX;
     } else {
     	huart->Init.Mode = UART_MODE_TX;
@@ -294,6 +313,26 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 		__HAL_UART_FLUSH_DRREGISTER(huart);
 
 		if (HAL_UART_Receive_DMA(&huart5, UART5_DMA_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
+		    PANIC;
+		}
+	} else if (huart->Instance == USART6) {
+    	NVIC_SetPriority(USART6_IRQn, 9);
+		HAL_NVIC_EnableIRQ(USART6_IRQn);
+
+		__HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
+		__HAL_UART_FLUSH_DRREGISTER(huart);
+
+		if (HAL_UART_Receive_DMA(&huart6, UART6_DMA_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
+		    PANIC;
+		}
+    } else if (huart->Instance == USART1) {
+    	NVIC_SetPriority(USART1_IRQn, 9);
+		HAL_NVIC_EnableIRQ(USART1_IRQn);
+
+		__HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
+		__HAL_UART_FLUSH_DRREGISTER(huart);
+
+		if (HAL_UART_Receive_DMA(&huart1, UART1_DMA_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
 		    PANIC;
 		}
 	} else if (huart->Instance == USART2) {
@@ -474,6 +513,86 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
 		NVIC_SetPriority(DMA1_Stream0_IRQn, 6);  // higher priority than UART
 		HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
 	}
+
+    else if (uartHandle->Instance == USART6) {
+		// USART6 clock enable
+		__HAL_RCC_USART6_CLK_ENABLE();
+		__HAL_RCC_DMA2_CLK_ENABLE();
+
+		__HAL_RCC_GPIOG_CLK_ENABLE();
+		// USART3 GPIO Configuration
+		// PG9     ------> UART4_RX
+		GPIO_InitStruct.Pin = GPIO_PIN_9;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF8_USART6;
+		HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+		// DMA config - check your device's DMA request mapping table
+		// for the correct stream/channel for USART6_RX pg 253 of reference manual
+		hdma_uart6_rx.Instance = DMA2_Stream2;        // verify in reference manual
+		hdma_uart6_rx.Init.Channel = DMA_CHANNEL_5; // verify in reference manual
+		hdma_uart6_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+		hdma_uart6_rx.Init.PeriphInc = DMA_PINC_DISABLE;  // RDR address stays fixed
+		hdma_uart6_rx.Init.MemInc = DMA_MINC_ENABLE;      // buffer pointer increments
+		hdma_uart6_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+		hdma_uart6_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+		hdma_uart6_rx.Init.Mode = DMA_CIRCULAR;         // or DMA_CIRCULAR (see note below)
+		hdma_uart6_rx.Init.Priority = DMA_PRIORITY_HIGH;
+		hdma_uart6_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+
+		if (HAL_DMA_Init(&hdma_uart6_rx) != HAL_OK) {
+			PANIC;
+		}
+
+		// This links the DMA handle to the UART handle
+		__HAL_LINKDMA(uartHandle, hdmarx, hdma_uart6_rx);
+
+		// DMA stream IRQ
+		NVIC_SetPriority(DMA2_Stream2_IRQn, 6);  // higher priority than UART
+		HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
+	}
+
+	else if (uartHandle->Instance == USART1) {
+		// USART1 clock enable
+		__HAL_RCC_USART1_CLK_ENABLE();
+		__HAL_RCC_DMA2_CLK_ENABLE();
+
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		// USART1 GPIO Configuration
+		// PA10      ------> USART1_RX
+		GPIO_InitStruct.Pin = GPIO_PIN_10;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+		// DMA config - check your device's DMA request mapping table
+		// for the correct stream/channel for USART1_RX pg 253 of reference manual
+		hdma_uart1_rx.Instance = DMA2_Stream5;        // verify in reference manual
+		hdma_uart1_rx.Init.Channel = DMA_CHANNEL_4; // verify in reference manual
+		hdma_uart1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+		hdma_uart1_rx.Init.PeriphInc = DMA_PINC_DISABLE;  // RDR address stays fixed
+		hdma_uart1_rx.Init.MemInc = DMA_MINC_ENABLE;      // buffer pointer increments
+		hdma_uart1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+		hdma_uart1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+		hdma_uart1_rx.Init.Mode = DMA_CIRCULAR;         // or DMA_CIRCULAR (see note below)
+		hdma_uart1_rx.Init.Priority = DMA_PRIORITY_HIGH;
+		hdma_uart1_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+
+		if (HAL_DMA_Init(&hdma_uart1_rx) != HAL_OK) {
+			PANIC;
+		}
+
+		// This links the DMA handle to the UART handle
+		__HAL_LINKDMA(uartHandle, hdmarx, hdma_uart1_rx);
+
+		// DMA stream IRQ
+		NVIC_SetPriority(DMA2_Stream5_IRQn, 6);  // higher priority than UART
+		HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);
+	}
 }
 
 void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
@@ -520,5 +639,27 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
 		PD2      ------> UART5_RX
 		*/
 		HAL_GPIO_DeInit(GPIOD, GPIO_PIN_2);
+	}
+
+    else if (uartHandle->Instance == USART6) {
+		/* Peripheral clock disable */
+		__HAL_RCC_USART6_CLK_DISABLE();
+
+		/**USART3 GPIO Configuration
+		PG9     ------> USART6_RX
+		PG10    ------> USART6_TX
+		*/
+		HAL_GPIO_DeInit(GPIOG, GPIO_PIN_9 | GPIO_PIN_10);
+	}
+
+	else if (uartHandle->Instance == USART1) {
+		/* Peripheral clock disable */
+		__HAL_RCC_USART1_CLK_DISABLE();
+
+		/**USART3 GPIO Configuration
+		PA9      ------> UART5_TX
+		PA10     ------> UART5_RX
+		*/
+		HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9 | GPIO_PIN_10);
 	}
 }
