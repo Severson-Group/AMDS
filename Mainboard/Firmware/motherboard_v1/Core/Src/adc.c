@@ -182,50 +182,77 @@ void EXTI3_IRQHandler(void)
 	uint16_t new_data[8] = { 0 };
     adc_sample_all_daughtercards(new_data);
 
-    // Conditionally Transmit
-	for (int i = 0; i < 4; i++) {
-		uint8_t header = 0x90 | i;
+    // Send the data we sampled out as fast as possible
+    //
+    // =========================================================================
+    // OPTIMIZATION: Zero-Branch Fast Path for Nominal Operation
+    // =========================================================================
+    if (active_sensor_mask == 0xFF) {
+        // Channel 0 & 4
+        drv_uart_putc_fast(USART2, 0x90);
+        drv_uart_putc_fast(USART3, 0x90);
+        drv_uart_putc_fast(USART2, (uint8_t)(new_data[0] >> 8));
+        drv_uart_putc_fast(USART3, (uint8_t)(new_data[4] >> 8));
+        drv_uart_putc_fast(USART2, (uint8_t)new_data[0]);
+        drv_uart_putc_fast(USART3, (uint8_t)new_data[4]);
 
-		// If both channels in current iteration are enabled. We can do a much faster transmission
-		if ((active_sensor_mask & (1 << i)) && (active_sensor_mask & (1 << (i + 4)))) {
-			// Send header
-			drv_uart_putc_fast(USART2, header);
-			drv_uart_putc_fast(USART3, header);
+        // Channel 1 & 5
+        drv_uart_putc_fast(USART2, 0x91);
+        drv_uart_putc_fast(USART3, 0x91);
+        drv_uart_putc_fast(USART2, (uint8_t)(new_data[1] >> 8));
+        drv_uart_putc_fast(USART3, (uint8_t)(new_data[5] >> 8));
+        drv_uart_putc_fast(USART2, (uint8_t)new_data[1]);
+        drv_uart_putc_fast(USART3, (uint8_t)new_data[5]);
 
-			// Send MSB
-			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-			drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+        // Channel 2 & 6
+        drv_uart_putc_fast(USART2, 0x92);
+        drv_uart_putc_fast(USART3, 0x92);
+        drv_uart_putc_fast(USART2, (uint8_t)(new_data[2] >> 8));
+        drv_uart_putc_fast(USART3, (uint8_t)(new_data[6] >> 8));
+        drv_uart_putc_fast(USART2, (uint8_t)new_data[2]);
+        drv_uart_putc_fast(USART3, (uint8_t)new_data[6]);
 
-			// Send LSB
-			drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
-			drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
-		} else { // otherwise check each channel individually
-			bool u3 = false;
-			bool u2 = false;
-			// Check Channel 0-3 (UART2)
-			if (active_sensor_mask & (1 << i)) {
-				drv_uart_putc_fast(USART2, header);
-				u2 = true;
-				drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-			}
+        // Channel 3 & 7
+        drv_uart_putc_fast(USART2, 0x93);
+        drv_uart_putc_fast(USART3, 0x93);
+        drv_uart_putc_fast(USART2, (uint8_t)(new_data[3] >> 8));
+        drv_uart_putc_fast(USART3, (uint8_t)(new_data[7] >> 8));
+        drv_uart_putc_fast(USART2, (uint8_t)new_data[3]);
+        drv_uart_putc_fast(USART3, (uint8_t)new_data[7]);
+    } 
+    // =========================================================================
+    // SLOW PATH: Loop for Partial Masks
+    // =========================================================================
+    else { 
+        for (int i = 0; i < 4; i++) {
+            uint8_t header = 0x90 | i;
 
-			// Check Channel 4-7 (UART3)
-			if (active_sensor_mask & (1 << (i + 4))) {
-				drv_uart_putc_fast(USART3, header);
-				u3 = true;
-				drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-			}
-
-			if (u2) {
-				drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
-			}
-
-			// Check Channel 4-7 (UART3)
-			if (u3) {
-				drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
-			}
-		}
-	}
+            if ((active_sensor_mask & (1 << i)) && (active_sensor_mask & (1 << (i + 4)))) {
+                drv_uart_putc_fast(USART2, header);
+                drv_uart_putc_fast(USART3, header);
+                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
+                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
+            } else { 
+                bool u3 = false;
+                bool u2 = false;
+                
+                if (active_sensor_mask & (1 << i)) {
+                    drv_uart_putc_fast(USART2, header);
+                    u2 = true;
+                    drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+                }
+                if (active_sensor_mask & (1 << (i + 4))) {
+                    drv_uart_putc_fast(USART3, header);
+                    u3 = true;
+                    drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+                }
+                if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
+                if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
+            }
+        }
+    }
 
     //Handle any DMA data that has been received from daisy chain
 	try_process_routing(); // This try function is thread safe
