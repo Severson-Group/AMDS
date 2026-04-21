@@ -62,8 +62,8 @@ void process_routing(void) {
     // 2. Read DMA hardware pointers ONCE at the start. 
     // NDTR counts down, so the write head is (SIZE - NDTR).
     // Casting to uint8_t naturally handles the modulo wrap-around at 256.
-    uint8_t w4 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
-    uint8_t w5 = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
+    uint8_t w4 = GET_W4();
+    uint8_t w5 = GET_W5();
 
     // Process instantly as long as either buffer has data. No NOP delays!
     while ((r4 != w4) || (r5 != w5)) {
