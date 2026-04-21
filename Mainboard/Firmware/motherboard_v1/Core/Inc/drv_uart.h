@@ -54,7 +54,7 @@ extern volatile uint16_t u3_q_tail;
 // BENCHMARK MODE FLAG for DMA
 // Comment out this line to return to real hardware DMA operation!
 // =========================================================================
-#define BENCHMARK_MODE 
+//#define BENCHMARK_MODE
 // =========================================================================
 
 #ifdef BENCHMARK_MODE
