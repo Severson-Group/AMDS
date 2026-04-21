@@ -154,6 +154,8 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 void EXTI3_IRQHandler(void)
 {
 	// alert daisy chained AMDSs to begin converting
+	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
+	try_reset_routing_state();
 	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
     //reset DMA routing state machine to ensure robust operation in case bytes were dropped
     try_reset_routing_state();
