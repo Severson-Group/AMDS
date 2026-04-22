@@ -1,0 +1,600 @@
+UNITS=MM
+#
+#Component attribute names
+#
+@0 .comp_mount_type
+@1 .comp_height
+@2 .no_pop
+@3 .comp_ignore
+@4 .comp_variant_list
+
+#
+#Component attribute text strings
+#
+
+# CMP 0
+CMP 7 57.023 74.93 270 N TP6 Test_Point ;0=1,1=0.0000
+PRP Category 'Test and Measurement'
+PRP Color 'Natural'
+PRP ComponentLink1Description 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP ComponentLink1URL 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP Manufacturer 'TE Connectivity AMP Connectors'
+PRP Manufacturer_Part_Number 'RCU-0C'
+PRP Material_-_Body '-'
+PRP Material_-_Insulation 'No Insulation'
+PRP Mounting_Type 'Surface Mount'
+PRP Packaging 'Cut Tape (CT)'
+PRP Part_Status 'Active'
+PRP Plating '-'
+PRP Price ''
+PRP Pricing_1 '1=0.22, 10=0.206, 25=0.1756, 50=0.1536, 100=0.1426, 250=0.12616, 500=0.12068, 1000=0.09874 (USD)'
+PRP RoHS 'RoHS Compliant'
+PRP Size_/_Dimension '0.063_ x 0.031_ x 0.045_ (1.60mm x 0.80mm x 1.15mm)'
+PRP Stock_1 '136646'
+PRP Supplier ''
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number ''
+PRP Supplier_Part_Number_1 'A106145CT-ND'
+PRP Type 'PC Test Point'
+TOP 0 57.023 74.93 180 N 21 9 1
+#
+# CMP 1
+CMP 7 57.023 111.887 270 N TP5 Test_Point ;0=1,1=0.0000
+PRP Category 'Test and Measurement'
+PRP Color 'Natural'
+PRP ComponentLink1Description 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP ComponentLink1URL 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP Manufacturer 'TE Connectivity AMP Connectors'
+PRP Manufacturer_Part_Number 'RCU-0C'
+PRP Material_-_Body '-'
+PRP Material_-_Insulation 'No Insulation'
+PRP Mounting_Type 'Surface Mount'
+PRP Packaging 'Cut Tape (CT)'
+PRP Part_Status 'Active'
+PRP Plating '-'
+PRP Price ''
+PRP Pricing_1 '1=0.22, 10=0.206, 25=0.1756, 50=0.1536, 100=0.1426, 250=0.12616, 500=0.12068, 1000=0.09874 (USD)'
+PRP RoHS 'RoHS Compliant'
+PRP Size_/_Dimension '0.063_ x 0.031_ x 0.045_ (1.60mm x 0.80mm x 1.15mm)'
+PRP Stock_1 '136646'
+PRP Supplier ''
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number ''
+PRP Supplier_Part_Number_1 'A106145CT-ND'
+PRP Type 'PC Test Point'
+TOP 0 57.023 111.887 180 N 21 10 1
+#
+# CMP 2
+CMP 7 54.483 74.93 270 N TP4 Test_Point ;0=1,1=0.0000
+PRP Category 'Test and Measurement'
+PRP Color 'Natural'
+PRP ComponentLink1Description 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP ComponentLink1URL 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP Manufacturer 'TE Connectivity AMP Connectors'
+PRP Manufacturer_Part_Number 'RCU-0C'
+PRP Material_-_Body '-'
+PRP Material_-_Insulation 'No Insulation'
+PRP Mounting_Type 'Surface Mount'
+PRP Packaging 'Cut Tape (CT)'
+PRP Part_Status 'Active'
+PRP Plating '-'
+PRP Price ''
+PRP Pricing_1 '1=0.22, 10=0.206, 25=0.1756, 50=0.1536, 100=0.1426, 250=0.12616, 500=0.12068, 1000=0.09874 (USD)'
+PRP RoHS 'RoHS Compliant'
+PRP Size_/_Dimension '0.063_ x 0.031_ x 0.045_ (1.60mm x 0.80mm x 1.15mm)'
+PRP Stock_1 '136646'
+PRP Supplier ''
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number ''
+PRP Supplier_Part_Number_1 'A106145CT-ND'
+PRP Type 'PC Test Point'
+TOP 0 54.483 74.93 180 N 8 1 1
+#
+# CMP 3
+CMP 7 51.943 74.93 270 N TP3 Test_Point ;0=1,1=0.0000
+PRP Category 'Test and Measurement'
+PRP Color 'Natural'
+PRP ComponentLink1Description 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP ComponentLink1URL 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP Manufacturer 'TE Connectivity AMP Connectors'
+PRP Manufacturer_Part_Number 'RCU-0C'
+PRP Material_-_Body '-'
+PRP Material_-_Insulation 'No Insulation'
+PRP Mounting_Type 'Surface Mount'
+PRP Packaging 'Cut Tape (CT)'
+PRP Part_Status 'Active'
+PRP Plating '-'
+PRP Price ''
+PRP Pricing_1 '1=0.22, 10=0.206, 25=0.1756, 50=0.1536, 100=0.1426, 250=0.12616, 500=0.12068, 1000=0.09874 (USD)'
+PRP RoHS 'RoHS Compliant'
+PRP Size_/_Dimension '0.063_ x 0.031_ x 0.045_ (1.60mm x 0.80mm x 1.15mm)'
+PRP Stock_1 '136646'
+PRP Supplier ''
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number ''
+PRP Supplier_Part_Number_1 'A106145CT-ND'
+PRP Type 'PC Test Point'
+TOP 0 51.943 74.93 180 N 11 2 1
+#
+# CMP 4
+CMP 7 54.483 111.887 270 N TP2 Test_Point ;0=1,1=0.0000
+PRP Category 'Test and Measurement'
+PRP Color 'Natural'
+PRP ComponentLink1Description 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP ComponentLink1URL 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP Manufacturer 'TE Connectivity AMP Connectors'
+PRP Manufacturer_Part_Number 'RCU-0C'
+PRP Material_-_Body '-'
+PRP Material_-_Insulation 'No Insulation'
+PRP Mounting_Type 'Surface Mount'
+PRP Packaging 'Cut Tape (CT)'
+PRP Part_Status 'Active'
+PRP Plating '-'
+PRP Price ''
+PRP Pricing_1 '1=0.22, 10=0.206, 25=0.1756, 50=0.1536, 100=0.1426, 250=0.12616, 500=0.12068, 1000=0.09874 (USD)'
+PRP RoHS 'RoHS Compliant'
+PRP Size_/_Dimension '0.063_ x 0.031_ x 0.045_ (1.60mm x 0.80mm x 1.15mm)'
+PRP Stock_1 '136646'
+PRP Supplier ''
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number ''
+PRP Supplier_Part_Number_1 'A106145CT-ND'
+PRP Type 'PC Test Point'
+TOP 0 54.483 111.887 180 N 14 2 1
+#
+# CMP 5
+CMP 7 51.943 111.887 90 N TP1 Test_Point ;0=1,1=0.0000
+PRP Category 'Test and Measurement'
+PRP Color 'Natural'
+PRP ComponentLink1Description 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP ComponentLink1URL 'http://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=1773266&DocType=DS&DocLang=English'
+PRP Manufacturer 'TE Connectivity AMP Connectors'
+PRP Manufacturer_Part_Number 'RCU-0C'
+PRP Material_-_Body '-'
+PRP Material_-_Insulation 'No Insulation'
+PRP Mounting_Type 'Surface Mount'
+PRP Packaging 'Cut Tape (CT)'
+PRP Part_Status 'Active'
+PRP Plating '-'
+PRP Price ''
+PRP Pricing_1 '1=0.22, 10=0.206, 25=0.1756, 50=0.1536, 100=0.1426, 250=0.12616, 500=0.12068, 1000=0.09874 (USD)'
+PRP RoHS 'RoHS Compliant'
+PRP Size_/_Dimension '0.063_ x 0.031_ x 0.045_ (1.60mm x 0.80mm x 1.15mm)'
+PRP Stock_1 '136646'
+PRP Supplier ''
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number ''
+PRP Supplier_Part_Number_1 'A106145CT-ND'
+PRP Type 'PC Test Point'
+TOP 0 51.943 111.887 0 N 17 2 1
+#
+# CMP 6
+CMP 8 41.91 129.667 90 N U3 RS6-2405S ;0=2,1=0.0000
+PRP ComponentLink1Description 'https://www.recom-power.com/pdf/Econoline/RS6.pdf?src-supplier=Digi-Key'
+PRP ComponentLink1URL 'https://www.recom-power.com/pdf/Econoline/RS6.pdf?src-supplier=Digi-Key'
+PRP Manufacturer 'Recom'
+PRP Manufacturer_Part_Number 'RS6-2405S'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '945-2985-ND'
+TOP 0 41.91 129.667 90 N 5 0 1
+TOP 1 41.91 127.127 90 N 4 0 2
+TOP 2 41.91 124.587 90 N 0 12 3
+TOP 3 41.91 119.507 90 N 2 1 5
+TOP 4 41.91 116.967 90 N 23 3 6
+TOP 5 41.91 114.427 90 N 22 3 7
+TOP 6 41.91 111.887 90 N 0 13 8
+#
+# CMP 7
+CMP 2 28.829 116.967 0 N R8 Resistor ;0=1,1=0.0000
+PRP Case_Code_(Imperial) '0603'
+PRP Case_Code_(Metric) '1608'
+PRP Case/Package '0603'
+PRP Category 'Chip SMD Resistors'
+PRP ComponentLink1Description 'https://www.seielect.com/catalog/SEI-RMCF_RMCP.pdf?src-supplier=Avnet'
+PRP ComponentLink1URL 'https://www.seielect.com/catalog/SEI-RMCF_RMCP.pdf?src-supplier=Avnet'
+PRP ComponentLink2Description 'http://components.arrow.com/part/dataview/50497142S181428N1174?src-supplier=Arrow'
+PRP ComponentLink2URL 'http://components.arrow.com/part/dataview/50497142S181428N1174?src-supplier=Arrow'
+PRP ComponentLink3Description 'https://www.seielect.com/catalog/SEI-Packaging.pdf?src-supplier=Digi-Key'
+PRP ComponentLink3URL 'https://www.seielect.com/catalog/SEI-Packaging.pdf?src-supplier=Digi-Key'
+PRP Composition 'Thick Film'
+PRP Contact_Plating 'Tin,Matte'
+PRP Features 'Automotive AEC-Q200'
+PRP Height '0.022inch'
+PRP Length '0.061inch'
+PRP Manufacturer 'Stackpole Electronics'
+PRP Manufacturer_Part_Number 'RMCF0603FT470R'
+PRP Max_Operating_Temperature '155°C'
+PRP Max_Power_Dissipation '100mW'
+PRP Min_Operating_Temperature '-55°C'
+PRP Mount 'Surface Mount'
+PRP Number_of_Terminations '2'
+PRP Packaging 'Tape and Reel'
+PRP Pricing_1 '1=0.10000, 10=0.01600, 100=0.00650, 1000=0.00292, 2500=0.00253 (USD)'
+PRP Radiation_Hardening 'No'
+PRP Resistance '470R'
+PRP RoHS 'Yes'
+PRP Stock_1 '165688'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 'RMCF0603FT470RCT-ND'
+PRP Temperature_Coefficient '100ppm/°C'
+PRP Tolerance '1%'
+PRP Value '470'
+PRP Width '0.031inch'
+TOP 0 27.97899916 116.967 0 N 22 7 1
+TOP 1 29.67900084 116.967 0 N 3 0 2
+#
+# CMP 8
+CMP 6 76.962 67.818 0 N MH4 empty_part_name ;0=2,1=0.0000
+TOP 0 76.962 67.818 0 N 0 2 1
+#
+# CMP 9
+CMP 6 28.829 67.818 0 N MH3 empty_part_name ;0=2,1=0.0000
+TOP 0 28.829 67.818 0 N 0 1 1
+#
+# CMP 10
+CMP 6 77.089 132.207 0 N MH2 empty_part_name ;0=2,1=0.0000
+TOP 0 77.089 132.207 0 N 0 0 1
+#
+# CMP 11
+CMP 6 28.829 132.08 0 N MH1 empty_part_name ;0=2,1=0.0000
+TOP 0 28.829 132.08 0 N 0 11 1
+#
+# CMP 12
+CMP 1 31.115 116.11699916 270 N LED1 RED ;0=1,1=0.0000
+PRP Manufacturer 'Lite-On Inc.'
+PRP Manufacturer_Part_Number 'LTST-C191KRKT'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '160-1447-1-ND'
+TOP 0 31.115 116.967 270 N 23 7 A
+TOP 1 31.115 115.26699832 270 N 3 1 C
+#
+# CMP 13
+CMP 10 52.578 125.857 90 N L1 744273801 ;0=1,1=5.3000
+PRP Case/Package 'SMD/SMT'
+PRP ComponentLink1Description 'Manufacturer Link'
+PRP ComponentLink1URL 'http://www.we-online.com'
+PRP ComponentLink2Description 'Datasheet'
+PRP ComponentLink2URL 'http://www.we-online.de/katalog/media/pdf/744273801.pdf'
+PRP ComponentLink3Description 'https://datasheet.ciiva.com/6215/744273801-6215152.pdf?src-supplier=Digi-Key'
+PRP ComponentLink3URL 'https://datasheet.ciiva.com/6215/744273801-6215152.pdf?src-supplier=Digi-Key'
+PRP ComponentLink4Description 'https://datasheet.ciiva.com/6048/1735681-6048514.pdf?src-supplier=Farnell'
+PRP ComponentLink4URL 'https://datasheet.ciiva.com/6048/1735681-6048514.pdf?src-supplier=Farnell'
+PRP ComponentLink5Description 'https://datasheet.ciiva.com/11800/0900766b80f886be-11800844.pdf?src-supplier=RSComponents'
+PRP ComponentLink5URL 'https://datasheet.ciiva.com/11800/0900766b80f886be-11800844.pdf?src-supplier=RSComponents'
+PRP ComponentLink6Description 'https://datasheet.ciiva.com/4952/744273801-77788-4952319.pdf?src-supplier=Mouser'
+PRP ComponentLink6URL 'https://datasheet.ciiva.com/4952/744273801-77788-4952319.pdf?src-supplier=Mouser'
+PRP ComponentLink7Description 'https://datasheet.ciiva.com/6215/744273801-6215157.pdf?src-supplier=Digi-Key'
+PRP ComponentLink7URL 'https://datasheet.ciiva.com/6215/744273801-6215157.pdf?src-supplier=Digi-Key'
+PRP ComponentLink8Description 'https://datasheet.ciiva.com/7764/1735681-7764966.pdf?src-supplier=Element14'
+PRP ComponentLink8URL 'https://datasheet.ciiva.com/7764/1735681-7764966.pdf?src-supplier=Element14'
+PRP ComponentLink9Description 'https://datasheet.ciiva.com/14123/744273801-eng-tds-14123645.pdf?src-supplier=Distrelec'
+PRP ComponentLink9URL 'https://datasheet.ciiva.com/14123/744273801-eng-tds-14123645.pdf?src-supplier=Distrelec'
+PRP ComponentLink10Description 'https://datasheet.ciiva.com/48690/001087412-da-01-ml-we-sl5-hc-stromk-smd-lin-fil-74427-de-en-48690507.pdf?src-supplier=Conrad'
+PRP ComponentLink10URL 'https://datasheet.ciiva.com/48690/001087412-da-01-ml-we-sl5-hc-stromk-smd-lin-fil-74427-de-en-48690507.pdf?src-supplier=Conrad'
+PRP Core_Material 'Ferrite'
+PRP Current '3.5A'
+PRP Current_Rating '3.5A'
+PRP DatasheetVersion 'ver 3, Feb-2010'
+PRP DC_Resistance_(DCR) '11mR'
+PRP Depth '8.3mm'
+PRP Height '5.3mm'
+PRP Impedance '800R'
+PRP Inductance '9.00 ÂµH'
+PRP Inductance_Tolerance '25%'
+PRP Length '9.5mm'
+PRP Manufacturer 'Wurth Electronics'
+PRP Manufacturer_Part_Number '744273801'
+PRP Max_DC_Current '3.5A'
+PRP Max_Operating_Temperature '125°C'
+PRP Min_Operating_Temperature '-40°C'
+PRP Mount 'Surface Mount'
+PRP Number_of_Lines '2'
+PRP Number_of_Pins '4'
+PRP Package_Quantity '1000'
+PRP PackageDescription 'SMD Inductor, Body 8.3 x 9.5 mm'
+PRP PackageReference 'WE-SL5-HC'
+PRP PackageVersion '2010'
+PRP Packaging 'Tape and Reel'
+PRP Pricing_1 '1=3.37000, 10=3.12500, 50=2.82200, 100=2.72200, 500=2.52000 (USD)'
+PRP REACH_SVHC 'No SVHC'
+PRP Resistance '11mR'
+PRP RoHS 'Yes'
+PRP Series_Resistance '11mR'
+PRP Stock_1 '4132'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '732-2215-6-ND'
+PRP Termination 'SMD/SMT'
+PRP Test_Frequency '100kHz'
+PRP Tolerance '25%'
+PRP Voltage_Rating_(DC) '80V'
+PRP Width '8.3mm'
+TOP 0 55.68799886 129.667 0 N 7 2 1
+TOP 1 49.4679986 129.667 0 N 6 2 2
+TOP 2 49.4679986 122.047 0 N 5 2 3
+TOP 3 55.68799886 122.047 0 N 4 2 4
+#
+# CMP 14
+CMP 3 67.985005 129.921 0 N CON3 TERM_BLOCK_1x2 ;0=2,1=11.4000
+PRP Manufacturer 'Phoenix Contact'
+PRP Manufacturer_Part_Number '1935161'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '277-1667-ND'
+TOP 0 65.48501 129.921 0 N 7 0 1
+TOP 1 70.485 129.921 0 N 6 0 2
+#
+# CMP 15
+CMP 4 40.386 133.604 180 N C7 6.8uF ;0=1,1=0.7100
+PRP Case_Code_(Imperial) '1206'
+PRP Case_Code_(Metric) '3216'
+PRP Case/Package '1206'
+PRP Category 'Ceramic Capacitors'
+PRP ComponentLink1Description 'https://datasheet.ciiva.com/24217/c3216x5r1h685k160ab-265286-24217008.pdf?src-supplier=Mouser'
+PRP ComponentLink1URL 'https://datasheet.ciiva.com/24217/c3216x5r1h685k160ab-265286-24217008.pdf?src-supplier=Mouser'
+PRP ComponentLink2Description 'https://datasheet.ciiva.com/6253/tdkmlcccaprange-6253149.pdf?src-supplier=Digi-Key'
+PRP ComponentLink2URL 'https://datasheet.ciiva.com/6253/tdkmlcccaprange-6253149.pdf?src-supplier=Digi-Key'
+PRP ComponentLink3Description 'https://datasheet.ciiva.com/14907/tdkmlcccaprange-14907192.pdf?src-supplier=Digi-Key'
+PRP ComponentLink3URL 'https://datasheet.ciiva.com/14907/tdkmlcccaprange-14907192.pdf?src-supplier=Digi-Key'
+PRP ComponentLink4Description 'https://datasheet.ciiva.com/14907/tdkmlcccaprange-14907191.pdf?src-supplier=Digi-Key'
+PRP ComponentLink4URL 'https://datasheet.ciiva.com/14907/tdkmlcccaprange-14907191.pdf?src-supplier=Digi-Key'
+PRP Composition 'Ceramic'
+PRP Dielectric_Material 'Ceramic'
+PRP Height '1.6mm'
+PRP Lead_Free 'Lead Free'
+PRP Length '0.126inch'
+PRP Manufacturer 'TDK'
+PRP Manufacturer_Part_Number 'C3216JB1H685K160AB'
+PRP Max_Operating_Temperature '85°C'
+PRP Min_Operating_Temperature '-25°C'
+PRP Mount 'Surface Mount'
+PRP Package_Quantity '1'
+PRP Packaging 'Tape and Reel'
+PRP Pricing_1 '1=1.08000, 10=0.82200, 100=0.58820, 500=0.45540, 1000=0.39215 (USD)'
+PRP RoHS 'Yes'
+PRP Stock_1 '5993'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '445-11734-1-ND'
+PRP Termination 'SMD/SMT'
+PRP Thickness '0.069inch'
+PRP Tolerance '10%'
+PRP Value '6.8uF'
+PRP Voltage_Rating '50V'
+PRP Voltage_Rating_(DC) '50V'
+PRP Width '0.063inch'
+TOP 0 41.83599964 133.60399746 90 N 5 1 1
+TOP 1 38.93600036 133.60399746 90 N 4 1 2
+#
+# CMP 16
+CMP 4 60.25533034 128.47100036 90 N C6 6.8uF ;0=1,1=0.7100
+PRP Case_Code_(Imperial) '1206'
+PRP Case_Code_(Metric) '3216'
+PRP Case/Package '1206'
+PRP Category 'Ceramic Capacitors'
+PRP ComponentLink1Description 'https://datasheet.ciiva.com/24217/c3216x5r1h685k160ab-265286-24217008.pdf?src-supplier=Mouser'
+PRP ComponentLink1URL 'https://datasheet.ciiva.com/24217/c3216x5r1h685k160ab-265286-24217008.pdf?src-supplier=Mouser'
+PRP ComponentLink2Description 'https://datasheet.ciiva.com/6253/tdkmlcccaprange-6253149.pdf?src-supplier=Digi-Key'
+PRP ComponentLink2URL 'https://datasheet.ciiva.com/6253/tdkmlcccaprange-6253149.pdf?src-supplier=Digi-Key'
+PRP ComponentLink3Description 'https://datasheet.ciiva.com/14907/tdkmlcccaprange-14907192.pdf?src-supplier=Digi-Key'
+PRP ComponentLink3URL 'https://datasheet.ciiva.com/14907/tdkmlcccaprange-14907192.pdf?src-supplier=Digi-Key'
+PRP ComponentLink4Description 'https://datasheet.ciiva.com/14907/tdkmlcccaprange-14907191.pdf?src-supplier=Digi-Key'
+PRP ComponentLink4URL 'https://datasheet.ciiva.com/14907/tdkmlcccaprange-14907191.pdf?src-supplier=Digi-Key'
+PRP Composition 'Ceramic'
+PRP Dielectric_Material 'Ceramic'
+PRP Height '1.6mm'
+PRP Lead_Free 'Lead Free'
+PRP Length '0.126inch'
+PRP Manufacturer 'TDK'
+PRP Manufacturer_Part_Number 'C3216JB1H685K160AB'
+PRP Max_Operating_Temperature '85°C'
+PRP Min_Operating_Temperature '-25°C'
+PRP Mount 'Surface Mount'
+PRP Package_Quantity '1'
+PRP Packaging 'Tape and Reel'
+PRP Pricing_1 '1=1.08000, 10=0.82200, 100=0.58820, 500=0.45540, 1000=0.39215 (USD)'
+PRP RoHS 'Yes'
+PRP Stock_1 '5993'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '445-11734-1-ND'
+PRP Termination 'SMD/SMT'
+PRP Thickness '0.069inch'
+PRP Tolerance '10%'
+PRP Value '6.8uF'
+PRP Voltage_Rating '50V'
+PRP Voltage_Rating_(DC) '50V'
+PRP Width '0.063inch'
+TOP 0 60.25533288 129.921 0 N 7 1 1
+TOP 1 60.25533288 127.02100072 0 N 6 1 2
+#
+# CMP 17
+CMP 9 54.483 84.201 180 N U2 ISO3086TDWR ;0=1,1=2.6500
+PRP Manufacturer 'Texas Instruments'
+PRP Manufacturer_Part_Number 'ISO3086TDWR'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '296-43594-1-ND'
+TOP 0 59.23300066 79.756 90 N 0 19 1
+TOP 1 59.23300066 81.026 90 N 0 20 2
+TOP 2 59.23300066 82.296 90 N 21 3 3
+TOP 3 59.23300066 83.566 90 N 24 2 4
+TOP 4 59.23300066 84.836 90 N 11 1 5
+TOP 5 59.23300066 86.106 90 N 21 4 6
+TOP 6 59.23300066 87.376 90 N 24 3 7
+TOP 7 59.23300066 88.646 90 N 8 2 8
+TOP 8 49.73300188 88.646 90 N 22 9 9
+TOP 9 49.73300188 87.376 90 N 0 21 10
+TOP 10 49.73300188 86.106 90 N 12 2 11
+TOP 11 49.73300188 84.836 90 N 13 2 12
+TOP 12 49.73300188 83.566 90 N 10 2 13
+TOP 13 49.73300188 82.296 90 N 9 2 14
+TOP 14 49.73300188 81.026 90 N 22 8 15
+TOP 15 49.73300188 79.756 90 N 23 8 16
+#
+# CMP 18
+CMP 9 54.483 100.584 180 N U1 ISO3086TDWR ;0=1,1=2.6500
+PRP Manufacturer 'Texas Instruments'
+PRP Manufacturer_Part_Number 'ISO3086TDWR'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '296-43594-1-ND'
+TOP 0 59.23300066 96.139 90 N 0 22 1
+TOP 1 59.23300066 97.409 90 N 0 23 2
+TOP 2 59.23300066 98.679 90 N 21 5 3
+TOP 3 59.23300066 99.949 90 N 24 4 4
+TOP 4 59.23300066 101.219 90 N 17 1 5
+TOP 5 59.23300066 102.489 90 N 21 6 6
+TOP 6 59.23300066 103.759 90 N 24 5 7
+TOP 7 59.23300066 105.029 90 N 14 1 8
+TOP 8 49.73300188 105.029 90 N 22 11 9
+TOP 9 49.73300188 103.759 90 N 0 24 10
+TOP 10 49.73300188 102.489 90 N 18 2 11
+TOP 11 49.73300188 101.219 90 N 19 2 12
+TOP 12 49.73300188 99.949 90 N 16 2 13
+TOP 13 49.73300188 98.679 90 N 15 2 14
+TOP 14 49.73300188 97.409 90 N 22 10 15
+TOP 15 49.73300188 96.139 90 N 23 9 16
+#
+# CMP 19
+CMP 2 44.74299916 75.438 180 N R6 Resistor ;0=1,1=0.0000
+PRP Manufacturer 'Panasonic Electronic Components'
+PRP Manufacturer_Part_Number 'ERJ-3GEY0R00V'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 'P0.0GDKR-ND'
+PRP Value 'DNP'
+TOP 0 45.593 75.438 180 N 22 12 1
+TOP 1 43.89299832 75.438 180 N 1 2 2
+#
+# CMP 20
+CMP 2 46.228 83.40000084 90 N R5 Resistor ;0=1,1=0.0000
+PRP Manufacturer 'YAGEO'
+PRP Manufacturer_Part_Number 'RC0603FR-07120RL'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '311-120HRCT-ND'
+PRP Value '120'
+TOP 0 46.228 84.25000168 90 N 10 1 1
+TOP 1 46.228 82.55 90 N 9 1 2
+#
+# CMP 21
+CMP 2 46.228 99.568 90 N R4 Resistor ;0=1,1=0.0000
+PRP Manufacturer 'YAGEO'
+PRP Manufacturer_Part_Number 'RC0603FR-07120RL'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '311-120HRCT-ND'
+PRP Value '120'
+TOP 0 46.228 100.41800084 90 N 16 1 1
+TOP 1 46.228 98.71799916 90 N 15 1 2
+#
+# CMP 22
+CMP 2 46.228 86.52599916 270 N R3 Resistor ;0=1,1=0.0000
+PRP Manufacturer 'YAGEO'
+PRP Manufacturer_Part_Number 'RC0603FR-07120RL'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '311-120HRCT-ND'
+PRP Value '120'
+TOP 0 46.228 85.67599832 270 N 13 1 1
+TOP 1 46.228 87.376 270 N 12 1 2
+#
+# CMP 23
+CMP 2 46.228 102.616 270 N R2 Resistor ;0=1,1=0.0000
+PRP Manufacturer 'YAGEO'
+PRP Manufacturer_Part_Number 'RC0603FR-07120RL'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '311-120HRCT-ND'
+PRP Value '120'
+TOP 0 46.228 101.76599916 270 N 19 1 1
+TOP 1 46.228 103.46600084 270 N 18 1 2
+#
+# CMP 24
+CMP 2 61.88799916 75.438 0 N R1 Resistor ;0=1,1=0.0000
+PRP Manufacturer 'Panasonic Electronic Components'
+PRP Manufacturer_Part_Number 'ERJ-3GEY0R00V'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 'P0.0GDKR-ND'
+PRP Value 'DNP'
+TOP 0 61.03799832 75.438 0 N 21 11 1
+TOP 1 62.738 75.438 0 N 20 2 2
+#
+# CMP 25
+CMP 5 68.961 91.74299914 270 N CON2 ICD15S13E4GV00LF ;0=2,1=0.0000
+PRP Manufacturer 'Amphenol ICC (FCI)'
+PRP Manufacturer_Part_Number 'ICD15S13E6GX00LF'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '609-2801-ND'
+TOP 0 66.46099992 96.04799942 270 N 24 1 1
+TOP 1 66.421 93.78799886 270 N 17 0 2
+TOP 2 66.421 91.50799834 270 N 14 0 3
+TOP 3 66.421 89.22799782 270 N 11 0 4
+TOP 4 66.421 86.9479973 270 N 8 0 5
+TOP 5 68.961 97.20799964 270 N 0 3 6
+TOP 6 68.961 94.92799912 270 N 0 4 7
+TOP 7 68.961 92.6479986 270 N 0 5 8
+TOP 8 68.961 90.36799808 270 N 0 6 9
+TOP 9 68.961 88.08799756 270 N 0 7 10
+TOP 10 71.501 96.06799938 270 N 0 10 11
+TOP 11 71.501 93.78799886 270 N 0 9 12
+TOP 12 71.501 91.50799834 270 N 0 8 13
+TOP 13 71.501 89.22799782 270 N 21 2 14
+TOP 14 71.501 86.9479973 270 N 21 1 15
+TOP 15 68.961 104.23799828 270 N 20 1 SH1
+TOP 16 68.961 79.248 270 N 20 0 SH2
+#
+# CMP 26
+CMP 5 36.83 91.77200086 90 N CON1 ICD15S13E6GX00LF ;0=2,1=0.0000
+PRP Manufacturer 'Amphenol ICC (FCI)'
+PRP Manufacturer_Part_Number 'ICD15S13E6GX00LF'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '609-2801-ND'
+TOP 0 39.33000008 87.46700058 90 N 23 4 1
+TOP 1 39.37 89.72700114 90 N 18 0 2
+TOP 2 39.37 92.00700166 90 N 19 0 3
+TOP 3 39.37 94.28700218 90 N 12 0 4
+TOP 4 39.37 96.5670027 90 N 13 0 5
+TOP 5 36.83 86.30700036 90 N 0 14 6
+TOP 6 36.83 88.58700088 90 N 0 15 7
+TOP 7 36.83 90.8670014 90 N 0 16 8
+TOP 8 36.83 93.14700192 90 N 0 17 9
+TOP 9 36.83 95.42700244 90 N 0 18 10
+TOP 10 34.29 87.44700062 90 N 22 4 11
+TOP 11 34.29 89.72700114 90 N 15 0 12
+TOP 12 34.29 92.00700166 90 N 16 0 13
+TOP 13 34.29 94.28700218 90 N 9 0 14
+TOP 14 34.29 96.5670027 90 N 10 0 15
+TOP 15 36.83 79.27700172 90 N 1 1 SH1
+TOP 16 36.83 104.267 90 N 1 0 SH2
+#
+# CMP 27
+CMP 0 63.373 86.77999916 90 N C4 Capacitor ;0=1,1=0.0000
+PRP Manufacturer 'YAGEO'
+PRP Manufacturer_Part_Number 'CC0603ZRY5V9BB104'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '311-1343-1-ND'
+PRP Value '0.1uF'
+TOP 0 63.373 87.63 90 N 24 6 1
+TOP 1 63.373 85.92999832 90 N 21 7 2
+#
+# CMP 28
+CMP 0 46.228 80.391 270 N C3 Capacitor ;0=1,1=0.0000
+PRP Manufacturer 'YAGEO'
+PRP Manufacturer_Part_Number 'CC0603ZRY5V9BB104'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '311-1343-1-ND'
+PRP Value '0.1uF'
+TOP 0 46.228 79.54099916 270 N 23 6 1
+TOP 1 46.228 81.24100084 270 N 22 6 2
+#
+# CMP 29
+CMP 0 63.373 105.664 270 N C2 Capacitor ;0=1,1=0.0000
+PRP Manufacturer 'YAGEO'
+PRP Manufacturer_Part_Number 'CC0603ZRY5V9BB104'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '311-1343-1-ND'
+PRP Value '0.1uF'
+TOP 0 63.373 104.81399916 270 N 24 7 1
+TOP 1 63.373 106.51400084 270 N 21 8 2
+#
+# CMP 30
+CMP 0 46.228 96.43199916 270 N C1 Capacitor ;0=1,1=0.0000
+PRP Manufacturer 'YAGEO'
+PRP Manufacturer_Part_Number 'CC0603ZRY5V9BB104'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '311-1343-1-ND'
+PRP Value '0.1uF'
+TOP 0 46.228 95.58199832 270 N 23 5 1
+TOP 1 46.228 97.282 270 N 22 5 2
+#

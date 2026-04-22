@@ -1,0 +1,64 @@
+UNITS=MM
+#
+#Component attribute names
+#
+@0 .comp_mount_type
+@1 .comp_height
+@2 .no_pop
+@3 .comp_ignore
+@4 .comp_variant_list
+
+#
+#Component attribute text strings
+#
+
+# CMP 0
+CMP 2 45.0120004 117.5479996 270 N R7 Resistor ;0=1,1=0.0000
+PRP Case_Code_(Imperial) '0603'
+PRP Case_Code_(Metric) '1608'
+PRP Case/Package '0603'
+PRP Category 'Chip SMD Resistors'
+PRP ComponentLink1Description 'https://www.seielect.com/Catalog/SEI-rncp.pdf?src-supplier=Avnet'
+PRP ComponentLink1URL 'https://www.seielect.com/Catalog/SEI-rncp.pdf?src-supplier=Avnet'
+PRP ComponentLink2Description 'https://www.seielect.com/catalog/SEI-Packaging.pdf?src-supplier=Digi-Key'
+PRP ComponentLink2URL 'https://www.seielect.com/catalog/SEI-Packaging.pdf?src-supplier=Digi-Key'
+PRP ComponentLink3Description 'https://www.seielect.com/Catalog/SEI-rncp.pdf?src-supplier=Digi-Key'
+PRP ComponentLink3URL 'https://www.seielect.com/Catalog/SEI-rncp.pdf?src-supplier=Digi-Key'
+PRP Composition 'Thin Film'
+PRP Contact_Plating 'Tin,Matte'
+PRP Features 'Moisture Resistant,Anti-Sulfur'
+PRP Height '0.02inch'
+PRP Lead_Free 'Lead Free'
+PRP Length '0.059inch'
+PRP Manufacturer 'Stackpole Electronics'
+PRP Manufacturer_Part_Number 'RNCP0603FTD10K0'
+PRP Max_Operating_Temperature '155°C'
+PRP Max_Power_Dissipation '125mW'
+PRP Min_Operating_Temperature '-55°C'
+PRP Mount 'Surface Mount'
+PRP Number_of_Terminations '2'
+PRP Packaging 'Tape and Reel'
+PRP Pricing_1 '1=0.10000, 10=0.06700, 100=0.02730, 1000=0.01224, 2500=0.01063 (USD)'
+PRP Radiation_Hardening 'No'
+PRP Resistance '10kR'
+PRP RoHS 'Yes'
+PRP Stock_1 '578263'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 'RNCP0603FTD10K0CT-ND'
+PRP Temperature_Coefficient '100ppm/°C'
+PRP Tolerance '1%'
+PRP Value '10k'
+PRP Width '0.031inch'
+TOP 0 45.0120004 116.69799876 270 N 22 2 1
+TOP 1 45.0120004 118.39800044 270 N 2 0 2
+#
+# CMP 1
+CMP 0 39.116 115.824 270 N C5 10uF ;0=1,1=0.0000
+PRP Manufacturer 'Murata Electronics'
+PRP Manufacturer_Part_Number 'GRM21BR61E106MA73L'
+PRP Supplier_1 'Digi-Key'
+PRP Supplier_Part_Number_1 '490-10748-6-ND'
+PRP Value '10uF'
+TOP 0 39.116 114.97399916 270 N 22 1 1
+TOP 1 39.116 116.67400084 270 N 23 2 2
+#
