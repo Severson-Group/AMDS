@@ -1,6 +1,6 @@
-# AMDS Daisy Chain Board
+# AMDS Daisy Chain Adapter Board
 
-The daisy chain board is an accessory to the AMDS REVD with the goal of providing the AMDS the ability to daisy chain multiple times.
+This subfolder houses all the design files for the daisy chain adapter board used to operate the AMDS in a daisy-chained configuration.
 
 ## Documentation
 
