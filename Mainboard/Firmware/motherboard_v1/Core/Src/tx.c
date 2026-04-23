@@ -8,20 +8,20 @@ volatile bool sync_event_flag = false; // Set this to true in your EXTI ISR
 
 void process_transmissions(void) {
     // Loop as long as there is data in EITHER queue
-    while ((u2_q_tail != u2_q_head) || (u3_q_tail != u3_q_head)) {
-
-        // If UART2 has data, pop one byte and push it straight to the hardware
-        if (u2_q_tail != u2_q_head) {
-            drv_uart_putc_fast(USART2, uart2_dma_queue[u2_q_tail]);
-            u2_q_tail = (u2_q_tail + 1) % AMDS_RX_BUF_SIZE;
-        }
-
-        // If UART3 has data, pop one byte and push it straight to the hardware
-        if (u3_q_tail != u3_q_head) {
-            drv_uart_putc_fast(USART3, uart3_dma_queue[u3_q_tail]);
-            u3_q_tail = (u3_q_tail + 1) % AMDS_RX_BUF_SIZE;
-        }
-    }
+//    while ((u2_q_tail != u2_q_head) || (u3_q_tail != u3_q_head)) {
+//
+//        // If UART2 has data, pop one byte and push it straight to the hardware
+//        if (u2_q_tail != u2_q_head) {
+//            drv_uart_putc_fast(USART2, uart2_dma_queue[u2_q_tail]);
+//            u2_q_tail = (u2_q_tail + 1) % AMDS_RX_BUF_SIZE;
+//        }
+//
+//        // If UART3 has data, pop one byte and push it straight to the hardware
+//        if (u3_q_tail != u3_q_head) {
+//            drv_uart_putc_fast(USART3, uart3_dma_queue[u3_q_tail]);
+//            u3_q_tail = (u3_q_tail + 1) % AMDS_RX_BUF_SIZE;
+//        }
+//    }
 }
 
 
