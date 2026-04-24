@@ -151,114 +151,112 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 // This ISR is triggered by the AMDC to sync the ADC
 // conversions to the AMDC PWM carrier waveform. In
 // this ISR, all the motherboard ADCs should be sampled.
-//void EXTI3_IRQHandler(void)
-//{
-//	// alert daisy chained AMDSs to begin converting
-//	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
-//	try_reset_routing_state();
-//	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-//    //reset DMA routing state machine to ensure robust operation in case bytes were dropped
-//    try_reset_routing_state();
-//
-//#ifdef BENCHMARK_MODE
-//    // =========================================================================
-//    // INJECT MOCK DMA DATA FOR BENCHMARKING
-//    // Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
-//    // =========================================================================
-//    uint8_t current_head = mock_dma_write_head;
-//    for (int i = 0; i < 24; i++) {
-//        uint8_t idx = (uint8_t)(current_head + i);
-//        if (i % 3 == 0) {
-//            UART4_DMA_Pool[idx] = 0x90; // Valid Header
-//            UART5_DMA_Pool[idx] = 0x90;
-//        } else {
-//            UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
-//            UART5_DMA_Pool[idx] = 0xBB;
-//        }
-//    }
-//    // Instantly advance the mock hardware write head
-//    mock_dma_write_head = (uint8_t)(current_head + 24);
-//#endif
-//
-//	// Perform the actual SPI transactions
-//	uint16_t new_data[8] = { 0 };
-//    adc_sample_all_daughtercards(new_data);
-//
-//    // Send the data we sampled out as fast as possible
-//    //
-//    // =========================================================================
-//    // OPTIMIZATION: "Tight Loop" Fast Path
-//    // Tiny code footprint (fits in I-Cache) + Zero bitwise conditional branching
-//    // =========================================================================
-//    if (active_sensor_mask == 0xFF) {
-//        for (uint32_t i = 0; i < 4; i++) {
-//            drv_uart_putc_fast(USART2, 0x90 | i);
-//            drv_uart_putc_fast(USART3, 0x90 | i);
-//
-//            drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-//            drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-//
-//            drv_uart_putc_fast(USART2, (uint8_t)new_data[i]);
-//            drv_uart_putc_fast(USART3, (uint8_t)new_data[i + 4]);
-//        }
-//    }
-//    // =========================================================================
-//    // SLOW PATH: Safe loop for Partial Masks
-//    // =========================================================================
-//    else {
-//        for (uint32_t i = 0; i < 4; i++) {
-//            uint8_t header = 0x90 | i;
-//
-//            if ((active_sensor_mask & (1 << i)) && (active_sensor_mask & (1 << (i + 4)))) {
-//                drv_uart_putc_fast(USART2, header);
-//                drv_uart_putc_fast(USART3, header);
-//                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-//                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-//                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
-//                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
-//            } else {
-//                bool u3 = false;
-//                bool u2 = false;
-//
-//                if (active_sensor_mask & (1 << i)) {
-//                    drv_uart_putc_fast(USART2, header);
-//                    u2 = true;
-//                    drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-//                }
-//                if (active_sensor_mask & (1 << (i + 4))) {
-//                    drv_uart_putc_fast(USART3, header);
-//                    u3 = true;
-//                    drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-//                }
-//                if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
-//                if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
-//            }
-//        }
-//    }
-//
-//    //Handle any DMA data that has been received from daisy chain
-//	try_process_routing(); // This try function is thread safe
-//
-//    // Clear all pending IRQs for ADC conversions at the
-//    // end of this ISR so that the system realigns the
-//    // ADC conversions with the SYNC signal from the AMDC.
-//    //
-//    // For some reason, this only works if we call both of these:
-//    NVIC_ClearPendingIRQ(EXTI3_IRQn);
-//    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
-//    NVIC_ClearPendingIRQ(EXTI3_IRQn);
-//}
+void EXTI3_IRQHandler(void)
+{
+	// alert daisy chained AMDSs to begin converting
+	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
+	try_reset_routing_state();
+	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+    //reset DMA routing state machine to ensure robust operation in case bytes were dropped
+    try_reset_routing_state();
+
+#ifdef BENCHMARK_MODE
+    // =========================================================================
+    // INJECT MOCK DMA DATA FOR BENCHMARKING
+    // Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
+    // =========================================================================
+    uint8_t current_head = mock_dma_write_head;
+    for (int i = 0; i < 24; i++) {
+        uint8_t idx = (uint8_t)(current_head + i);
+        if (i % 3 == 0) {
+            UART4_DMA_Pool[idx] = 0x90; // Valid Header
+            UART5_DMA_Pool[idx] = 0x90;
+        } else {
+            UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
+            UART5_DMA_Pool[idx] = 0xBB;
+        }
+    }
+    // Instantly advance the mock hardware write head
+    mock_dma_write_head = (uint8_t)(current_head + 24);
+#endif
+
+	// Perform the actual SPI transactions
+	uint16_t new_data[8] = { 0 };
+    adc_sample_all_daughtercards(new_data);
+
+    // Send the data we sampled out as fast as possible
+    //
+    // =========================================================================
+    // OPTIMIZATION: "Tight Loop" Fast Path
+    // Tiny code footprint (fits in I-Cache) + Zero bitwise conditional branching
+    // =========================================================================
+    if (active_sensor_mask == 0xFF) {
+        for (uint32_t i = 0; i < 4; i++) {
+            drv_uart_putc_fast(USART2, 0x90 | i);
+            drv_uart_putc_fast(USART3, 0x90 | i);
+
+            drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+            drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+
+            drv_uart_putc_fast(USART2, (uint8_t)new_data[i]);
+            drv_uart_putc_fast(USART3, (uint8_t)new_data[i + 4]);
+        }
+    }
+    // =========================================================================
+    // SLOW PATH: Safe loop for Partial Masks
+    // =========================================================================
+    else {
+        for (uint32_t i = 0; i < 4; i++) {
+            uint8_t header = 0x90 | i;
+
+            if ((active_sensor_mask & (1 << i)) && (active_sensor_mask & (1 << (i + 4)))) {
+                drv_uart_putc_fast(USART2, header);
+                drv_uart_putc_fast(USART3, header);
+                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
+                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
+            } else {
+                bool u3 = false;
+                bool u2 = false;
+
+                if (active_sensor_mask & (1 << i)) {
+                    drv_uart_putc_fast(USART2, header);
+                    u2 = true;
+                    drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+                }
+                if (active_sensor_mask & (1 << (i + 4))) {
+                    drv_uart_putc_fast(USART3, header);
+                    u3 = true;
+                    drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+                }
+                if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
+                if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
+            }
+        }
+    }
+
+    //Handle any DMA data that has been received from daisy chain
+	try_process_routing(); // This try function is thread safe
+
+    // Clear all pending IRQs for ADC conversions at the
+    // end of this ISR so that the system realigns the
+    // ADC conversions with the SYNC signal from the AMDC.
+    //
+    // For some reason, this only works if we call both of these:
+    NVIC_ClearPendingIRQ(EXTI3_IRQn);
+    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
+    NVIC_ClearPendingIRQ(EXTI3_IRQn);
+}
 
 void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
 {
-    // Capture the exact clock cycle we start
-    uint32_t start_cycles = DWT->CYCCNT;
-
-    // Calculate 1.3 microseconds in CPU cycles (integer math safe)
+	// Calculate 1.3 microseconds in CPU cycles (integer math safe)
     uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
 
     // 1. Start all ADC conversions.
     SET_PIN_CONVST12_HIGH;
+    uint32_t start_cycles = DWT->CYCCNT;
     SET_PIN_CONVST34_HIGH;
     SET_PIN_CONVST56_HIGH;
     SET_PIN_CONVST78_HIGH;
@@ -306,6 +304,7 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     SET_PIN_CONVST56_LOW;
     SET_PIN_CONVST78_LOW;
 
+
     // Read second ADC data (Channels 4, 5, 6, 7)
     drv_spi_get_DR(SPI1, &sample_data_out[7]);
     drv_spi_get_DR(SPI4, &sample_data_out[5]);
@@ -335,65 +334,65 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     }
 }
 
-void EXTI3_IRQHandler(void)
-{
-    // alert daisy chained AMDSs to begin converting
-    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-
-    // reset DMA routing state machine
-    try_reset_routing_state();
-
-    uint16_t new_data[8] = { 0 };
-
-    // =========================================================================
-    // FAST PATH: Integrated Sampling and Transmission!
-    // =========================================================================
-    if (active_sensor_mask == 0xFF) {
-        adc_sample_and_transmit_fast_path(new_data);
-    }
-    // =========================================================================
-    // SLOW PATH: Legacy sampling for Partial Masks
-    // =========================================================================
-    else {
-        adc_sample_all_daughtercards(new_data);
-
-        for (uint32_t i = 0; i < 4; i++) {
-            uint8_t header = 0x90 | i;
-
-            if ((active_sensor_mask & (1 << i)) && (active_sensor_mask & (1 << (i + 4)))) {
-                drv_uart_putc_fast(USART2, header);
-                drv_uart_putc_fast(USART3, header);
-                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
-                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
-            } else {
-                bool u3 = false;
-                bool u2 = false;
-
-                if (active_sensor_mask & (1 << i)) {
-                    drv_uart_putc_fast(USART2, header);
-                    u2 = true;
-                    drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-                }
-                if (active_sensor_mask & (1 << (i + 4))) {
-                    drv_uart_putc_fast(USART3, header);
-                    u3 = true;
-                    drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-                }
-                if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
-                if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
-            }
-        }
-    }
-
-    // Handle any DMA data that has been received from daisy chain
-    try_process_routing();
-
-    NVIC_ClearPendingIRQ(EXTI3_IRQn);
-    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
-    NVIC_ClearPendingIRQ(EXTI3_IRQn);
-}
+//void EXTI3_IRQHandler(void)
+//{
+//    // alert daisy chained AMDSs to begin converting
+//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+//
+//    // reset DMA routing state machine
+//    try_reset_routing_state();
+//
+//    uint16_t new_data[8] = { 0 };
+//
+//    // =========================================================================
+//    // FAST PATH: Integrated Sampling and Transmission!
+//    // =========================================================================
+//    if (active_sensor_mask == 0xFF) {
+//        adc_sample_and_transmit_fast_path(new_data);
+//    }
+//    // =========================================================================
+//    // SLOW PATH: Legacy sampling for Partial Masks
+//    // =========================================================================
+//    else {
+//        adc_sample_all_daughtercards(new_data);
+//
+//        for (uint32_t i = 0; i < 4; i++) {
+//            uint8_t header = 0x90 | i;
+//
+//            if ((active_sensor_mask & (1 << i)) && (active_sensor_mask & (1 << (i + 4)))) {
+//                drv_uart_putc_fast(USART2, header);
+//                drv_uart_putc_fast(USART3, header);
+//                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+//                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+//                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
+//                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
+//            } else {
+//                bool u3 = false;
+//                bool u2 = false;
+//
+//                if (active_sensor_mask & (1 << i)) {
+//                    drv_uart_putc_fast(USART2, header);
+//                    u2 = true;
+//                    drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
+//                }
+//                if (active_sensor_mask & (1 << (i + 4))) {
+//                    drv_uart_putc_fast(USART3, header);
+//                    u3 = true;
+//                    drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
+//                }
+//                if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] & 0xFF));
+//                if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] & 0xFF));
+//            }
+//        }
+//    }
+//
+//    // Handle any DMA data that has been received from daisy chain
+//    try_process_routing();
+//
+//    NVIC_ClearPendingIRQ(EXTI3_IRQn);
+//    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
+//    NVIC_ClearPendingIRQ(EXTI3_IRQn);
+//}
 
 static void setup_pin_CONVST(void)
 {

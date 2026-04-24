@@ -45,10 +45,10 @@ int main(void)
 //    SysTick->CTRL &= 0xFFFFFFFE;
     
     // Enable the Cortex-M7 DWT Cycle Counter for perfect hardware delays
-	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-	DWT->LAR = 0xC5ACCE55;
-	DWT->CYCCNT = 0;
-	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+//	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+//	DWT->LAR = 0xC5ACCE55;
+//	DWT->CYCCNT = 0;
+//	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
     while (1) {
 
