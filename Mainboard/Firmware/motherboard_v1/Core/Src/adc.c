@@ -81,6 +81,8 @@ void adc_latest_bits(uint16_t *output)
     output[7] = data[7];
 }
 
+#if defined(TARGET_AMDS)
+
 static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 {
     // This function has been optimized for very
@@ -152,53 +154,6 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
     drv_spi_get_DR(SPI4, &sample_data_out[5]);
     drv_spi_get_DR(SPI5, &sample_data_out[4]);
     drv_spi_get_DR(SPI6, &sample_data_out[6]);
-}
-
-static void adc_sample_1_5_daughtercards(uint16_t *sample_data_out)
-{
-    // This function has been optimized for very
-    // fast operation of SPI5 interface
-    // to cards 1 and 5.
-    //
-    // It directly manipulates the SPI peripherals'
-    // registers to read in data from the ADCs. The ordering
-    // of operations may look strange, but this is to minimize
-    // wait time of the various APB interconnects in the MCU.
-    //
-    // The ADC devices support a max of 400ksps. Looking at
-    // the waveforms from this function, the CONVST line is
-    // asserted for effectively 280kHz... It could be faster,
-    // but its not terrible...
-
-    // Start all ADC conversions.
-    // ADC conversion triggered by CONVST56 connects to SPI5
-    SET_PIN_CONVST56_HIGH;
-
-    // Wait for ADC conversion to complete (per datasheet, >= 1300ns
-    // Each NOP takes 5ns, unrolled so branches don't affect timing...
-    //
-    // We need 260 NOPs
-    NOP256;
-    NOP4;
-
-    // Smartly read all data from ADC.
-    // This starts the SPI peripheral,then waits for it to
-    // complete and gets the resulting data.
-
-    // Start the SCLKs
-    drv_spi_start_read_two_16bits(SPI5);
-
-    // Wait and read first ADC data
-    drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
-
-    // Wait for second ADC data to complete
-    drv_spi_wait_for_RX(SPI5);
-
-    // End conversion
-    SET_PIN_CONVST56_LOW;
-
-    // Read second ADC data
-    drv_spi_get_DR(SPI5, &sample_data_out[4]);
 }
 
 // This ISR is triggered by the AMDC to sync the ADC
@@ -309,6 +264,55 @@ void EXTI3_IRQHandler(void)
     NVIC_ClearPendingIRQ(EXTI3_IRQn);
 }
 
+#elif defined(TARGET_2S)
+
+static void adc_sample_1_5_daughtercards(uint16_t *sample_data_out)
+{
+    // This function has been optimized for very
+    // fast operation of SPI5 interface
+    // to cards 1 and 5.
+    //
+    // It directly manipulates the SPI peripherals'
+    // registers to read in data from the ADCs. The ordering
+    // of operations may look strange, but this is to minimize
+    // wait time of the various APB interconnects in the MCU.
+    //
+    // The ADC devices support a max of 400ksps. Looking at
+    // the waveforms from this function, the CONVST line is
+    // asserted for effectively 280kHz... It could be faster,
+    // but its not terrible...
+
+    // Start all ADC conversions.
+    // ADC conversion triggered by CONVST56 connects to SPI5
+    SET_PIN_CONVST56_HIGH;
+
+    // Wait for ADC conversion to complete (per datasheet, >= 1300ns
+    // Each NOP takes 5ns, unrolled so branches don't affect timing...
+    //
+    // We need 260 NOPs
+    NOP256;
+    NOP4;
+
+    // Smartly read all data from ADC.
+    // This starts the SPI peripheral,then waits for it to
+    // complete and gets the resulting data.
+
+    // Start the SCLKs
+    drv_spi_start_read_two_16bits(SPI5);
+
+    // Wait and read first ADC data
+    drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
+
+    // Wait for second ADC data to complete
+    drv_spi_wait_for_RX(SPI5);
+
+    // End conversion
+    SET_PIN_CONVST56_LOW;
+
+    // Read second ADC data
+    drv_spi_get_DR(SPI5, &sample_data_out[4]);
+}
+
 // This ISR is for the FBC and is triggered by the
 // AMDC to sync the ADCconversions to the AMDC PWM
 // carrier waveform. In this ISR, on 2 ADCs should be sampled.
@@ -397,6 +401,9 @@ void EXTI15_10_IRQHandler(void)
 	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_11);
 	NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
 }
+#else
+#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
 
 static void setup_pin_CONVST(void)
 {
@@ -435,20 +442,13 @@ static void setup_pin_SYNC_ADC(void)
 
     GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
+#if defined(TARGET_AMDS)
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOD_CLK_ENABLE();
-
-
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_GPIOG_CLK_ENABLE();
+	__HAL_RCC_GPIOD_CLK_ENABLE();
 
     // Configure GPIO pin Output Level
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, GPIO_PIN_SET);
-
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_14, GPIO_PIN_SET);
-
 
     // Configure GPIO pins
     GPIO_InitStruct.Pin = GPIO_PIN_3;
@@ -463,6 +463,18 @@ static void setup_pin_SYNC_ADC(void)
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+	// EXTI interrupt init
+	HAL_NVIC_SetPriority(EXTI3_IRQn, 10, 0);
+	HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+#elif defined(TARGET_2S)
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOG_CLK_ENABLE();
+
+	// Configure GPIO pin Output Level
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_14, GPIO_PIN_SET);
+
+	// Configure GPIO pins
 	GPIO_InitStruct.Pin = GPIO_PIN_11;
 	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -476,9 +488,9 @@ static void setup_pin_SYNC_ADC(void)
 	HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
     // EXTI interrupt init
-    HAL_NVIC_SetPriority(EXTI3_IRQn, 10, 0);
-    HAL_NVIC_EnableIRQ(EXTI3_IRQn);
-
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 10, 0);
 	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+#else
+	#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
 }
