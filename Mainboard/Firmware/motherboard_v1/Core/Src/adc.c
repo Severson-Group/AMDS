@@ -48,15 +48,13 @@ static volatile uint16_t latest_valid_adc_data[8] = { 0 };
 
 // Global bitmask: 1 = Active, 0 = Inactive.
 // For example: 0b00010001 (0x0F) means channels 1-4 are active, 5-8 are disabled.
-//#if defined(TARGET_AMDS)
-//    volatile uint8_t active_sensor_mask = 0xFF;
-//#elif defined(TARGET_2S)
-//    volatile uint8_t active_sensor_mask = 0x11;
-//#else
-//    #error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
-//#endif
-
-volatile uint8_t active_sensor_mask = 0xFF;
+#if defined(TARGET_AMDS)
+    volatile uint8_t active_sensor_mask = 0xFF;
+#elif defined(TARGET_2S)
+    volatile uint8_t active_sensor_mask = 0x11;
+#else
+    #error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
 
 void adc_init(void)
 {
