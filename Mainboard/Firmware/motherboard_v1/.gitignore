@@ -1,6 +1,8 @@
 .settings/language.settings.xml
 Debug/
 Release/
+AMDS/
+2S/
 scripts/__pycache__/
 *.o
 *.d
