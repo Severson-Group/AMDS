@@ -59,6 +59,9 @@ extern volatile bool is_routing_active;
 void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id);
 void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len);
 
+// Add this prototype
+bool drv_uart_has_dma_data(void);
+
 void process_routing(void);
 
 /**

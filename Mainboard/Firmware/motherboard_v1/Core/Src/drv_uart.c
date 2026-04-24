@@ -44,6 +44,15 @@ volatile bool is_routing_active = false;
 	#define GET_W2() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX2_UART.hdmarx))
 #endif
 
+bool drv_uart_has_dma_data(void) {
+	// Perform an unprotected, non-atomic peek at the DMA hardware.
+	// Reading these 8-bit values is natively atomic, so it is safe to
+	// evaluate them even if an interrupt is modifying them in the background.
+	uint8_t w1 = GET_W1();
+	uint8_t w2 = GET_W2();
+
+	return (tracker1.read_index != w1) || (tracker2.read_index != w2);
+}
 
 void process_routing(void) {
     // 1. Load tracking state into local CPU registers for zero-wait-state access
