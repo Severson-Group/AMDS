@@ -10,14 +10,17 @@ void drv_uart_init(void);
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
-extern UART_HandleTypeDef huart4;
-extern UART_HandleTypeDef huart5;
+extern UART_HandleTypeDef DAISY_RX1_UART;
+extern UART_HandleTypeDef DAISY_RX2_UART;
 
 extern DMA_HandleTypeDef hdma_usart2_tx;
 extern DMA_HandleTypeDef hdma_usart3_tx;
 
 extern DMA_HandleTypeDef hdma_uart4_rx;
 extern DMA_HandleTypeDef hdma_uart5_rx;
+
+extern DMA_HandleTypeDef hdma_uart6_rx;
+extern DMA_HandleTypeDef hdma_uart1_rx;
 
 typedef enum {
     STATE_IDLE,
@@ -32,23 +35,12 @@ typedef struct {
     uint8_t read_index;
 } uart_rx_tracker_t;
 
-extern uart_rx_tracker_t tracker4;
-extern uart_rx_tracker_t tracker5;
+extern uart_rx_tracker_t tracker1;
+extern uart_rx_tracker_t tracker2;
 
 #define AMDS_RX_BUF_SIZE 256 // Must be 256 for uint8_t indexing and wrap-around logic to work correctly
-extern uint8_t UART4_DMA_Pool[AMDS_RX_BUF_SIZE];
-extern uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
-
-extern volatile uint8_t uart2_dma_queue[AMDS_RX_BUF_SIZE];
-extern volatile uint8_t uart3_dma_queue[AMDS_RX_BUF_SIZE];
-extern volatile uint8_t uart2_dma_buffer[AMDS_RX_BUF_SIZE];
-extern volatile uint8_t uart3_dma_buffer[AMDS_RX_BUF_SIZE];
-
-// Queue tracking indices
-extern volatile uint16_t u2_q_head;
-extern volatile uint16_t u2_q_tail;
-extern volatile uint16_t u3_q_head;
-extern volatile uint16_t u3_q_tail;
+extern uint8_t DAISY_RX1_Pool[AMDS_RX_BUF_SIZE];
+extern uint8_t DAISY_RX2_Pool[AMDS_RX_BUF_SIZE];
 
 // =========================================================================
 // BENCHMARK MODE FLAG for DMA
@@ -113,18 +105,18 @@ static inline void try_reset_routing_state(void) {
     if (!is_routing_active) {
         
         // 1. Reset state machines to gracefully await the next packet
-        tracker4.state = STATE_IDLE;
-        tracker5.state = STATE_IDLE;
+        tracker1.state = STATE_IDLE;
+        tracker2.state = STATE_IDLE;
         
         // 2. Soft-flush the DMA buffers.
         // We advance our read pointers to exactly where the DMA hardware 
         // is currently writing. All old, unprocessed bytes are instantly discarded.
 #ifdef BENCHMARK_MODE
-        tracker4.read_index = mock_dma_write_head;
-        tracker5.read_index = mock_dma_write_head;
+        tracker1.read_index = mock_dma_write_head;
+        tracker2.read_index = mock_dma_write_head;
 #else
-        tracker4.read_index = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx));
-        tracker5.read_index = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx));
+        tracker1.read_index = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX1_UART.hdmarx));
+        tracker2.read_index = (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX2_UART.hdmarx));
 #endif
     }
 }
