@@ -256,10 +256,11 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
 
     // 1. Start all ADC conversions.
     SET_PIN_CONVST12_HIGH;
-    uint32_t start_cycles = DWT->CYCCNT;
+
     SET_PIN_CONVST34_HIGH;
     SET_PIN_CONVST56_HIGH;
     SET_PIN_CONVST78_HIGH;
+    uint32_t start_cycles = DWT->CYCCNT;
 
     // =========================================================================
     // LATENCY HIDE 1: We have 1.3us of free time!
@@ -268,10 +269,17 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     drv_uart_putc_fast(USART2, 0x90);
     drv_uart_putc_fast(USART3, 0x90);
 
+    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
     // Deterministic wait for exactly 1300ns using hardware cycles, not NOPs
     while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
         // Spin perfectly safely
     }
+    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+
+    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+    NOP256;
+	NOP4;
+	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
     // 2. Start the SCLKs
     drv_spi_start_read_two_16bits(SPI1);
@@ -292,11 +300,13 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     // =========================================================================
     drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[0] >> 8));
 
+    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
     // Wait for second ADC data to complete
     drv_spi_wait_for_RX(SPI1);
     drv_spi_wait_for_RX(SPI4);
     drv_spi_wait_for_RX(SPI5);
     drv_spi_wait_for_RX(SPI6);
+    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
     // End conversion
     SET_PIN_CONVST12_LOW;
