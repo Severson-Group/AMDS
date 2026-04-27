@@ -251,16 +251,12 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 
 void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
 {
-	// Calculate 1.3 microseconds in CPU cycles (integer math safe)
-    uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
-
     // 1. Start all ADC conversions.
     SET_PIN_CONVST12_HIGH;
 
     SET_PIN_CONVST34_HIGH;
     SET_PIN_CONVST56_HIGH;
     SET_PIN_CONVST78_HIGH;
-    uint32_t start_cycles = DWT->CYCCNT;
 
     // =========================================================================
     // LATENCY HIDE 1: We have 1.3us of free time!
