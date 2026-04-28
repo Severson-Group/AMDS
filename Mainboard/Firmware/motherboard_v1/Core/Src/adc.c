@@ -261,6 +261,8 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     SET_PIN_CONVST78_HIGH;
     uint32_t start_cycles = DWT->CYCCNT;
 
+    // reset DMA routing state machine
+	try_reset_routing_state();
 
     // =========================================================================
     // LATENCY HIDE 1: We have 1.3us of free time!
@@ -275,7 +277,6 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
         // Spin perfectly safely
     }
 
-
     // 2. Start the SCLKs
     drv_spi_start_read_two_16bits(SPI1);
     drv_spi_start_read_two_16bits(SPI4);
@@ -287,7 +288,6 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     drv_spi_finish_read_one_16bits(SPI4, &sample_data_out[1]);
     drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
     drv_spi_finish_read_one_16bits(SPI6, &sample_data_out[2]);
-    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
     // =========================================================================
     // LATENCY HIDE 2: We have to wait for the second SPI read!
@@ -378,9 +378,6 @@ void EXTI3_IRQHandler(void)
 {
     // alert daisy chained AMDSs to begin converting
     GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-
-    // reset DMA routing state machine
-    try_reset_routing_state();
 
     uint16_t new_data[8] = { 0 };
 
