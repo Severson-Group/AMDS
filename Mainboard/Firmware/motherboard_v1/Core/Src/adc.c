@@ -251,26 +251,30 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 
 void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
 {
+	// Calculate 1.3 microseconds in CPU cycles (integer math safe)
+    uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
+
     // 1. Start all ADC conversions.
     SET_PIN_CONVST12_HIGH;
-
     SET_PIN_CONVST34_HIGH;
     SET_PIN_CONVST56_HIGH;
     SET_PIN_CONVST78_HIGH;
+    uint32_t start_cycles = DWT->CYCCNT;
+
 
     // =========================================================================
     // LATENCY HIDE 1: We have 1.3us of free time!
     // Send Header for Channel 0 & 4 while waiting for ADCs to convert!
     // =========================================================================
+//  drv_uart_putc_fast(USART2, 0x90);
+//	drv_uart_putc_fast(USART3, 0x90);
 
 
-//    // Deterministic wait for exactly 1300ns using hardware cycles, not NOPs
-//    while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
-//        // Spin perfectly safely
-//    }
+    // Deterministic wait for exactly 1300ns using hardware cycles, not NOPs
+    while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
+        // Spin perfectly safely
+    }
 
-    NOP256;
-	NOP4;
 
     // 2. Start the SCLKs
     drv_spi_start_read_two_16bits(SPI1);
@@ -283,56 +287,91 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     drv_spi_finish_read_one_16bits(SPI4, &sample_data_out[1]);
     drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
     drv_spi_finish_read_one_16bits(SPI6, &sample_data_out[2]);
+    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
     // =========================================================================
     // LATENCY HIDE 2: We have to wait for the second SPI read!
     // Send MSB for Channel 0 while waiting for SPI!
     // (We can't send Ch 4 yet because it hasn't been read from SPI yet)
     // =========================================================================
-    drv_uart_putc_fast(USART2, 0x90);
-	drv_uart_putc_fast(USART3, 0x90);
-    drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[0] >> 8));
 
-    // Wait for second ADC data to complete
-    drv_spi_wait_for_RX(SPI1);
-    drv_spi_wait_for_RX(SPI4);
-    drv_spi_wait_for_RX(SPI5);
-    drv_spi_wait_for_RX(SPI6);
+//    drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[0] >> 8));
+//	drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[1] >> 8));
+//
+//	drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[0]);
+//	drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[1]);
+
 
     // End conversion
-    SET_PIN_CONVST12_LOW;
-    SET_PIN_CONVST34_LOW;
-    SET_PIN_CONVST56_LOW;
-    SET_PIN_CONVST78_LOW;
+	SET_PIN_CONVST12_LOW;
+	SET_PIN_CONVST34_LOW;
+	SET_PIN_CONVST56_LOW;
+	SET_PIN_CONVST78_LOW;
 
 
-    // Read second ADC data (Channels 4, 5, 6, 7)
-    drv_spi_get_DR(SPI1, &sample_data_out[7]);
-    drv_spi_get_DR(SPI4, &sample_data_out[5]);
-    drv_spi_get_DR(SPI5, &sample_data_out[4]);
-    drv_spi_get_DR(SPI6, &sample_data_out[6]);
+	// Read second ADC data (Channels 4, 5, 6, 7)
+	drv_spi_get_DR(SPI1, &sample_data_out[7]);
+	drv_spi_get_DR(SPI4, &sample_data_out[5]);
+	drv_spi_get_DR(SPI5, &sample_data_out[4]);
+	drv_spi_get_DR(SPI6, &sample_data_out[6]);
 
-    // =========================================================================
-    // LATENCY HIDE 3: Finish sending Channel 0 and 4 immediately
-    // =========================================================================
-    drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[4] >> 8)); // Send Ch 4 MSB
-    drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[0]));      // Send Ch 0 LSB
-    drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[4]));      // Send Ch 4 LSB
+    for (uint32_t i = 0; i < 4; i++) {
+		drv_uart_putc_fast(USART2, 0x90 | i);
+		drv_uart_putc_fast(USART3, 0x90 | i);
 
-    // =========================================================================
-    // SEND REMAINING CHANNELS: 1-3 & 5-7
-    // Because Ch 0 & 4 were hidden in the latency, we only loop 3 times!
-    // =========================================================================
-    for (uint32_t i = 1; i < 4; i++) {
-        drv_uart_putc_fast(USART2, 0x90 | i);
-        drv_uart_putc_fast(USART3, 0x90 | i);
+		drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[i] >> 8));
+		drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[i + 4] >> 8));
 
-        drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[i] >> 8));
-        drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[i + 4] >> 8));
+		drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[i]);
+		drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[i + 4]);
+	}
 
-        drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[i]);
-        drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[i + 4]);
-    }
+//    // Wait for second ADC data to complete
+//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+//    drv_spi_wait_for_RX(SPI4);
+//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+//    drv_spi_wait_for_RX(SPI1);
+//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+//    drv_spi_wait_for_RX(SPI5);
+//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+//    drv_spi_wait_for_RX(SPI6);
+//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+//
+//    // End conversion
+//    SET_PIN_CONVST12_LOW;
+//    SET_PIN_CONVST34_LOW;
+//    SET_PIN_CONVST56_LOW;
+//    SET_PIN_CONVST78_LOW;
+//
+//
+//    // Read second ADC data (Channels 4, 5, 6, 7)
+//    drv_spi_get_DR(SPI1, &sample_data_out[7]);
+//    drv_spi_get_DR(SPI4, &sample_data_out[5]);
+//    drv_spi_get_DR(SPI5, &sample_data_out[4]);
+//    drv_spi_get_DR(SPI6, &sample_data_out[6]);
+//
+//    // =========================================================================
+//    // LATENCY HIDE 3: Finish sending Channel 0 and 4 immediately
+//    // =========================================================================
+////    drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[4] >> 8)); // Send Ch 4 MSB
+////    drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[0]));      // Send Ch 0 LSB
+////    drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[4]));      // Send Ch 4 LSB
+//
+//    // =========================================================================
+//    // SEND REMAINING CHANNELS: 1-3 & 5-7
+//    // Because Ch 0 & 4 were hidden in the latency, we only loop 3 times!
+//    // =========================================================================
+//    for (uint32_t i = 4; i < 8; i++) {
+//        drv_uart_putc_fast(USART2, 0x90 | i);
+//        drv_uart_putc_fast(USART3, 0x90 | (i + 1));
+//
+//        drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[i] >> 8));
+//        drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[i + 1] >> 8));
+//
+//        drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[i]);
+//        drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[i + 1]);
+//        i++;
+//    }
 }
 
 void EXTI3_IRQHandler(void)
