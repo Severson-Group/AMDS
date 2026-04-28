@@ -260,6 +260,7 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     SET_PIN_CONVST56_HIGH;
     SET_PIN_CONVST78_HIGH;
     uint32_t start_cycles = DWT->CYCCNT;
+    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
     // reset DMA routing state machine
 	try_reset_routing_state();
@@ -276,18 +277,20 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
         // Spin perfectly safely
     }
+    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
     // 2. Start the SCLKs
     drv_spi_start_read_two_16bits(SPI1);
     drv_spi_start_read_two_16bits(SPI4);
     drv_spi_start_read_two_16bits(SPI5);
     drv_spi_start_read_two_16bits(SPI6);
-
+    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
     // 3. Wait and read first ADC data (Channels 0, 1, 2, 3)
     drv_spi_finish_read_one_16bits(SPI1, &sample_data_out[3]);
     drv_spi_finish_read_one_16bits(SPI4, &sample_data_out[1]);
     drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
     drv_spi_finish_read_one_16bits(SPI6, &sample_data_out[2]);
+    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
     // =========================================================================
     // LATENCY HIDE 2: We have to wait for the second SPI read!
