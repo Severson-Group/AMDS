@@ -148,107 +148,6 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
     drv_spi_get_DR(SPI6, &sample_data_out[6]);
 }
 
-// This ISR is triggered by the AMDC to sync the ADC
-// conversions to the AMDC PWM carrier waveform. In
-// this ISR, all the motherboard ADCs should be sampled.
-//void EXTI3_IRQHandler(void)
-//{
-//	// alert daisy chained AMDSs to begin converting
-//	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
-//	try_reset_routing_state();
-//	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-//    //reset DMA routing state machine to ensure robust operation in case bytes were dropped
-//    try_reset_routing_state();
-//
-//#ifdef BENCHMARK_MODE
-//    // =========================================================================
-//    // INJECT MOCK DMA DATA FOR BENCHMARKING
-//    // Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
-//    // =========================================================================
-//    uint8_t current_head = mock_dma_write_head;
-//    for (int i = 0; i < 24; i++) {
-//        uint8_t idx = (uint8_t)(current_head + i);
-//        if (i % 3 == 0) {
-//            UART4_DMA_Pool[idx] = 0x90; // Valid Header
-//            UART5_DMA_Pool[idx] = 0x90;
-//        } else {
-//            UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
-//            UART5_DMA_Pool[idx] = 0xBB;
-//        }
-//    }
-//    // Instantly advance the mock hardware write head
-//    mock_dma_write_head = (uint8_t)(current_head + 24);
-//#endif
-//
-//	// Perform the actual SPI transactions
-//	uint16_t new_data[8] = { 0 };
-//    adc_sample_all_daughtercards(new_data);
-//
-//    // Send the data we sampled out as fast as possible
-//    //
-//    // =========================================================================
-//    // OPTIMIZATION: "Tight Loop" Fast Path
-//    // Tiny code footprint (fits in I-Cache) + Zero bitwise conditional branching
-//    // =========================================================================
-//    if (active_sensor_mask == 0xFF) {
-//        for (uint32_t i = 0; i < 4; i++) {
-//            drv_uart_putc_fast(USART2, 0x90 | i);
-//            drv_uart_putc_fast(USART3, 0x90 | i);
-//
-//            drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-//            drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-//
-//            drv_uart_putc_fast(USART2, (uint8_t)new_data[i]);
-//            drv_uart_putc_fast(USART3, (uint8_t)new_data[i + 4]);
-//        }
-//    }
-//    // =========================================================================
-//    // SLOW PATH: Safe loop for Partial Masks
-//    // =========================================================================
-//    else {
-//        for (uint32_t i = 0; i < 4; i++) {
-//            uint8_t header = 0x90 | i;
-//
-//            if ((active_sensor_mask & (1 << i)) && (active_sensor_mask & (1 << (i + 4)))) {
-//                drv_uart_putc_fast(USART2, header);
-//                drv_uart_putc_fast(USART3, header);
-//                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-//                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-//                drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
-//                drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
-//            } else {
-//                bool u3 = false;
-//                bool u2 = false;
-//
-//                if (active_sensor_mask & (1 << i)) {
-//                    drv_uart_putc_fast(USART2, header);
-//                    u2 = true;
-//                    drv_uart_putc_fast(USART2, (uint8_t)(new_data[i] >> 8));
-//                }
-//                if (active_sensor_mask & (1 << (i + 4))) {
-//                    drv_uart_putc_fast(USART3, header);
-//                    u3 = true;
-//                    drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4] >> 8));
-//                }
-//                if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[i]));
-//                if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[i + 4]));
-//            }
-//        }
-//    }
-//
-//    //Handle any DMA data that has been received from daisy chain
-//	try_process_routing(); // This try function is thread safe
-//
-//    // Clear all pending IRQs for ADC conversions at the
-//    // end of this ISR so that the system realigns the
-//    // ADC conversions with the SYNC signal from the AMDC.
-//    //
-//    // For some reason, this only works if we call both of these:
-//    NVIC_ClearPendingIRQ(EXTI3_IRQn);
-//    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
-//    NVIC_ClearPendingIRQ(EXTI3_IRQn);
-//}
-
 void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
 {
 	bool send_header = false;
@@ -257,83 +156,39 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     SET_PIN_CONVST34_HIGH;
     SET_PIN_CONVST56_HIGH;
     SET_PIN_CONVST78_HIGH;
-    uint32_t start_cycles = DWT->CYCCNT;
-//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
+    //Timing optimization: do work before the wait state below.
+
+    uint32_t start_cycles = DWT->CYCCNT;
     // reset DMA routing state machine
 	try_reset_routing_state();
 
-    // =========================================================================
-    // LATENCY HIDE 1: We have 1.3us of free time!
-    // Send Header for Channel 0 & 4 while waiting for ADCs to convert!
-    // =========================================================================
-//  drv_uart_putc_fast(USART2, 0x90);
-//	drv_uart_putc_fast(USART3, 0x90);
-
-	//WE ARE WAITING HERE AND COULD DO MORE TASKS BEFORE CALLING THIS
 	// Calculate 1.3 microseconds in CPU cycles (integer math safe)
 	uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
-
 
     // Deterministic wait for exactly 1300ns using hardware cycles, not NOPs
     while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
         // Spin perfectly safely
     }
-//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
     // 2. Start the SCLKs
     drv_spi_start_read_two_16bits(SPI1);
     drv_spi_start_read_two_16bits(SPI4);
     drv_spi_start_read_two_16bits(SPI5);
     drv_spi_start_read_two_16bits(SPI6);
-//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-    // 3. Wait and read first ADC data (Channels 0, 1, 2, 3)
-    // IT LOOKS LIKE WE ARE WAITING HERE AND COULD DO OTHER TASKS BEFORE CALLING THESE (1.3 us)
+
+    // Timing optimization: send our first header bytes here because code after this is waiting
     drv_uart_putc_fast(USART2, 0x90);
 	drv_uart_putc_fast(USART3, 0x90);
 
+	// 3. Wait and read first ADC data (Channels 0, 1, 2, 3)
     drv_spi_finish_read_one_16bits(SPI1, &sample_data_out[3]);
     drv_spi_finish_read_one_16bits(SPI4, &sample_data_out[1]);
     drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
     drv_spi_finish_read_one_16bits(SPI6, &sample_data_out[2]);
-//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
-    // =========================================================================
-    // LATENCY HIDE 2: We have to wait for the second SPI read!
-    // Send MSB for Channel 0 while waiting for SPI!
-    // (We can't send Ch 4 yet because it hasn't been read from SPI yet)
-    // =========================================================================
-
-//    drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[0] >> 8));
-//	drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[1] >> 8));
-//
-//	drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[0]);
-//	drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[1]);
-
-
-
-
-	//NEED TO BRING BACK WAIT STATE FOR 78
-	//drv_spi_wait_for_RX(SPI6);
-
-	//if (!(SPI6->SR & SPI_SR_RXNE))
-	//{
-		//GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-		//if (!(SPI6->SR & SPI_SR_RXNE))
-		//{
-		//	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-	    // Wait until we have received at least one word
-			//while (!(SPI6->SR & SPI_SR_RXNE)) {
-				//GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-			//}
-		//}
-
-
+	//Timing optimization: wait for only the last SPI that we started
 	drv_spi_wait_for_RX(SPI6);
-	//}
-	//GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-	//GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-	//GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
 
 	// Read second ADC data (Channels 4, 5, 6, 7)
 	drv_spi_get_DR(SPI1, &sample_data_out[7]);
@@ -341,7 +196,8 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
 	drv_spi_get_DR(SPI5, &sample_data_out[4]);
 	drv_spi_get_DR(SPI6, &sample_data_out[6]);
 
-    /*for (uint32_t i = 0; i < 4; i++) {
+    for (uint32_t i = 0; i < 4; i++) {
+    	//don't send first header because we sent it earlier (timing optimization)
     	if (send_header){
     		drv_uart_putc_fast(USART2, 0x90 | i);
     		drv_uart_putc_fast(USART3, 0x90 | i);
@@ -355,111 +211,18 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
 
 		drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[i]);
 		drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[i + 4]);
-	}*/
-
-
-
-	drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[0] >> 8));
-	drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[4] >> 8));
-
-	drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[0]);
-	drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[4]);
-
-	SET_PIN_CONVST12_LOW;
-
-	//packet 2
-
-	drv_uart_putc_fast(USART2, 0x91);
-	drv_uart_putc_fast(USART3, 0x91);
-
-	drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[1] >> 8));
-	drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[5] >> 8));
-
-	SET_PIN_CONVST34_LOW;
-
-
-	drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[1]);
-	drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[5]);
-
-	//packet 3
-	drv_uart_putc_fast(USART2, 0x92);
-	drv_uart_putc_fast(USART3, 0x92);
-
-	SET_PIN_CONVST56_LOW;
-
-
-	drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[2] >> 8));
-	drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[6] >> 8));
-
-	drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[2]);
-	drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[6]);
-
-	SET_PIN_CONVST78_LOW;
-
-	//packet 4
-	drv_uart_putc_fast(USART2, 0x93);
-	drv_uart_putc_fast(USART3, 0x93);
-
-	drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[3] >> 8));
-	drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[7] >> 8));
-
-	drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[3]);
-	drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[7]);
+	}
 
     // End conversion
-//	SET_PIN_CONVST12_LOW;
-//	SET_PIN_CONVST34_LOW;
-//	SET_PIN_CONVST56_LOW;
-//	SET_PIN_CONVST78_LOW;
-
-//    // Wait for second ADC data to complete
-//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-//    drv_spi_wait_for_RX(SPI4);
-//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-//    drv_spi_wait_for_RX(SPI1);
-//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-//    drv_spi_wait_for_RX(SPI5);
-//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-//    drv_spi_wait_for_RX(SPI6);
-//    GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
-//
-//    // End conversion
-//    SET_PIN_CONVST12_LOW;
-//    SET_PIN_CONVST34_LOW;
-//    SET_PIN_CONVST56_LOW;
-//    SET_PIN_CONVST78_LOW;
-//
-//
-//    // Read second ADC data (Channels 4, 5, 6, 7)
-//    drv_spi_get_DR(SPI1, &sample_data_out[7]);
-//    drv_spi_get_DR(SPI4, &sample_data_out[5]);
-//    drv_spi_get_DR(SPI5, &sample_data_out[4]);
-//    drv_spi_get_DR(SPI6, &sample_data_out[6]);
-//
-//    // =========================================================================
-//    // LATENCY HIDE 3: Finish sending Channel 0 and 4 immediately
-//    // =========================================================================
-////    drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[4] >> 8)); // Send Ch 4 MSB
-////    drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[0]));      // Send Ch 0 LSB
-////    drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[4]));      // Send Ch 4 LSB
-//
-//    // =========================================================================
-//    // SEND REMAINING CHANNELS: 1-3 & 5-7
-//    // Because Ch 0 & 4 were hidden in the latency, we only loop 3 times!
-//    // =========================================================================
-//    for (uint32_t i = 4; i < 8; i++) {
-//        drv_uart_putc_fast(USART2, 0x90 | i);
-//        drv_uart_putc_fast(USART3, 0x90 | (i + 1));
-//
-//        drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[i] >> 8));
-//        drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[i + 1] >> 8));
-//
-//        drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[i]);
-//        drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[i + 1]);
-//        i++;
-//    }
+	SET_PIN_CONVST12_LOW;
+	SET_PIN_CONVST34_LOW;
+	SET_PIN_CONVST56_LOW;
+	SET_PIN_CONVST78_LOW;
 }
 
+// This ISR is triggered by the AMDC to sync the ADC
+// conversions to the AMDC PWM carrier waveform. In
+// this ISR, all the motherboard ADCs should be sampled.
 void EXTI3_IRQHandler(void)
 {
     // alert daisy chained AMDSs to begin converting
@@ -477,7 +240,8 @@ void EXTI3_IRQHandler(void)
     // SLOW PATH: Legacy sampling for Partial Masks
     // =========================================================================
     else {
-        adc_sample_all_daughtercards(new_data);
+    	try_reset_routing_state();
+    	adc_sample_all_daughtercards(new_data);
 
         for (uint32_t i = 0; i < 4; i++) {
             uint8_t header = 0x90 | i;
