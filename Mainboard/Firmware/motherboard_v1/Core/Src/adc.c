@@ -441,7 +441,7 @@ void EXTI15_10_IRQHandler(void)
 	// =========================================================================
 	// FAST PATH: Integrated Sampling and Transmission!
 	// =========================================================================
-	if (active_sensor_mask == 0xFF) {
+	if (active_sensor_mask == 0x11) {
 		adc_sample_and_transmit_1_5_fast_path(new_data);
 	}
 	// =========================================================================
