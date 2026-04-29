@@ -13,27 +13,20 @@ UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart2_tx;
 DMA_HandleTypeDef hdma_usart3_tx;
 
-UART_HandleTypeDef huart4;
-UART_HandleTypeDef huart5;
-
 DMA_HandleTypeDef hdma_uart4_rx;
 DMA_HandleTypeDef hdma_uart5_rx;
 
-uart_rx_tracker_t tracker4 = {0};
-uart_rx_tracker_t tracker5 = {0};
+DMA_HandleTypeDef hdma_uart6_rx;
+DMA_HandleTypeDef hdma_uart1_rx;
 
-uint8_t UART4_DMA_Pool[AMDS_RX_BUF_SIZE];
-uint8_t UART5_DMA_Pool[AMDS_RX_BUF_SIZE];
+// Daisy Chain RX Peripherals
+UART_HandleTypeDef DAISY_RX1_UART;
+UART_HandleTypeDef DAISY_RX2_UART;
 
-volatile uint8_t uart2_dma_queue[AMDS_RX_BUF_SIZE];
-volatile uint8_t uart3_dma_queue[AMDS_RX_BUF_SIZE];
-volatile uint8_t uart2_dma_buffer[AMDS_RX_BUF_SIZE];
-volatile uint8_t uart3_dma_buffer[AMDS_RX_BUF_SIZE];
-
-volatile uint16_t u2_q_head = 0;
-volatile uint16_t u2_q_tail = 0;
-volatile uint16_t u3_q_head = 0;
-volatile uint16_t u3_q_tail = 0;
+uart_rx_tracker_t tracker1;
+uart_rx_tracker_t tracker2;
+uint8_t DAISY_RX1_Pool[AMDS_RX_BUF_SIZE];
+uint8_t DAISY_RX2_Pool[AMDS_RX_BUF_SIZE];
 
 // Global flag to track if routing is actively occurring.
 // Must be volatile so the compiler knows it can change inside an IRQ.
@@ -41,74 +34,70 @@ volatile bool is_routing_active = false;
 
 #ifdef BENCHMARK_MODE
     volatile uint8_t mock_dma_write_head = 0;
-    #define GET_W4() mock_dma_write_head
-    #define GET_W5() mock_dma_write_head
+    #define GET_W1() mock_dma_write_head
+    #define GET_W2() mock_dma_write_head
 #else
     // NDTR counts down, so the write head is (SIZE - NDTR).
     // Casting to uint8_t naturally handles the modulo wrap-around at 256.
     // AMDS_RX_BUF_SIZE MUST BE 256 FOR THIS MATH TO WORK PROPERLY!
-    #define GET_W4() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart4.hdmarx))
-    #define GET_W5() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart5.hdmarx))
+	#define GET_W1() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX1_UART.hdmarx))
+	#define GET_W2() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX2_UART.hdmarx))
 #endif
 
 bool drv_uart_has_dma_data(void) {
-    // Perform an unprotected, non-atomic peek at the DMA hardware.
-    // Reading these 8-bit values is natively atomic, so it is safe to 
-    // evaluate them even if an interrupt is modifying them in the background.
-    uint8_t w4 = GET_W4();
-    uint8_t w5 = GET_W5();
-    
-    return (tracker4.read_index != w4) || (tracker5.read_index != w5);
+	// Perform an unprotected, non-atomic peek at the DMA hardware.
+	// Reading these 8-bit values is natively atomic, so it is safe to
+	// evaluate them even if an interrupt is modifying them in the background.
+	uint8_t w1 = GET_W1();
+	uint8_t w2 = GET_W2();
+
+	return (tracker1.read_index != w1) || (tracker2.read_index != w2);
 }
 
 void process_routing(void) {
     // 1. Load tracking state into local CPU registers for zero-wait-state access
-    uint8_t r4 = tracker4.read_index;
-    uint8_t r5 = tracker5.read_index;
-    uint8_t s4 = tracker4.state;
-    uint8_t s5 = tracker5.state;
+	uint8_t r1 = tracker1.read_index;
+	uint8_t r2 = tracker2.read_index;
+	uint8_t s1 = tracker1.state;
+	uint8_t s2 = tracker2.state;
 
-    // 2. Read DMA hardware pointers ONCE at the start. 
-    // NDTR counts down, so the write head is (SIZE - NDTR).
-    // Casting to uint8_t naturally handles the modulo wrap-around at 256.
-    uint8_t w4 = GET_W4();
-    uint8_t w5 = GET_W5();
+	uint8_t w1 = GET_W1();
+	uint8_t w2 = GET_W2();
 
     // Process instantly as long as either buffer has data. No NOP delays!
-    while ((r4 != w4) || (r5 != w5)) {
-        
+	while ((r1 != w1) || (r2 != w2)) {
         // Calculate exactly how many bytes are sitting unread in the DMA buffer.
         // Because everything is cast to uint8_t, this math safely handles 
         // circular buffer wrap-around natively (e.g. w4=2, r4=254 -> avail=4)
-        uint8_t avail4 = (uint8_t)(w4 - r4);
-        uint8_t avail5 = (uint8_t)(w5 - r5);
+		uint8_t avail1 = (uint8_t)(w1 - r1);
+		uint8_t avail2 = (uint8_t)(w2 - r2);
 
         // =====================================================================
         // OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
         // =====================================================================
         // If BOTH streams have at least a full 3-byte packet, process them completely
         // interleaved to keep both hardware lines saturated simultaneously.
-        while ((s4 == STATE_IDLE && avail4 >= 3) && (s5 == STATE_IDLE && avail5 >= 3)) {
-            uint8_t h4 = UART4_DMA_Pool[r4];
-            uint8_t h5 = UART5_DMA_Pool[r5];
+        while ((s1 == STATE_IDLE && avail1 >= 3) && (s2 == STATE_IDLE && avail2 >= 3)) {
+            uint8_t h1 = DAISY_RX1_Pool[r1];
+            uint8_t h2 = DAISY_RX2_Pool[r2];
             
-            if (((h4 & 0xF0) == 0x90) && ((h5 & 0xF0) == 0x90)) {
+            if (((h1 & 0xF0) == 0x90) && ((h2 & 0xF0) == 0x90)) {
                 // Byte 1: Headers (Incremented)
-                drv_uart_putc_fast(USART2, h4 + 4);
-                drv_uart_putc_fast(USART3, h5 + 4);
+                drv_uart_putc_fast(USART2, h1 + 4);
+                drv_uart_putc_fast(USART3, h2 + 4);
                 
                 // Byte 2: MSB
-                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 1)]);
-                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 1)]);
+                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 1)]);
+                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 1)]);
                 
                 // Byte 3: LSB
-                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 2)]);
-                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 2)]);
+                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 2)]);
+                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 2)]);
                 
-                r4 += 3;
-                r5 += 3;
-                avail4 -= 3;
-                avail5 -= 3;
+                r1 += 3;
+                r2 += 3;
+                avail1 -= 3;
+                avail2 -= 3;
             } else {
                 break; // Misaligned or corrupted header, break to let the slow-path handle it
             }
@@ -118,29 +107,29 @@ void process_routing(void) {
         // OPTIMIZATION 2: SINGLE-STREAM FAST PATHS 
         // =====================================================================
         // If one UART receives data slightly faster than the other, process it.
-        while (s4 == STATE_IDLE && avail4 >= 3) {
-            uint8_t h4 = UART4_DMA_Pool[r4];
-            if ((h4 & 0xF0) == 0x90) {
-                drv_uart_putc_fast(USART2, h4 + 4);
-                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 1)]);
-                drv_uart_putc_fast(USART2, UART4_DMA_Pool[(uint8_t)(r4 + 2)]);
+        while (s1 == STATE_IDLE && avail1 >= 3) {
+            uint8_t h1 = DAISY_RX1_Pool[r1];
+            if ((h1 & 0xF0) == 0x90) {
+                drv_uart_putc_fast(USART2, h1 + 4);
+                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 1)]);
+                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 2)]);
                 
-                r4 += 3;
-                avail4 -= 3;
+                r1 += 3;
+                avail1 -= 3;
             } else {
                 break;
             }
         }
 
-        while (s5 == STATE_IDLE && avail5 >= 3) {
-            uint8_t h5 = UART5_DMA_Pool[r5];
-            if ((h5 & 0xF0) == 0x90) {
-                drv_uart_putc_fast(USART3, h5 + 4);
-                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 1)]);
-                drv_uart_putc_fast(USART3, UART5_DMA_Pool[(uint8_t)(r5 + 2)]);
+        while (s2 == STATE_IDLE && avail2 >= 3) {
+            uint8_t h2 = DAISY_RX2_Pool[r2];
+            if ((h2 & 0xF0) == 0x90) {
+                drv_uart_putc_fast(USART3, h2 + 4);
+                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 1)]);
+                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 2)]);
                 
-                r5 += 3;
-                avail5 -= 3;
+                r2 += 3;
+                avail2 -= 3;
             } else {
                 break;
             }
@@ -152,89 +141,75 @@ void process_routing(void) {
         // We only fall down here if a packet is fragmented across a DMA update
         // boundary or if data is corrupted. We can safely revert to the simple 
         // 1-byte-at-a-time logic.
-        if (r4 != w4) {
-            uint8_t b4 = UART4_DMA_Pool[r4++];
-            if (s4 == STATE_IDLE) {
-                if ((b4 & 0xF0) == 0x90) {
-                    drv_uart_putc_fast(USART2, b4 + 4);
-                    s4 = STATE_GOT_HEADER;
+        if (r1 != w1) {
+            uint8_t b1 = DAISY_RX1_Pool[r1++];
+            if (s1 == STATE_IDLE) {
+                if ((b1 & 0xF0) == 0x90) {
+                    drv_uart_putc_fast(USART2, b1 + 4);
+                    s1 = STATE_GOT_HEADER;
                 }
-            } else if (s4 == STATE_GOT_HEADER) {
-                drv_uart_putc_fast(USART2, b4);
-                s4 = STATE_GOT_MSB;
+            } else if (s1 == STATE_GOT_HEADER) {
+                drv_uart_putc_fast(USART2, b1);
+                s1 = STATE_GOT_MSB;
             } else { // STATE_GOT_MSB
-                drv_uart_putc_fast(USART2, b4);
-                s4 = STATE_IDLE;
+                drv_uart_putc_fast(USART2, b1);
+                s1 = STATE_IDLE;
             }
         }
 
-        if (r5 != w5) {
-            uint8_t b5 = UART5_DMA_Pool[r5++];
-            if (s5 == STATE_IDLE) {
-                if ((b5 & 0xF0) == 0x90) {
-                    drv_uart_putc_fast(USART3, b5 + 4);
-                    s5 = STATE_GOT_HEADER;
+        if (r2 != w2) {
+            uint8_t b2 = DAISY_RX2_Pool[r2++];
+            if (s2 == STATE_IDLE) {
+                if ((b2 & 0xF0) == 0x90) {
+                    drv_uart_putc_fast(USART3, b2 + 4);
+                    s2 = STATE_GOT_HEADER;
                 }
-            } else if (s5 == STATE_GOT_HEADER) {
-                drv_uart_putc_fast(USART3, b5);
-                s5 = STATE_GOT_MSB;
+            } else if (s2 == STATE_GOT_HEADER) {
+                drv_uart_putc_fast(USART3, b2);
+                s2 = STATE_GOT_MSB;
             } else { // STATE_GOT_MSB
-                drv_uart_putc_fast(USART3, b5);
-                s5 = STATE_IDLE;
+                drv_uart_putc_fast(USART3, b2);
+                s2 = STATE_IDLE;
             }
         }
 
         // Check if we caught up to our cached write pointers.
         // If so, re-sample the DMA registers to see if new data arrived 
         // while we were actively processing the previous bytes.
-        if ((r4 == w4) && (r5 == w5)) {
-            w4 = GET_W4();
-            w5 = GET_W5();
+        if ((r1 == w1) && (r2 == w2)) {
+            w1 = GET_W1();
+            w2 = GET_W2();
         }
     }
 
     // 5. Store states back
-    tracker4.read_index = r4;
-    tracker5.read_index = r5;
-    tracker4.state = s4;
-    tracker5.state = s5;
+    tracker1.read_index = r1;
+    tracker2.read_index = r2;
+    tracker1.state = s1;
+    tracker2.state = s2;
 }
 
-
-void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len) {
-    if (uart_id == 2) {
-        for (int i = 0; i < len; i++) {
-            uart2_dma_queue[u2_q_head] = data[i];
-            u2_q_head = (u2_q_head + 1) % AMDS_RX_BUF_SIZE;
-        }
-    } else if (uart_id == 3) {
-        for (int i = 0; i < len; i++) {
-            uart3_dma_queue[u3_q_head] = data[i];
-            u3_q_head = (u3_q_head + 1) % AMDS_RX_BUF_SIZE;
-        }
-    }
-}
-
+#if defined(TARGET_AMDS)
 void UART4_IRQHandler(void)
 {
     // Check for Parity, Overrun, Noise, or Frame errors
-    if (__HAL_UART_GET_FLAG(&huart4, UART_FLAG_PE)  ||
-        __HAL_UART_GET_FLAG(&huart4, UART_FLAG_ORE) ||
-        __HAL_UART_GET_FLAG(&huart4, UART_FLAG_NE)  ||
-        __HAL_UART_GET_FLAG(&huart4, UART_FLAG_FE))
+    if (__HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_PE)  ||
+        __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_ORE) ||
+        __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_NE)  ||
+        __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_FE))
     {
         // 1. Clear the error flags (Added UART_CLEAR_PEF)
-        __HAL_UART_CLEAR_IT(&huart4, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
+        __HAL_UART_CLEAR_IT(&DAISY_RX1_UART, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
         // 2. IMPORTANT: Re-enable DMA receiver request
         // The hardware/HAL drops this bit on error, halting the DMA stream.
-        SET_BIT(huart4.Instance->CR3, USART_CR3_DMAR);
+        SET_BIT(DAISY_RX1_UART.Instance->CR3, USART_CR3_DMAR);
 
         return;
     }
 
     // Process normal RX/TX interrupts via the HAL
-    HAL_UART_IRQHandler(&huart4);
+    HAL_UART_IRQHandler(&DAISY_RX1_UART);
 }
 
 void DMA1_Stream2_IRQHandler(void)
@@ -245,29 +220,83 @@ void DMA1_Stream2_IRQHandler(void)
 void UART5_IRQHandler(void)
 {
 	// Check for Overrun, Noise, or Frame errors
-	if (__HAL_UART_GET_FLAG(&huart4, UART_FLAG_PE)  ||
-		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_ORE) ||
-		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_NE)  ||
-		__HAL_UART_GET_FLAG(&huart5, UART_FLAG_FE))
+	if (__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_PE)  ||
+		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_ORE) ||
+		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_NE)  ||
+		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_FE))
 	{
 		// 1. Clear the error flags
-		__HAL_UART_CLEAR_IT(&huart5, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
+		__HAL_UART_CLEAR_IT(&DAISY_RX2_UART, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
 		// 2. IMPORTANT: Re-enable DMA receiver request
 		// Sometimes HAL disables this bit (DMAR) on error.
-		SET_BIT(huart5.Instance->CR3, USART_CR3_DMAR);
+		SET_BIT(DAISY_RX2_UART.Instance->CR3, USART_CR3_DMAR);
 
 		return;
 	}
-	HAL_UART_IRQHandler(&huart5);
+	HAL_UART_IRQHandler(&DAISY_RX2_UART);
 }
 
 void DMA1_Stream0_IRQHandler(void)
 {
     HAL_DMA_IRQHandler(&hdma_uart5_rx);
 }
+#elif defined(TARGET_2S)
+void USART6_IRQHandler(void)
+{
+    // Check for Parity, Overrun, Noise, or Frame errors
+    if (__HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_PE)  ||
+        __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_ORE) ||
+        __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_NE)  ||
+        __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_FE))
+    {
+        // 1. Clear the error flags (Added UART_CLEAR_PEF)
+        __HAL_UART_CLEAR_IT(&DAISY_RX1_UART, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
-// USART2 DMA and UART Interrupts
+        // 2. IMPORTANT: Re-enable DMA receiver request
+        // The hardware/HAL drops this bit on error, halting the DMA stream.
+        SET_BIT(DAISY_RX1_UART.Instance->CR3, USART_CR3_DMAR);
+
+        return;
+    }
+
+    // Process normal RX/TX interrupts via the HAL
+    HAL_UART_IRQHandler(&DAISY_RX1_UART);
+}
+
+void DMA2_Stream2_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&hdma_uart6_rx);
+}
+
+void USART1_IRQHandler(void)
+{
+	// Check for Overrun, Noise, or Frame errors
+	if (__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_PE)  ||
+		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_ORE) ||
+		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_NE)  ||
+		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_FE))
+	{
+		// 1. Clear the error flags
+		__HAL_UART_CLEAR_IT(&DAISY_RX2_UART, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
+
+		// 2. IMPORTANT: Re-enable DMA receiver request
+		// Sometimes HAL disables this bit (DMAR) on error.
+		SET_BIT(DAISY_RX2_UART.Instance->CR3, USART_CR3_DMAR);
+
+		return;
+	}
+	HAL_UART_IRQHandler(&DAISY_RX2_UART);
+}
+
+void DMA2_Stream5_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&hdma_uart1_rx);
+}
+#else
+	#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
+
 void DMA1_Stream6_IRQHandler(void) {
     HAL_DMA_IRQHandler(&hdma_usart2_tx);
 }
@@ -296,15 +325,28 @@ void drv_uart_init(void)
 
     __HAL_RCC_USART2_CONFIG(RCC_USART2CLKSOURCE_SYSCLK);
     __HAL_RCC_USART3_CONFIG(RCC_USART3CLKSOURCE_SYSCLK);
-
+#if defined(TARGET_AMDS)
     __HAL_RCC_UART4_CONFIG(RCC_UART4CLKSOURCE_SYSCLK);
 	__HAL_RCC_UART5_CONFIG(RCC_UART5CLKSOURCE_SYSCLK);
+#elif defined(TARGET_2S)
+	__HAL_RCC_USART1_CONFIG(RCC_USART1CLKSOURCE_SYSCLK);
+	__HAL_RCC_USART6_CONFIG(RCC_USART6CLKSOURCE_SYSCLK);
+#else
+	#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
 
     MX_USART_UART_Init(&huart2, USART2);
     MX_USART_UART_Init(&huart3, USART3);
 
-    MX_USART_UART_Init(&huart4, UART4);
-	MX_USART_UART_Init(&huart5, UART5);
+#if defined(TARGET_AMDS)
+    MX_USART_UART_Init(&DAISY_RX1_UART, UART4);
+	MX_USART_UART_Init(&DAISY_RX2_UART, UART5);
+#elif defined(TARGET_2S)
+    MX_USART_UART_Init(&DAISY_RX1_UART, USART6);
+	MX_USART_UART_Init(&DAISY_RX2_UART, USART1);
+#else
+    #error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
 }
 
 static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
@@ -330,9 +372,9 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
     huart->Init.StopBits = UART_STOPBITS_2;
     huart->Init.Parity = UART_PARITY_ODD;
 
-    if (huart->Instance == UART4) {
+    if (huart->Instance == UART4 || huart->Instance == USART6) {
     	huart->Init.Mode = UART_MODE_RX;
-    } else if (huart->Instance == UART5) {
+    } else if (huart->Instance == UART5 || huart->Instance == USART1) {
     	huart->Init.Mode = UART_MODE_RX;
     } else {
     	huart->Init.Mode = UART_MODE_TX;
@@ -347,7 +389,7 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
         PANIC;
     }
 
-    // Interrupt setup must come AFTER HAL_UART_Init()
+#if defined(TARGET_AMDS)
 	if (huart->Instance == UART4) {
     	NVIC_SetPriority(UART4_IRQn, 9);
 		HAL_NVIC_EnableIRQ(UART4_IRQn);
@@ -355,20 +397,48 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 		__HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
 		__HAL_UART_FLUSH_DRREGISTER(huart);
 
-		if (HAL_UART_Receive_DMA(&huart4, UART4_DMA_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
+		if (HAL_UART_Receive_DMA(&DAISY_RX1_UART, DAISY_RX1_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
 		    PANIC;
 		}
-    } else if (huart->Instance == UART5) {
+    }
+
+	if (huart->Instance == UART5) {
     	NVIC_SetPriority(UART5_IRQn, 9);
 		HAL_NVIC_EnableIRQ(UART5_IRQn);
 
 		__HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
 		__HAL_UART_FLUSH_DRREGISTER(huart);
 
-		if (HAL_UART_Receive_DMA(&huart5, UART5_DMA_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
+		if (HAL_UART_Receive_DMA(&DAISY_RX2_UART, DAISY_RX2_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
 		    PANIC;
 		}
-	} else if (huart->Instance == USART2) {
+	}
+#elif defined(TARGET_2S)
+	if (huart->Instance == USART6) {
+    	NVIC_SetPriority(USART6_IRQn, 9);
+		HAL_NVIC_EnableIRQ(USART6_IRQn);
+
+		__HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
+		__HAL_UART_FLUSH_DRREGISTER(huart);
+
+		if (HAL_UART_Receive_DMA(&DAISY_RX1_UART, DAISY_RX1_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
+		    PANIC;
+		}
+    } else if (huart->Instance == USART1) {
+    	NVIC_SetPriority(USART1_IRQn, 9);
+		HAL_NVIC_EnableIRQ(USART1_IRQn);
+
+		__HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
+		__HAL_UART_FLUSH_DRREGISTER(huart);
+
+		if (HAL_UART_Receive_DMA(&DAISY_RX2_UART, DAISY_RX2_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
+		    PANIC;
+		}
+	}
+#else
+	#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
+	if (huart->Instance == USART2) {
     	NVIC_SetPriority(USART2_IRQn, 10);
 		HAL_NVIC_EnableIRQ(USART2_IRQn);
 
@@ -467,7 +537,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
 		NVIC_SetPriority(DMA1_Stream3_IRQn, 7);  // higher priority than UART
 		HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
     }
-
+#if defined(TARGET_AMDS)
     else if (uartHandle->Instance == UART4) {
 		// USART3 clock enable
 		__HAL_RCC_UART4_CLK_ENABLE();
@@ -548,6 +618,89 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
 		NVIC_SetPriority(DMA1_Stream0_IRQn, 6);  // higher priority than UART
 		HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
 	}
+#elif defined(TARGET_2S)
+    else if (uartHandle->Instance == USART6) {
+		// USART6 clock enable
+		__HAL_RCC_USART6_CLK_ENABLE();
+		__HAL_RCC_DMA2_CLK_ENABLE();
+
+		__HAL_RCC_GPIOG_CLK_ENABLE();
+		// USART3 GPIO Configuration
+		// PG9     ------> UART4_RX
+		GPIO_InitStruct.Pin = GPIO_PIN_9;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF8_USART6;
+		HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+		// DMA config - check your device's DMA request mapping table
+		// for the correct stream/channel for USART6_RX pg 253 of reference manual
+		hdma_uart6_rx.Instance = DMA2_Stream2;        // verify in reference manual
+		hdma_uart6_rx.Init.Channel = DMA_CHANNEL_5; // verify in reference manual
+		hdma_uart6_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+		hdma_uart6_rx.Init.PeriphInc = DMA_PINC_DISABLE;  // RDR address stays fixed
+		hdma_uart6_rx.Init.MemInc = DMA_MINC_ENABLE;      // buffer pointer increments
+		hdma_uart6_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+		hdma_uart6_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+		hdma_uart6_rx.Init.Mode = DMA_CIRCULAR;         // or DMA_CIRCULAR (see note below)
+		hdma_uart6_rx.Init.Priority = DMA_PRIORITY_HIGH;
+		hdma_uart6_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+
+		if (HAL_DMA_Init(&hdma_uart6_rx) != HAL_OK) {
+			PANIC;
+		}
+
+		// This links the DMA handle to the UART handle
+		__HAL_LINKDMA(uartHandle, hdmarx, hdma_uart6_rx);
+
+		// DMA stream IRQ
+		NVIC_SetPriority(DMA2_Stream2_IRQn, 6);  // higher priority than UART
+		HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
+	}
+
+	else if (uartHandle->Instance == USART1) {
+		// USART1 clock enable
+		__HAL_RCC_USART1_CLK_ENABLE();
+		__HAL_RCC_DMA2_CLK_ENABLE();
+
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		// USART1 GPIO Configuration
+		// PA10      ------> USART1_RX
+		GPIO_InitStruct.Pin = GPIO_PIN_10;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+		// DMA config - check your device's DMA request mapping table
+		// for the correct stream/channel for USART1_RX pg 253 of reference manual
+		hdma_uart1_rx.Instance = DMA2_Stream5;        // verify in reference manual
+		hdma_uart1_rx.Init.Channel = DMA_CHANNEL_4; // verify in reference manual
+		hdma_uart1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+		hdma_uart1_rx.Init.PeriphInc = DMA_PINC_DISABLE;  // RDR address stays fixed
+		hdma_uart1_rx.Init.MemInc = DMA_MINC_ENABLE;      // buffer pointer increments
+		hdma_uart1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+		hdma_uart1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+		hdma_uart1_rx.Init.Mode = DMA_CIRCULAR;         // or DMA_CIRCULAR (see note below)
+		hdma_uart1_rx.Init.Priority = DMA_PRIORITY_HIGH;
+		hdma_uart1_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+
+		if (HAL_DMA_Init(&hdma_uart1_rx) != HAL_OK) {
+			PANIC;
+		}
+
+		// This links the DMA handle to the UART handle
+		__HAL_LINKDMA(uartHandle, hdmarx, hdma_uart1_rx);
+
+		// DMA stream IRQ
+		NVIC_SetPriority(DMA2_Stream5_IRQn, 6);  // higher priority than UART
+		HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);
+	}
+#else
+	#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
 }
 
 void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
@@ -574,7 +727,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
         */
         HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10 | GPIO_PIN_11);
     }
-
+#if defined(TARGET_AMDS)
     else if (uartHandle->Instance == UART4) {
 		/* Peripheral clock disable */
 		__HAL_RCC_UART4_CLK_DISABLE();
@@ -595,4 +748,29 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
 		*/
 		HAL_GPIO_DeInit(GPIOD, GPIO_PIN_2);
 	}
+#elif defined(TARGET_2S)
+    else if (uartHandle->Instance == USART6) {
+		/* Peripheral clock disable */
+		__HAL_RCC_USART6_CLK_DISABLE();
+
+		/**USART3 GPIO Configuration
+		PG9     ------> USART6_RX
+		PG14    ------> USART6_TX
+		*/
+		HAL_GPIO_DeInit(GPIOG, GPIO_PIN_9 | GPIO_PIN_14);
+	}
+
+	else if (uartHandle->Instance == USART1) {
+		/* Peripheral clock disable */
+		__HAL_RCC_USART1_CLK_DISABLE();
+
+		/**USART3 GPIO Configuration
+		PA9      ------> UART5_TX
+		PA10     ------> UART5_RX
+		*/
+		HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9 | GPIO_PIN_10);
+	}
+#else
+	#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
 }

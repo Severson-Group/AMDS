@@ -48,7 +48,13 @@ static volatile uint16_t latest_valid_adc_data[8] = { 0 };
 
 // Global bitmask: 1 = Active, 0 = Inactive.
 // For example: 0b00010001 (0x0F) means channels 1-4 are active, 5-8 are disabled.
-volatile uint8_t active_sensor_mask = 0xFF;
+#if defined(TARGET_AMDS)
+    volatile uint8_t active_sensor_mask = 0xFF;
+#elif defined(TARGET_2S)
+    volatile uint8_t active_sensor_mask = 0x11;
+#else
+    #error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
 
 void adc_init(void)
 {
@@ -74,6 +80,8 @@ void adc_latest_bits(uint16_t *output)
     output[6] = data[6];
     output[7] = data[7];
 }
+
+#if defined(TARGET_AMDS)
 
 static void adc_sample_all_daughtercards(uint16_t *sample_data_out)
 {
@@ -301,6 +309,147 @@ void EXTI3_IRQHandler(void)
     NVIC_ClearPendingIRQ(EXTI3_IRQn);
 }
 
+#elif defined(TARGET_2S)
+
+static void adc_sample_1_5_daughtercards(uint16_t *sample_data_out)
+{
+    // This function has been optimized for very
+    // fast operation of SPI5 interface
+    // to cards 1 and 5.
+    //
+    // It directly manipulates the SPI peripherals'
+    // registers to read in data from the ADCs. The ordering
+    // of operations may look strange, but this is to minimize
+    // wait time of the various APB interconnects in the MCU.
+    //
+    // The ADC devices support a max of 400ksps. Looking at
+    // the waveforms from this function, the CONVST line is
+    // asserted for effectively 280kHz... It could be faster,
+    // but its not terrible...
+
+    // Start all ADC conversions.
+    // ADC conversion triggered by CONVST56 connects to SPI5
+    SET_PIN_CONVST56_HIGH;
+
+    // Wait for ADC conversion to complete (per datasheet, >= 1300ns
+    // Each NOP takes 5ns, unrolled so branches don't affect timing...
+    //
+    // We need 260 NOPs
+    NOP256;
+    NOP4;
+
+    // Smartly read all data from ADC.
+    // This starts the SPI peripheral,then waits for it to
+    // complete and gets the resulting data.
+
+    // Start the SCLKs
+    drv_spi_start_read_two_16bits(SPI5);
+
+    // Wait and read first ADC data
+    drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
+
+    // Wait for second ADC data to complete
+    drv_spi_wait_for_RX(SPI5);
+
+    // End conversion
+    SET_PIN_CONVST56_LOW;
+
+    // Read second ADC data
+    drv_spi_get_DR(SPI5, &sample_data_out[4]);
+}
+
+// This ISR is for the FBC and is triggered by the
+// AMDC to sync the ADCconversions to the AMDC PWM
+// carrier waveform. In this ISR, on 2 ADCs should be sampled.
+//void EXTI15_10_IRQHandler(void)
+void EXTI15_10_IRQHandler(void)
+{
+	// alert daisy chained AMDSs to begin converting
+	GPIO_TOGGLE_PIN(GPIOG, GPIO_PIN_14);
+	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
+	try_reset_routing_state();
+
+#ifdef BENCHMARK_MODE
+	// =========================================================================
+	// INJECT MOCK DMA DATA FOR BENCHMARKING
+	// Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
+	// =========================================================================
+	uint8_t current_head = mock_dma_write_head;
+	for (int i = 0; i < 6; i++) {
+		uint8_t idx = (uint8_t)(current_head + i);
+		if (i == 0) {
+			UART4_DMA_Pool[idx] = 0x90; // Valid Header
+			UART5_DMA_Pool[idx] = 0x90;
+		} else if (i == 3) {
+			UART4_DMA_Pool[idx] = 0x94; // Valid Header
+			UART5_DMA_Pool[idx] = 0x94;
+		} else {
+			UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
+			UART5_DMA_Pool[idx] = 0xBB;
+		}
+	}
+	// Instantly advance the mock hardware write head
+	mock_dma_write_head = (uint8_t)(current_head + 6);
+#endif
+
+	// Perform the actual SPI transactions
+	uint16_t new_data[8] = { 0 };
+	adc_sample_1_5_daughtercards(new_data);
+
+	// Send the data we sampled out as fast as possible
+	//
+	// =========================================================================
+	// OPTIMIZATION: "Tight Loop" Fast Path
+	// Tiny code footprint (fits in I-Cache) + Zero bitwise conditional branching
+	// =========================================================================
+	if (active_sensor_mask == 0x11) {
+		drv_uart_putc_fast(USART2, 0x90);
+		drv_uart_putc_fast(USART3, 0x94);
+
+		drv_uart_putc_fast(USART2, (uint8_t)(new_data[0] >> 8));
+		drv_uart_putc_fast(USART3, (uint8_t)(new_data[4] >> 8));
+
+		drv_uart_putc_fast(USART2, (uint8_t)new_data[0]);
+		drv_uart_putc_fast(USART3, (uint8_t)new_data[4]);
+	}
+	// =========================================================================
+	// SLOW PATH: Safe loop for Partial Masks
+	// =========================================================================
+	else {
+		bool u3 = false;
+		bool u2 = false;
+		uint8_t header = 0x90;
+
+		if (active_sensor_mask & (1 << 0)) {
+			drv_uart_putc_fast(USART2, header);
+			u2 = true;
+			drv_uart_putc_fast(USART2, (uint8_t)(new_data[0] >> 8));
+		}
+		if (active_sensor_mask & (1 << 4)) {
+			drv_uart_putc_fast(USART3, header);
+			u3 = true;
+			drv_uart_putc_fast(USART3, (uint8_t)(new_data[4] >> 8));
+		}
+		if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[0]));
+		if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[4]));
+	}
+
+	//Handle any DMA data that has been received from daisy chain
+	try_process_routing(); // This try function is thread safe
+
+	// Clear all pending IRQs for ADC conversions at the
+	// end of this ISR so that the system realigns the
+	// ADC conversions with the SYNC signal from the AMDC.
+	//
+	// For some reason, this only works if we call both of these:
+	NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
+	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_11);
+	NVIC_ClearPendingIRQ(EXTI15_10_IRQn);
+}
+#else
+#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
+
 static void setup_pin_CONVST(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = { 0 };
@@ -338,13 +487,13 @@ static void setup_pin_SYNC_ADC(void)
 
     GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
+#if defined(TARGET_AMDS)
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOD_CLK_ENABLE();
+	__HAL_RCC_GPIOD_CLK_ENABLE();
 
     // Configure GPIO pin Output Level
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, GPIO_PIN_SET);
-
 
     // Configure GPIO pins
     GPIO_InitStruct.Pin = GPIO_PIN_3;
@@ -359,7 +508,34 @@ static void setup_pin_SYNC_ADC(void)
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+	// EXTI interrupt init
+	HAL_NVIC_SetPriority(EXTI3_IRQn, 10, 0);
+	HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+#elif defined(TARGET_2S)
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOG_CLK_ENABLE();
+
+	// Configure GPIO pin Output Level
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_14, GPIO_PIN_SET);
+
+	// Configure GPIO pins
+	GPIO_InitStruct.Pin = GPIO_PIN_11;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = GPIO_PIN_14;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
     // EXTI interrupt init
-    HAL_NVIC_SetPriority(EXTI3_IRQn, 10, 0);
-    HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 10, 0);
+	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+#else
+	#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
+#endif
 }
