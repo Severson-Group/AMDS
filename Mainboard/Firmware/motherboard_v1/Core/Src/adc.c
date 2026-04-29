@@ -358,6 +358,52 @@ static void adc_sample_1_5_daughtercards(uint16_t *sample_data_out)
     drv_spi_get_DR(SPI5, &sample_data_out[4]);
 }
 
+void adc_sample_and_transmit_1_5_fast_path(uint16_t *sample_data_out)
+{
+    // 1. Start all ADC conversions.
+    SET_PIN_CONVST56_HIGH;
+
+    //Timing optimization: do work before the wait state below.
+
+    uint32_t start_cycles = DWT->CYCCNT;
+    // reset DMA routing state machine
+	try_reset_routing_state();
+
+	// Calculate 1.3 microseconds in CPU cycles (integer math safe)
+	uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
+
+    // Deterministic wait for exactly 1300ns using hardware cycles, not NOPs
+    while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
+        // Spin perfectly safely
+    }
+
+    // 2. Start the SCLK
+    drv_spi_start_read_two_16bits(SPI5);
+
+    // Timing optimization: send our first header bytes here because code after this is waiting
+    drv_uart_putc_fast(USART2, 0x90);
+	drv_uart_putc_fast(USART3, 0x90);
+
+	// 3. Wait and read first ADC data (Channels 0, 1, 2, 3)
+    drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
+
+	//Timing optimization: wait for only the last SPI that we started
+	drv_spi_wait_for_RX(SPI5);
+
+	// Read second ADC data (Channels 4, 5, 6, 7)
+	drv_spi_get_DR(SPI5, &sample_data_out[4]);
+
+	//don't send first header because we sent it earlier (timing optimization)
+	drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[0] >> 8));
+	drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[4] >> 8));
+
+	drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[0]);
+	drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[4]);
+
+    // End conversion
+	SET_PIN_CONVST56_LOW;
+}
+
 // This ISR is for the FBC and is triggered by the
 // AMDC to sync the ADCconversions to the AMDC PWM
 // carrier waveform. In this ISR, on 2 ADCs should be sampled.
@@ -366,8 +412,6 @@ void EXTI15_10_IRQHandler(void)
 {
 	// alert daisy chained AMDSs to begin converting
 	GPIO_TOGGLE_PIN(GPIOG, GPIO_PIN_14);
-	//reset DMA routing state machine to ensure robust operation in case bytes were dropped
-	try_reset_routing_state();
 
 #ifdef BENCHMARK_MODE
 	// =========================================================================
@@ -392,30 +436,21 @@ void EXTI15_10_IRQHandler(void)
 	mock_dma_write_head = (uint8_t)(current_head + 6);
 #endif
 
-	// Perform the actual SPI transactions
 	uint16_t new_data[8] = { 0 };
-	adc_sample_1_5_daughtercards(new_data);
 
-	// Send the data we sampled out as fast as possible
-	//
 	// =========================================================================
-	// OPTIMIZATION: "Tight Loop" Fast Path
-	// Tiny code footprint (fits in I-Cache) + Zero bitwise conditional branching
+	// FAST PATH: Integrated Sampling and Transmission!
 	// =========================================================================
-	if (active_sensor_mask == 0x11) {
-		drv_uart_putc_fast(USART2, 0x90);
-		drv_uart_putc_fast(USART3, 0x94);
-
-		drv_uart_putc_fast(USART2, (uint8_t)(new_data[0] >> 8));
-		drv_uart_putc_fast(USART3, (uint8_t)(new_data[4] >> 8));
-
-		drv_uart_putc_fast(USART2, (uint8_t)new_data[0]);
-		drv_uart_putc_fast(USART3, (uint8_t)new_data[4]);
+	if (active_sensor_mask == 0xFF) {
+		adc_sample_and_transmit_1_5_fast_path(new_data);
 	}
 	// =========================================================================
 	// SLOW PATH: Safe loop for Partial Masks
 	// =========================================================================
 	else {
+		try_reset_routing_state();
+		adc_sample_1_5_daughtercards(new_data);
+
 		bool u3 = false;
 		bool u2 = false;
 		uint8_t header = 0x90;
