@@ -9,7 +9,6 @@
 
 // Modules
 #include "adc.h"
-#include "tx.h"
 
 int main(void)
 {
@@ -23,10 +22,6 @@ int main(void)
     drv_spi_init();
     drv_uart_init();
     drv_led_init();
-
-    // Tell the UART to constantly route TX requests to the DMA controller
-//    huart2.Instance->CR3 |= USART_CR3_DMAT;
-//    huart3.Instance->CR3 |= USART_CR3_DMAT;
 
     // Initialize the main modules
     adc_init();

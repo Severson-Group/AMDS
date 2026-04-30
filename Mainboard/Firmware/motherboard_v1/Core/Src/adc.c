@@ -2,7 +2,6 @@
 #include "drv_uart.h"
 #include "drv_spi.h"
 #include "platform.h"
-#include "tx.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -42,9 +41,6 @@ static void setup_pin_CONVST(void);
 
 #define ADC_BITS_TO_VOLTS(bits) (ADC_VOLTS_PER_BIT * (float) bits)
 
-// Buffer of latest samples
-static volatile uint16_t latest_valid_adc_data[8] = { 0 };
-
 
 // Global bitmask: 1 = Active, 0 = Inactive.
 // For example: 0b00001111 (0x0F) means channels 1-4 are active, 5-8 are disabled.
@@ -63,22 +59,6 @@ void adc_init(void)
 
     // Setup input pin which triggers ADC sampling (from AMDC)
     setup_pin_SYNC_ADC();
-}
-
-// NOTE: this function is called from the transmit function
-void adc_latest_bits(uint16_t *output)
-{
-    volatile uint16_t *data = latest_valid_adc_data;
-
-    // Give user their data (unrolled for speed)
-    output[0] = data[0];
-    output[1] = data[1];
-    output[2] = data[2];
-    output[3] = data[3];
-    output[4] = data[4];
-    output[5] = data[5];
-    output[6] = data[6];
-    output[7] = data[7];
 }
 
 #if defined(TARGET_AMDS)
