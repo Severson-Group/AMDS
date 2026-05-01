@@ -1,5 +1,4 @@
 #include "drv_uart.h"
-#include "tx.h"
 #include "defines.h"
 #include "drv_clock.h"
 #include "platform.h"
@@ -9,9 +8,6 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
-
-DMA_HandleTypeDef hdma_usart2_tx;
-DMA_HandleTypeDef hdma_usart3_tx;
 
 DMA_HandleTypeDef hdma_uart4_rx;
 DMA_HandleTypeDef hdma_uart5_rx;
@@ -45,7 +41,6 @@ volatile bool is_routing_active = false;
 #endif
 
 bool drv_uart_has_dma_data(void) {
-	// Perform an unprotected, non-atomic peek at the DMA hardware.
 	// Reading these 8-bit values is natively atomic, so it is safe to
 	// evaluate them even if an interrupt is modifying them in the background.
 	uint8_t w1 = GET_W1();
@@ -55,7 +50,7 @@ bool drv_uart_has_dma_data(void) {
 }
 
 void process_routing(void) {
-    // 1. Load tracking state into local CPU registers for zero-wait-state access
+    // Load tracking state into local CPU registers
 	uint8_t r1 = tracker1.read_index;
 	uint8_t r2 = tracker2.read_index;
 	uint8_t s1 = tracker1.state;
@@ -64,9 +59,9 @@ void process_routing(void) {
 	uint8_t w1 = GET_W1();
 	uint8_t w2 = GET_W2();
 
-    // Process instantly as long as either buffer has data. No NOP delays!
+    // Process as long as either buffer has data
 	while ((r1 != w1) || (r2 != w2)) {
-        // Calculate exactly how many bytes are sitting unread in the DMA buffer.
+        // Calculate how many bytes are sitting unread in the DMA buffer
         // Because everything is cast to uint8_t, this math safely handles 
         // circular buffer wrap-around natively (e.g. w4=2, r4=254 -> avail=4)
 		uint8_t avail1 = (uint8_t)(w1 - r1);
@@ -75,7 +70,7 @@ void process_routing(void) {
         // =====================================================================
         // OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
         // =====================================================================
-        // If BOTH streams have at least a full 3-byte packet, process them completely
+        // If both streams have at least a full 3-byte packet, process them completely
         // interleaved to keep both hardware lines saturated simultaneously.
         while ((s1 == STATE_IDLE && avail1 >= 3) && (s2 == STATE_IDLE && avail2 >= 3)) {
             uint8_t h1 = DAISY_RX1_Pool[r1];
@@ -182,7 +177,7 @@ void process_routing(void) {
         }
     }
 
-    // 5. Store states back
+    // Store states back
     tracker1.read_index = r1;
     tracker2.read_index = r2;
     tracker1.state = s1;
@@ -297,17 +292,8 @@ void DMA2_Stream5_IRQHandler(void)
 	#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
 #endif
 
-void DMA1_Stream6_IRQHandler(void) {
-    HAL_DMA_IRQHandler(&hdma_usart2_tx);
-}
-
 void USART2_IRQHandler(void) {
     HAL_UART_IRQHandler(&huart2);
-}
-
-// USART3 DMA and UART Interrupts
-void DMA1_Stream3_IRQHandler(void) {
-    HAL_DMA_IRQHandler(&hdma_usart3_tx);
 }
 
 void USART3_IRQHandler(void) {
@@ -329,8 +315,8 @@ void drv_uart_init(void)
     __HAL_RCC_UART4_CONFIG(RCC_UART4CLKSOURCE_SYSCLK);
 	__HAL_RCC_UART5_CONFIG(RCC_UART5CLKSOURCE_SYSCLK);
 #elif defined(TARGET_2S)
-	__HAL_RCC_USART1_CONFIG(RCC_USART1CLKSOURCE_SYSCLK);
 	__HAL_RCC_USART6_CONFIG(RCC_USART6CLKSOURCE_SYSCLK);
+	__HAL_RCC_USART1_CONFIG(RCC_USART1CLKSOURCE_SYSCLK);
 #else
 	#error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
 #endif
@@ -463,7 +449,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
     if (uartHandle->Instance == USART2) {
         // USART2 clock enable
         __HAL_RCC_USART2_CLK_ENABLE();
-        __HAL_RCC_DMA1_CLK_ENABLE();
 
         __HAL_RCC_GPIOA_CLK_ENABLE();
         // USART2 GPIO Configuration
@@ -475,34 +460,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
         GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-        // DMA config - check your device's DMA request mapping table
-		// for the correct stream/channel for USART2_TX
-        hdma_usart2_tx.Instance = DMA1_Stream6;
-        hdma_usart2_tx.Instance->CR |= USART_CR3_DDRE;
-        hdma_usart2_tx.Init.Channel = DMA_CHANNEL_4;
-        hdma_usart2_tx.Init.Direction = DMA_MEMORY_TO_PERIPH; // Memory -> UART
-        hdma_usart2_tx.Init.PeriphInc = DMA_PINC_DISABLE;
-        hdma_usart2_tx.Init.MemInc = DMA_MINC_ENABLE;
-        hdma_usart2_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-        hdma_usart2_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-        hdma_usart2_tx.Init.Mode = DMA_NORMAL; // Keep it looping
-        hdma_usart2_tx.Init.Priority = DMA_PRIORITY_LOW; // Let RX have higher priority
-
-        if (HAL_DMA_Init(&hdma_usart2_tx) != HAL_OK) {
-            PANIC;
-        }
-        __HAL_LINKDMA(uartHandle, hdmatx, hdma_usart2_tx);
-
-		// DMA stream IRQ
-		NVIC_SetPriority(DMA1_Stream6_IRQn, 7);  // higher priority than UART
-		HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
     }
 
     else if (uartHandle->Instance == USART3) {
         // USART3 clock enable
         __HAL_RCC_USART3_CLK_ENABLE();
-        __HAL_RCC_DMA1_CLK_ENABLE();
 
         __HAL_RCC_GPIOB_CLK_ENABLE();
         // USART3 GPIO Configuration
@@ -514,28 +476,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
         GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-        // DMA config - check your device's DMA request mapping table
-		// for the correct stream/channel for USART3_TX
-		hdma_usart3_tx.Instance = DMA1_Stream3;
-		hdma_usart3_tx.Instance->CR |= USART_CR3_DDRE;
-		hdma_usart3_tx.Init.Channel = DMA_CHANNEL_4;
-		hdma_usart3_tx.Init.Direction = DMA_MEMORY_TO_PERIPH; // Memory -> UART
-		hdma_usart3_tx.Init.PeriphInc = DMA_PINC_DISABLE;
-		hdma_usart3_tx.Init.MemInc = DMA_MINC_ENABLE;
-		hdma_usart3_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-		hdma_usart3_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-		hdma_usart3_tx.Init.Mode = DMA_NORMAL; // Keep it looping
-		hdma_usart3_tx.Init.Priority = DMA_PRIORITY_LOW; // Let RX have higher priority
-
-		if (HAL_DMA_Init(&hdma_usart3_tx) != HAL_OK) {
-			PANIC;
-		}
-		__HAL_LINKDMA(uartHandle, hdmatx, hdma_usart3_tx);
-
-		// DMA stream IRQ
-		NVIC_SetPriority(DMA1_Stream3_IRQn, 7);  // higher priority than UART
-		HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
     }
 #if defined(TARGET_AMDS)
     else if (uartHandle->Instance == UART4) {

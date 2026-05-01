@@ -1,6 +1,9 @@
 #ifndef DRV_UART_H
 #define DRV_UART_H
 
+// BENCHMARK MODE FLAG for DMA
+//#define BENCHMARK_MODE
+
 #include "platform.h"
 #include <stdint.h>
 #include <stdbool.h>
@@ -12,9 +15,6 @@ extern UART_HandleTypeDef huart3;
 
 extern UART_HandleTypeDef DAISY_RX1_UART;
 extern UART_HandleTypeDef DAISY_RX2_UART;
-
-extern DMA_HandleTypeDef hdma_usart2_tx;
-extern DMA_HandleTypeDef hdma_usart3_tx;
 
 extern DMA_HandleTypeDef hdma_uart4_rx;
 extern DMA_HandleTypeDef hdma_uart5_rx;
@@ -42,22 +42,12 @@ extern uart_rx_tracker_t tracker2;
 extern uint8_t DAISY_RX1_Pool[AMDS_RX_BUF_SIZE];
 extern uint8_t DAISY_RX2_Pool[AMDS_RX_BUF_SIZE];
 
-// =========================================================================
-// BENCHMARK MODE FLAG for DMA
-// Comment out this line to return to real hardware DMA operation!
-// =========================================================================
-//#define BENCHMARK_MODE
-// =========================================================================
-
 #ifdef BENCHMARK_MODE
 extern volatile uint8_t mock_dma_write_head;
 #endif
 
 // Declare the global flag so all .c files know it exists
 extern volatile bool is_routing_active;
-
-void process_uart_fifo(uint8_t *pool, uart_rx_tracker_t *track, uint8_t uart_id);
-void dma_queue(uint8_t uart_id, uint8_t *data, uint8_t len);
 
 // Add this prototype
 bool drv_uart_has_dma_data(void);
@@ -149,38 +139,6 @@ static inline void drv_uart_send_fast(USART_TypeDef *uart, uint8_t *data, uint16
     }
 
     drv_uart_wait_TC(uart);
-}
-
-static inline void drv_uart_dma_send_fast(UART_HandleTypeDef *huart, uint8_t *data, uint16_t len)
-{
-    DMA_Stream_TypeDef *dma = (DMA_Stream_TypeDef *)huart->hdmatx->Instance;
-
-    // 1. Disable the DMA channel
-    dma->CR &= ~DMA_SxCR_EN;
-
-    // 2. CRITICAL FIX: Wait for the hardware to actually halt.
-    // Writing to address registers while EN is still high causes a silent failure.
-    while ((dma->CR & DMA_SxCR_EN) != 0) {
-        asm("nop");
-    }
-
-    // 3. Clear the DMA Transfer Complete and Half Transfer flags
-    __HAL_DMA_CLEAR_FLAG(huart->hdmatx, __HAL_DMA_GET_TC_FLAG_INDEX(huart->hdmatx));
-    __HAL_DMA_CLEAR_FLAG(huart->hdmatx, __HAL_DMA_GET_HT_FLAG_INDEX(huart->hdmatx));
-
-    // 4. CRITICAL FIX: Tell the DMA exactly *where* to push the bytes.
-    // It must point directly to the UART's Transmit Data Register.
-    dma->PAR = (uint32_t)&huart->Instance->TDR;
-
-    // 5. Load the Memory Address and Length registers
-    dma->M0AR = (uint32_t)data;
-    dma->NDTR = len;
-
-    // 6. Clear UART Transmission Complete flag to ensure it's ready for a fresh burst
-    huart->Instance->ICR = USART_ICR_TCCF;
-
-    // 7. Fire!
-    dma->CR |= DMA_SxCR_EN;
 }
 
 #endif // DRV_UART_H
