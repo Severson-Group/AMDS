@@ -20,30 +20,20 @@ This tool is analogous to the Xilinx SDK tool (for the AMDC). It is effectively 
 
 To develop code for STM32 processors:
 
-#### Generating New Projects
+### Testing / Debugging Code
 
-1. Use the STM32CubeIDE to generate a new project
-2. When configuring this project, select the exact MCU device which you are targetting (the mainboard uses `STM32F765ZGT6`)
-3. Open the CubeMX perspective (i.e. `*.ioc` file) and configure all desired peripherals (SPIs, UARTs, ETH, etc)
-4. Change to the clock configuration tab and use the GUI to configure the PLL settings
-5. Generate initialization code to boot-strap your project. This will configure the clock and peripherals like you specified.
+1. Use the IDE to compile your code and ensure there are no errors.
+2. To flash the hardware, plug in a SWD debugger device to your PC + board (highly recommend [`STLINK-V3SET`](https://www.digikey.com/product-detail/en/stmicroelectronics/STLINK-V3SET/497-18216-ND/9636028))
+3. Configure a debug session in the IDE
+4. Run the debug sessions. This will flash the MCU and start the code (probably breakpoint at `main()`)
 
-#### Writing Code
-
-6. Now that you have a base project, write all your application-specific code...
-
-#### Testing / Debugging Code
-
-7. Use the IDE to compile your code and ensure there are no errors.
-8. To flash the hardware, plug in a SWD debugger device to your PC + board (highly recommend [`STLINK-V3SET`](https://www.digikey.com/product-detail/en/stmicroelectronics/STLINK-V3SET/497-18216-ND/9636028))
-9. Configure a debug session in the IDE
-10. Run the debug sessions. This will flash the MCU and start the code (probably breakpoint at `main()`)
+For more detailed instructions on programming the AMDS, please refer to the [AMDS Documentation](https://docs.amdc.dev/accessories/amds/index.html).
 
 NOTE: The STM32 devices are typically programmed into non-volatile memory. Therefore, there is no seperate "flashing" step. Every time you upload code, it is permanantely stored on the processor. You can power cycle the device and your code will start running again.
 
 ## Mainboard Firmware Design
 
-The mainboard firmware is fairly simple, yet very specialized for the application. Before changing *anything* in the code, make sure you understand how it works. Practically every line of the code is optimized for speed and efficiency! Using a multi-channel logic analyzer / oscilloscope is absolutely required when updating the mainboard firmware to validate code timing.
+The mainboard firmware is fairly simple, yet very specialized for the application. Before changing *anything* in the code, make sure you understand how it works. Practically every line of the code is optimized for speed and efficiency! Using a multi-channel logic analyzer / oscilloscope is absolutely required when updating the mainboard firmware to validate code timing. Please refer to the [Firmware Architecture Documentation](https://docs.amdc.dev/accessories/amds/firmware/index.html) for more information.
 
 **Do not blindly change the code.**
 
