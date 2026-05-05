@@ -360,20 +360,19 @@ void adc_sample_and_transmit_1_5_fast_path(uint16_t *sample_data_out)
     // 2. Start the SCLK
     drv_spi_start_read_two_16bits(SPI5);
 
-    // Timing optimization: send our first header bytes here because code after this is waiting
-    drv_uart_putc_fast(USART2, 0x90);
-	drv_uart_putc_fast(USART3, 0x90);
-
 	// 3. Wait and read first ADC data (Channels 0, 1, 2, 3)
     drv_spi_finish_read_one_16bits(SPI5, &sample_data_out[0]);
 
 	//Timing optimization: wait for only the last SPI that we started
 	drv_spi_wait_for_RX(SPI5);
 
+	drv_uart_putc_fast(USART2, 0x90);
+	drv_uart_putc_fast(USART3, 0x90);
+
 	// Read second ADC data (Channels 4, 5, 6, 7)
 	drv_spi_get_DR(SPI5, &sample_data_out[4]);
 
-	//don't send first header because we sent it earlier (timing optimization)
+	// don't send first header
 	drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[0] >> 8));
 	drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[4] >> 8));
 
@@ -448,6 +447,25 @@ void EXTI15_10_IRQHandler(void)
 		if (u2) drv_uart_putc_fast(USART2, (uint8_t)(new_data[0]));
 		if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[4]));
 	}
+
+//	uint32_t start_cycles = DWT->CYCCNT;
+//
+//	// Calculate 1 microseconds in CPU cycles (integer math safe)
+//	uint32_t wait_cycles = (SystemCoreClock / 1000000);
+//
+//	// Deterministic wait for exactly 1000ns using hardware cycles, not NOPs
+//	while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
+//		// Spin perfectly safely
+//	}
+//
+////  NOP128;
+////	NOP64;
+////	NOP8;
+
+	uint32_t start_cycles = DWT->CYCCNT;
+	uint32_t wait_cycles = (SystemCoreClock / 1000000);
+
+	while ((DWT->CYCCNT - start_cycles) < wait_cycles);
 
 	//Handle any DMA data that has been received from daisy chain
 	try_process_routing(); // This try function is thread safe

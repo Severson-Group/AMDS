@@ -52,7 +52,7 @@ int main(void)
         // is actually data waiting in the DMA buffers to help the
         // external IRQ retain higher priority access to process_routing
         if (drv_uart_has_dma_data())
-            try_process_routing(); // This try function is thread safe
+        	try_process_routing(); // This try function is thread safe
 
         // Handle LEDs
         if (HAL_GetTick() - ledDelta >= 250) {

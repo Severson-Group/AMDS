@@ -93,6 +93,16 @@ void process_routing(void) {
                 r2 += 3;
                 avail1 -= 3;
                 avail2 -= 3;
+
+                uint32_t start_cycles = DWT->CYCCNT;
+
+				// Calculate 1 microseconds in CPU cycles (integer math safe)
+				uint32_t wait_cycles = (SystemCoreClock / 1000000) * 2;
+
+				// Deterministic wait for exactly 1300ns using hardware cycles, not NOPs
+				while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
+					// Spin perfectly safely
+				}
             } else {
                 break; // Misaligned or corrupted header, break to let the slow-path handle it
             }
