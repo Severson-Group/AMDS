@@ -449,7 +449,8 @@ void EXTI15_10_IRQHandler(void)
 	}
 
 	//Handle any DMA data that has been received from daisy chain
-	try_process_routing(); // This try function is thread safe
+	if (drv_uart_has_dma_data())
+		try_process_routing(); // This try function is thread safe
 
 	// Clear all pending IRQs for ADC conversions at the
 	// end of this ISR so that the system realigns the
