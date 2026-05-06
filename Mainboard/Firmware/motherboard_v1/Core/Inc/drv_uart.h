@@ -52,6 +52,8 @@ extern volatile bool is_routing_active;
 // Add this prototype
 bool drv_uart_has_dma_data(void);
 
+#define GPIO_TOGGLE_PIN(port, pin) ((port)->BSRR = ((port)->ODR & (pin)) ? ((pin) << 16) : (pin))
+
 void process_routing(void);
 
 /**

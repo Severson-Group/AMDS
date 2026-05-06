@@ -50,6 +50,7 @@ bool drv_uart_has_dma_data(void) {
 }
 
 void process_routing(void) {
+	GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_6);
     // Load tracking state into local CPU registers
 	uint8_t r1 = tracker1.read_index;
 	uint8_t r2 = tracker2.read_index;
@@ -97,12 +98,13 @@ void process_routing(void) {
                 uint32_t start_cycles = DWT->CYCCNT;
 
 				// Calculate 1 microseconds in CPU cycles (integer math safe)
-				uint32_t wait_cycles = (SystemCoreClock / 1000000) * 2;
+				uint32_t wait_cycles = (SystemCoreClock / 1000000);
 
 				// Deterministic wait for exactly 1300ns using hardware cycles, not NOPs
 				while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
 					// Spin perfectly safely
 				}
+				GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_6);
             } else {
                 break; // Misaligned or corrupted header, break to let the slow-path handle it
             }

@@ -383,6 +383,9 @@ void adc_sample_and_transmit_1_5_fast_path(uint16_t *sample_data_out)
 	SET_PIN_CONVST56_LOW;
 }
 
+int main_inc = 0;
+int int_inc = 0;
+
 // This ISR is for the FBC and is triggered by the
 // AMDC to sync the ADCconversions to the AMDC PWM
 // carrier waveform. In this ISR, on 2 ADCs should be sampled.
@@ -448,25 +451,22 @@ void EXTI15_10_IRQHandler(void)
 		if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[4]));
 	}
 
-//	uint32_t start_cycles = DWT->CYCCNT;
-//
-//	// Calculate 1 microseconds in CPU cycles (integer math safe)
-//	uint32_t wait_cycles = (SystemCoreClock / 1000000);
-//
-//	// Deterministic wait for exactly 1000ns using hardware cycles, not NOPs
-//	while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
-//		// Spin perfectly safely
-//	}
-//
-////  NOP128;
-////	NOP64;
-////	NOP8;
+//  NOP128;
+//	NOP64;
+//	NOP8;
 
 	uint32_t start_cycles = DWT->CYCCNT;
-	uint32_t wait_cycles = (SystemCoreClock / 1000000);
 
-	while ((DWT->CYCCNT - start_cycles) < wait_cycles);
+	// Calculate 1 microseconds in CPU cycles (integer math safe)
+	uint32_t wait_cycles = (SystemCoreClock / 1000000) / 10;
 
+	// Deterministic wait for exactly 1000ns using hardware cycles, not NOPs
+	while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
+		// Spin perfectly safely
+	}
+//
+//	int_inc++;
+//	main_inc--;
 	//Handle any DMA data that has been received from daisy chain
 	try_process_routing(); // This try function is thread safe
 
@@ -548,9 +548,13 @@ static void setup_pin_SYNC_ADC(void)
     __HAL_RCC_GPIOB_CLK_ENABLE();
 	__HAL_RCC_GPIOG_CLK_ENABLE();
 
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+
 	// Configure GPIO pin Output Level
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_14, GPIO_PIN_SET);
+
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
 
 	// Configure GPIO pins
 	GPIO_InitStruct.Pin = GPIO_PIN_11;
@@ -564,6 +568,12 @@ static void setup_pin_SYNC_ADC(void)
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = GPIO_PIN_6;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     // EXTI interrupt init
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 10, 0);
