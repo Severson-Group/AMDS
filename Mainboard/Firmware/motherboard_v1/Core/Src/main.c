@@ -28,7 +28,6 @@ int main(void)
 
     // Infinite loop (all real work is done in ISRs)
     uint8_t led = 0;
-//    uint32_t ledDelta = HAL_GetTick();
 
     // Use DWT cycle counter instead of HAL_GetTick()
 	uint32_t ledDelta = DWT->CYCCNT;
@@ -60,17 +59,6 @@ int main(void)
         if (drv_uart_has_dma_data())
         	try_process_routing(); // This try function is thread safe
 
-//        // Handle LEDs
-//        if (HAL_GetTick() - ledDelta >= 250) {
-//            ledDelta = HAL_GetTick();
-//            drv_led_clear();
-//            drv_led_on(1 << led);
-//            drv_led_display();
-//
-//            if (++led >= DRV_LED_NUM_TOTAL) {
-//                led = 0;
-//            }
-//        }
         // Handle LEDs using hardware cycle counts
 		if (DWT->CYCCNT - ledDelta >= cyclesPer250ms) {
 			ledDelta = DWT->CYCCNT;

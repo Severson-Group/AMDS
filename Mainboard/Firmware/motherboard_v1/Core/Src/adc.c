@@ -282,7 +282,8 @@ void EXTI3_IRQHandler(void)
     }
 
     // Handle any DMA data that has been received from daisy chain
-    try_process_routing();
+    if (drv_uart_has_dma_data())
+    	try_process_routing();
 
     NVIC_ClearPendingIRQ(EXTI3_IRQn);
     __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
