@@ -5,7 +5,4 @@
 
 void adc_init(void);
 
-extern int main_inc;
-extern int int_inc;
-
 #endif // ADC_H

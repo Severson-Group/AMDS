@@ -68,6 +68,28 @@ void process_routing(void) {
 		uint8_t avail1 = (uint8_t)(w1 - r1);
 		uint8_t avail2 = (uint8_t)(w2 - r2);
 
+
+		if (avail1 < 3 || avail2 < 3) {
+			// 2us timeout to let us receive enough data for dual-stream fast path
+			uint32_t start_cycles = DWT->CYCCNT;
+
+			// Calculate 2 microseconds in CPU cycles (integer math safe)
+			uint32_t wait_cycles = (SystemCoreClock / 1000000);
+
+			while ((avail1 >= 1 && avail1 <= 3) || (avail2 >= 1 && avail2 <= 3)) {
+				w1 = GET_W1();
+				w2 = GET_W2();
+
+				avail1 = (uint8_t)(w1 - r1);
+				avail2 = (uint8_t)(w2 - r2);
+
+				// Break if we reach the 2us timeout
+				if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
+					break;
+				}
+			}
+		}
+
         // =====================================================================
         // OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
         // =====================================================================
@@ -95,16 +117,25 @@ void process_routing(void) {
                 avail1 -= 3;
                 avail2 -= 3;
 
-                uint32_t start_cycles = DWT->CYCCNT;
+                if (avail1 < 3 || avail2 < 3) {
+                	uint32_t start_cycles = DWT->CYCCNT;
 
-				// Calculate 1 microseconds in CPU cycles (integer math safe)
-				uint32_t wait_cycles = (SystemCoreClock / 1000000);
+					// Calculate 2 microseconds in CPU cycles (integer math safe)
+					uint32_t wait_cycles = (SystemCoreClock / 1000000);
 
-				// Deterministic wait for exactly 1300ns using hardware cycles, not NOPs
-				while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
-					// Spin perfectly safely
-				}
-				GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_6);
+					while ((avail1 >= 1 && avail1 <= 3) || (avail2 >= 1 && avail2 <= 3)) {
+						w1 = GET_W1();
+						w2 = GET_W2();
+
+						avail1 = (uint8_t)(w1 - r1);
+						avail2 = (uint8_t)(w2 - r2);
+
+						// Break if we reach the 2us timeout
+						if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
+							break;
+						}
+					}
+                }
             } else {
                 break; // Misaligned or corrupted header, break to let the slow-path handle it
             }
