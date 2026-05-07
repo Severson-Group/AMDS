@@ -50,6 +50,7 @@ bool drv_uart_has_dma_data(void) {
 }
 
 void process_routing(void) {
+	GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_6);
     // Load tracking state into local CPU registers
 	uint8_t r1 = tracker1.read_index;
 	uint8_t r2 = tracker2.read_index;
@@ -73,7 +74,7 @@ void process_routing(void) {
 			uint32_t start_cycles = DWT->CYCCNT;
 
 			// Calculate 2 microseconds in CPU cycles (integer math safe)
-			uint32_t wait_cycles = (SystemCoreClock / 1000000) * 2;
+			uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
 
 			while ((avail1 >= 1 && avail1 <= 3) || (avail2 >= 1 && avail2 <= 3)) {
 				w1 = GET_W1();
@@ -84,6 +85,7 @@ void process_routing(void) {
 
 				// Break if we reach the 2us timeout
 				if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
+					GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_7);
 					break;
 				}
 			}
@@ -120,7 +122,7 @@ void process_routing(void) {
                 	uint32_t start_cycles = DWT->CYCCNT;
 
 					// Calculate 2 microseconds in CPU cycles (integer math safe)
-					uint32_t wait_cycles = (SystemCoreClock / 1000000) * 2;
+					uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
 
 					while ((avail1 >= 1 && avail1 <= 3) || (avail2 >= 1 && avail2 <= 3)) {
 						w1 = GET_W1();
@@ -131,6 +133,7 @@ void process_routing(void) {
 
 						// Break if we reach the 2us timeout
 						if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
+							GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_7);
 							break;
 						}
 					}

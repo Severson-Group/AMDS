@@ -450,8 +450,7 @@ void EXTI15_10_IRQHandler(void)
 	}
 
 	//Handle any DMA data that has been received from daisy chain
-	if (drv_uart_has_dma_data())
-		try_process_routing(); // This try function is thread safe
+	try_process_routing(); // This try function is thread safe
 
 	// Clear all pending IRQs for ADC conversions at the
 	// end of this ISR so that the system realigns the
@@ -538,6 +537,7 @@ static void setup_pin_SYNC_ADC(void)
 	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_14, GPIO_PIN_SET);
 
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
 
 	// Configure GPIO pins
 	GPIO_InitStruct.Pin = GPIO_PIN_11;
@@ -552,7 +552,7 @@ static void setup_pin_SYNC_ADC(void)
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-	GPIO_InitStruct.Pin = GPIO_PIN_6;
+	GPIO_InitStruct.Pin = GPIO_PIN_6 | GPIO_PIN_7;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
