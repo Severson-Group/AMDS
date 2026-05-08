@@ -449,6 +449,17 @@ void EXTI15_10_IRQHandler(void)
 		if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[4]));
 	}
 
+	uint32_t start_cycles = DWT->CYCCNT;
+
+	// Calculate 1 microseconds in CPU cycles (integer math safe)
+	uint32_t wait_cycles = (SystemCoreClock / 1000000);
+
+	drv_uart_wait_TC(USART3);
+
+	while (!(USART3->ISR & UART_FLAG_TC) && ((DWT->CYCCNT - start_cycles) < wait_cycles)) {
+
+	}
+
 	//Handle any DMA data that has been received from daisy chain
 	try_process_routing(); // This try function is thread safe
 

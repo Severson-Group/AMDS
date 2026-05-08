@@ -70,13 +70,13 @@ void process_routing(void) {
 
 
 		if (avail1 < 3 || avail2 < 3) {
-			// 2us timeout to let us receive enough data for dual-stream fast path
+			// 1.3us timeout to let us receive enough data for dual-stream fast path
 			uint32_t start_cycles = DWT->CYCCNT;
 
-			// Calculate 2 microseconds in CPU cycles (integer math safe)
+			// Calculate 1.3 microseconds in CPU cycles (integer math safe)
 			uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
 
-			while ((avail1 >= 1 && avail1 <= 3) || (avail2 >= 1 && avail2 <= 3)) {
+			while ((avail1 >= 0 && avail1 <= 2) || (avail2 >= 0 && avail2 <= 2)) {
 				w1 = GET_W1();
 				w2 = GET_W2();
 
@@ -112,7 +112,7 @@ void process_routing(void) {
                 // Byte 3: LSB
                 drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 2)]);
                 drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 2)]);
-                
+
                 r1 += 3;
                 r2 += 3;
                 avail1 -= 3;
@@ -121,10 +121,10 @@ void process_routing(void) {
                 if (avail1 < 3 || avail2 < 3) {
                 	uint32_t start_cycles = DWT->CYCCNT;
 
-					// Calculate 2 microseconds in CPU cycles (integer math safe)
-					uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
+					// Calculate 3 microseconds in CPU cycles (integer math safe)
+					uint32_t wait_cycles = (SystemCoreClock / 1000000) * 3;
 
-					while ((avail1 >= 1 && avail1 <= 3) || (avail2 >= 1 && avail2 <= 3)) {
+					while ((avail1 >= 1 && avail1 <= 2) || (avail2 >= 1 && avail2 <= 2)) {
 						w1 = GET_W1();
 						w2 = GET_W2();
 
@@ -221,6 +221,9 @@ void process_routing(void) {
             w2 = GET_W2();
         }
     }
+
+	drv_uart_wait_TC(USART2);
+	drv_uart_wait_TC(USART3);
 
     // Store states back
     tracker1.read_index = r1;
