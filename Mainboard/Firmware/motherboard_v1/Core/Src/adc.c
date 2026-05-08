@@ -225,11 +225,11 @@ void EXTI3_IRQHandler(void)
     for (int i = 0; i < 24; i++) {
         uint8_t idx = (uint8_t)(current_head + i);
         if (i % 3 == 0) {
-            UART4_DMA_Pool[idx] = 0x90; // Valid Header
-            UART5_DMA_Pool[idx] = 0x90;
+        	DAISY_RX1_Pool[idx] = 0x90; // Valid Header
+            DAISY_RX2_Pool[idx] = 0x90;
         } else {
-            UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
-            UART5_DMA_Pool[idx] = 0xBB;
+        	DAISY_RX1_Pool[idx] = 0xAA; // Dummy Payload Data
+            DAISY_RX2_Pool[idx] = 0xBB;
         }
     }
     // Instantly advance the mock hardware write head
@@ -348,7 +348,7 @@ void adc_sample_and_transmit_1_5_fast_path(uint16_t *sample_data_out)
 
     uint32_t start_cycles = DWT->CYCCNT;
     // reset DMA routing state machine
-	try_reset_routing_state();
+//	try_reset_routing_state();
 
 	// Calculate 1.3 microseconds in CPU cycles (integer math safe)
 	uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
@@ -393,27 +393,28 @@ void EXTI15_10_IRQHandler(void)
 	// alert daisy chained AMDSs to begin converting
 	GPIO_TOGGLE_PIN(GPIOG, GPIO_PIN_14);
 
+	try_reset_routing_state();
 #ifdef BENCHMARK_MODE
 	// =========================================================================
 	// INJECT MOCK DMA DATA FOR BENCHMARKING
 	// Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
 	// =========================================================================
 	uint8_t current_head = mock_dma_write_head;
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 3; i++) {
 		uint8_t idx = (uint8_t)(current_head + i);
 		if (i == 0) {
-			UART4_DMA_Pool[idx] = 0x90; // Valid Header
-			UART5_DMA_Pool[idx] = 0x90;
-		} else if (i == 3) {
-			UART4_DMA_Pool[idx] = 0x94; // Valid Header
-			UART5_DMA_Pool[idx] = 0x94;
-		} else {
-			UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
-			UART5_DMA_Pool[idx] = 0xBB;
+			DAISY_RX1_Pool[idx] = 0x90; // Valid Header
+			DAISY_RX2_Pool[idx] = 0x90;
+		}/* else if (i == 3) {
+			DAISY_RX1_Pool[idx] = 0x94; // Valid Header
+			DAISY_RX2_Pool[idx] = 0x94;
+		}*/ else {
+			DAISY_RX1_Pool[idx] = 0xAA; // Dummy Payload Data
+			DAISY_RX2_Pool[idx] = 0xBB;
 		}
 	}
 	// Instantly advance the mock hardware write head
-	mock_dma_write_head = (uint8_t)(current_head + 6);
+	mock_dma_write_head = (uint8_t)(current_head + 3);
 #endif
 
 	uint16_t new_data[8] = { 0 };
@@ -454,9 +455,8 @@ void EXTI15_10_IRQHandler(void)
 	// Calculate 1 microseconds in CPU cycles (integer math safe)
 	uint32_t wait_cycles = (SystemCoreClock / 1000000);
 
-	drv_uart_wait_TC(USART3);
 
-	while (!(USART3->ISR & UART_FLAG_TC) && ((DWT->CYCCNT - start_cycles) < wait_cycles)) {
+	while (!(USART2->ISR & UART_FLAG_TC) && !(USART3->ISR & UART_FLAG_TC) && ((DWT->CYCCNT - start_cycles) < wait_cycles)) {
 
 	}
 

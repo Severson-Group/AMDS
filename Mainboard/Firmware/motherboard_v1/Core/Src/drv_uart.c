@@ -49,6 +49,139 @@ bool drv_uart_has_dma_data(void) {
 	return (tracker1.read_index != w1) || (tracker2.read_index != w2);
 }
 
+
+//void process_routing(void) {
+//	GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_6);
+//    // Load tracking state into local CPU registers
+//	uint8_t r1 = tracker1.read_index;
+//	uint8_t r2 = tracker2.read_index;
+//	uint8_t s1 = tracker1.state;
+//	uint8_t s2 = tracker2.state;
+//
+//	uint8_t w1 = GET_W1();
+//	uint8_t w2 = GET_W2();
+//
+//	uint8_t avail1 = (uint8_t)(w1 - r1);
+//	uint8_t avail2 = (uint8_t)(w2 - r2);
+//
+//
+//	// =====================================================================
+//	// OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
+//	// =====================================================================
+//	// If both streams have at least a full 3-byte packet, process them completely
+//	// interleaved to keep both hardware lines saturated simultaneously.
+//	while ((s1 == STATE_IDLE && avail1 >= 3) && (s2 == STATE_IDLE && avail2 >= 3)) {
+//		uint8_t h1 = DAISY_RX1_Pool[r1];
+//		uint8_t h2 = DAISY_RX2_Pool[r2];
+//
+//		if (((h1 & 0xF0) == 0x90) && ((h2 & 0xF0) == 0x90)) {
+//			// Byte 1: Headers (Incremented)
+//			drv_uart_putc_fast(USART2, h1 + 4);
+//			drv_uart_putc_fast(USART3, h2 + 4);
+//
+//			// Byte 2: MSB
+//			drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 1)]);
+//			drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 1)]);
+//
+//			// Byte 3: LSB
+//			drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 2)]);
+//			drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 2)]);
+//
+//			r1 += 3;
+//			r2 += 3;
+//			avail1 -= 3;
+//			avail2 -= 3;
+//
+//			if (avail1 < 3 || avail2 < 3) {
+//				uint32_t start_cycles = DWT->CYCCNT;
+//
+//				// Calculate 6 microseconds in CPU cycles (integer math safe)
+//				uint32_t wait_cycles = (SystemCoreClock / 1000000) * 6;
+//
+//				while ((avail1 > 0 && avail1 <= 2) || (avail2 > 0 && avail2 <= 2)) {
+//					w1 = GET_W1();
+//					w2 = GET_W2();
+//
+//					avail1 = (uint8_t)(w1 - r1);
+//					avail2 = (uint8_t)(w2 - r2);
+//
+//					// Break if we reach the 2us timeout
+//					if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
+//						if (avail1 > 0 || avail2 > 0) {
+//							GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_7);
+//						}
+//						drv_uart_wait_TC(USART2);
+//						drv_uart_wait_TC(USART3);
+//						break;
+//					}
+//				}
+//			}
+//		} else {
+//			break; // Misaligned or corrupted header, break to let the slow-path handle it
+//		}
+//	}
+//
+//	// Process as long as either buffer has data
+//	while ((avail1 > 0) || (avail2 > 0)) {
+//		 // =====================================================================
+//		// SLOW PATH: Fragmentation / State Recovery
+//		// =====================================================================
+//		// We only fall down here if a packet is fragmented across a DMA update
+//		// boundary or if data is corrupted. We can safely revert to the simple
+//		// 1-byte-at-a-time logic.
+//		if (r1 != w1) {
+//			uint8_t b1 = DAISY_RX1_Pool[r1++];
+//			if (s1 == STATE_IDLE) {
+//				if ((b1 & 0xF0) == 0x90) {
+//					drv_uart_putc_fast(USART2, b1 + 4);
+//					s1 = STATE_GOT_HEADER;
+//				}
+//			} else if (s1 == STATE_GOT_HEADER) {
+//				drv_uart_putc_fast(USART2, b1);
+//				s1 = STATE_GOT_MSB;
+//			} else { // STATE_GOT_MSB
+//				drv_uart_putc_fast(USART2, b1);
+//				s1 = STATE_IDLE;
+//			}
+//		}
+//
+//		if (r2 != w2) {
+//			uint8_t b2 = DAISY_RX2_Pool[r2++];
+//			if (s2 == STATE_IDLE) {
+//				if ((b2 & 0xF0) == 0x90) {
+//					drv_uart_putc_fast(USART3, b2 + 4);
+//					s2 = STATE_GOT_HEADER;
+//				}
+//			} else if (s2 == STATE_GOT_HEADER) {
+//				drv_uart_putc_fast(USART3, b2);
+//				s2 = STATE_GOT_MSB;
+//			} else { // STATE_GOT_MSB
+//				drv_uart_putc_fast(USART3, b2);
+//				s2 = STATE_IDLE;
+//			}
+//		}
+//
+//		// Check if we caught up to our cached write pointers.
+//		// If so, re-sample the DMA registers to see if new data arrived
+//		// while we were actively processing the previous bytes.
+//		if ((r1 == w1) && (r2 == w2)) {
+//			w1 = GET_W1();
+//			w2 = GET_W2();
+//			avail1 = (uint8_t)(w1 - r1);
+//			avail2 = (uint8_t)(w2 - r2);
+//		}
+//	}
+//	drv_uart_wait_TC(USART2);
+//	drv_uart_wait_TC(USART3);
+//
+//	// Store states back
+//	tracker1.read_index = r1;
+//	tracker2.read_index = r2;
+//	tracker1.state = s1;
+//	tracker2.state = s2;
+//}
+
+
 void process_routing(void) {
 	GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_6);
     // Load tracking state into local CPU registers
@@ -85,7 +218,6 @@ void process_routing(void) {
 
 				// Break if we reach the 2us timeout
 				if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
-					GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_7);
 					break;
 				}
 			}
@@ -122,9 +254,9 @@ void process_routing(void) {
                 	uint32_t start_cycles = DWT->CYCCNT;
 
 					// Calculate 3 microseconds in CPU cycles (integer math safe)
-					uint32_t wait_cycles = (SystemCoreClock / 1000000) * 3;
+					uint32_t wait_cycles = (SystemCoreClock / 1000000) * 10;
 
-					while ((avail1 >= 1 && avail1 <= 2) || (avail2 >= 1 && avail2 <= 2)) {
+					while ((avail1 >= 0 && avail1 <= 2) || (avail2 >= 0 && avail2 <= 2)) {
 						w1 = GET_W1();
 						w2 = GET_W2();
 
@@ -133,7 +265,9 @@ void process_routing(void) {
 
 						// Break if we reach the 2us timeout
 						if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
-							GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_7);
+							if (avail1 > 0 || avail2 > 0) {
+								GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_7);
+							}
 							break;
 						}
 					}
@@ -147,39 +281,39 @@ void process_routing(void) {
         // OPTIMIZATION 2: SINGLE-STREAM FAST PATHS 
         // =====================================================================
         // If one UART receives data slightly faster than the other, process it.
-        while (s1 == STATE_IDLE && avail1 >= 3) {
-            uint8_t h1 = DAISY_RX1_Pool[r1];
-            if ((h1 & 0xF0) == 0x90) {
-                drv_uart_putc_fast(USART2, h1 + 4);
-                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 1)]);
-                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 2)]);
-                
-                r1 += 3;
-                avail1 -= 3;
-            } else {
-                break;
-            }
-        }
-
-        while (s2 == STATE_IDLE && avail2 >= 3) {
-            uint8_t h2 = DAISY_RX2_Pool[r2];
-            if ((h2 & 0xF0) == 0x90) {
-                drv_uart_putc_fast(USART3, h2 + 4);
-                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 1)]);
-                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 2)]);
-                
-                r2 += 3;
-                avail2 -= 3;
-            } else {
-                break;
-            }
-        }
-
+//        while (s1 == STATE_IDLE && avail1 >= 3) {
+//            uint8_t h1 = DAISY_RX1_Pool[r1];
+//            if ((h1 & 0xF0) == 0x90) {
+//                drv_uart_putc_fast(USART2, h1 + 4);
+//                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 1)]);
+//                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 2)]);
+//
+//                r1 += 3;
+//                avail1 -= 3;
+//            } else {
+//                break;
+//            }
+//        }
+//
+//        while (s2 == STATE_IDLE && avail2 >= 3) {
+//            uint8_t h2 = DAISY_RX2_Pool[r2];
+//            if ((h2 & 0xF0) == 0x90) {
+//                drv_uart_putc_fast(USART3, h2 + 4);
+//                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 1)]);
+//                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 2)]);
+//
+//                r2 += 3;
+//                avail2 -= 3;
+//            } else {
+//                break;
+//            }
+//        }
+//
         // =====================================================================
         // SLOW PATH: Fragmentation / State Recovery
         // =====================================================================
         // We only fall down here if a packet is fragmented across a DMA update
-        // boundary or if data is corrupted. We can safely revert to the simple 
+        // boundary or if data is corrupted. We can safely revert to the simple
         // 1-byte-at-a-time logic.
         if (r1 != w1) {
             uint8_t b1 = DAISY_RX1_Pool[r1++];
@@ -221,9 +355,6 @@ void process_routing(void) {
             w2 = GET_W2();
         }
     }
-
-	drv_uart_wait_TC(USART2);
-	drv_uart_wait_TC(USART3);
 
     // Store states back
     tracker1.read_index = r1;
@@ -288,12 +419,13 @@ void DMA1_Stream0_IRQHandler(void)
 void USART6_IRQHandler(void)
 {
     // Check for Parity, Overrun, Noise, or Frame errors
-    if (__HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_PE)  ||
+    if (/*__HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_PE) || */
         __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_ORE) ||
         __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_NE)  ||
         __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_FE))
     {
-        // 1. Clear the error flags (Added UART_CLEAR_PEF)
+
+    	// 1. Clear the error flags
         __HAL_UART_CLEAR_IT(&DAISY_RX1_UART, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
         // 2. IMPORTANT: Re-enable DMA receiver request
@@ -315,11 +447,12 @@ void DMA2_Stream2_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
 	// Check for Overrun, Noise, or Frame errors
-	if (__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_PE)  ||
+	if (/* __HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_PE)  || */
 		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_ORE) ||
 		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_NE)  ||
 		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_FE))
 	{
+
 		// 1. Clear the error flags
 		__HAL_UART_CLEAR_IT(&DAISY_RX2_UART, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
