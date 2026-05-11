@@ -126,7 +126,13 @@ static inline void drv_uart_putc_fast(USART_TypeDef *uart, uint8_t data)
 
 static inline void drv_uart_wait_TC(USART_TypeDef *uart)
 {
-    // After done sending characters, must wait for TC flag!!
+    // ONLY USE THIS IF DISABLING THE UART OR GOING TO SLEEP!
+    // This function waits for all data to be sent from the USART
+    //    (it waits for both the TDR and the Shift Register to be
+    //     completely empty)
+    //
+    // Do NOT USE THIS during normal continuous data transmission
+    //       as it will add significant delays
     while (!(uart->ISR & UART_FLAG_TC)) {
         asm("nop");
     }

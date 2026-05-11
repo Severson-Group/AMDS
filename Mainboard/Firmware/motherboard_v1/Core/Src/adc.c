@@ -194,8 +194,8 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     		send_header = true;
     	}
 
+    	drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[i + 4] >> 8));
 		drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[i] >> 8));
-		drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[i + 4] >> 8));
 
 		drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[i]);
 		drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[i + 4]);
@@ -221,6 +221,7 @@ void EXTI3_IRQHandler(void)
     // INJECT MOCK DMA DATA FOR BENCHMARKING
     // Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
     // =========================================================================
+	try_reset_routing_state();
     uint8_t current_head = mock_dma_write_head;
     for (int i = 0; i < 24; i++) {
         uint8_t idx = (uint8_t)(current_head + i);
@@ -282,8 +283,7 @@ void EXTI3_IRQHandler(void)
     }
 
     // Handle any DMA data that has been received from daisy chain
-    if (drv_uart_has_dma_data())
-    	try_process_routing();
+	try_process_routing();
 
     NVIC_ClearPendingIRQ(EXTI3_IRQn);
     __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
@@ -393,12 +393,12 @@ void EXTI15_10_IRQHandler(void)
 	// alert daisy chained AMDSs to begin converting
 	GPIO_TOGGLE_PIN(GPIOG, GPIO_PIN_14);
 
-	try_reset_routing_state();
 #ifdef BENCHMARK_MODE
 	// =========================================================================
 	// INJECT MOCK DMA DATA FOR BENCHMARKING
 	// Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
 	// =========================================================================
+	try_reset_routing_state();
 	uint8_t current_head = mock_dma_write_head;
 	for (int i = 0; i < 3; i++) {
 		uint8_t idx = (uint8_t)(current_head + i);

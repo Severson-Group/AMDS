@@ -183,7 +183,7 @@ bool drv_uart_has_dma_data(void) {
 
 
 void process_routing(void) {
-	GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_6);
+//	GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_6);
     // Load tracking state into local CPU registers
 	uint8_t r1 = tracker1.read_index;
 	uint8_t r2 = tracker2.read_index;
@@ -238,8 +238,8 @@ void process_routing(void) {
                 drv_uart_putc_fast(USART3, h2 + 4);
                 
                 // Byte 2: MSB
-                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 1)]);
                 drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 1)]);
+                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 1)]);
                 
                 // Byte 3: LSB
                 drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 2)]);
@@ -266,7 +266,7 @@ void process_routing(void) {
 						// Break if we reach the 2us timeout
 						if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
 							if (avail1 > 0 || avail2 > 0) {
-								GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_7);
+//								GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_7);
 							}
 							break;
 						}
