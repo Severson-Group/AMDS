@@ -249,7 +249,9 @@ void EXTI3_IRQHandler(void)
     // SLOW PATH: Legacy sampling for Partial Masks
     // =========================================================================
     else {
-    	try_reset_routing_state();
+#ifndef BENCHMARK_MODE
+		try_reset_routing_state();
+#endif
     	adc_sample_all_daughtercards(new_data);
 
         for (uint32_t i = 0; i < 4; i++) {
@@ -405,10 +407,10 @@ void EXTI15_10_IRQHandler(void)
 		if (i == 0) {
 			DAISY_RX1_Pool[idx] = 0x90; // Valid Header
 			DAISY_RX2_Pool[idx] = 0x90;
-		}/* else if (i == 3) {
+		} else if (i == 3) {
 			DAISY_RX1_Pool[idx] = 0x94; // Valid Header
 			DAISY_RX2_Pool[idx] = 0x94;
-		}*/ else {
+		} else {
 			DAISY_RX1_Pool[idx] = 0xAA; // Dummy Payload Data
 			DAISY_RX2_Pool[idx] = 0xBB;
 		}
@@ -429,7 +431,9 @@ void EXTI15_10_IRQHandler(void)
 	// SLOW PATH: Safe loop for Partial Masks
 	// =========================================================================
 	else {
+#ifndef BENCHMARK_MODE
 		try_reset_routing_state();
+#endif
 		adc_sample_1_5_daughtercards(new_data);
 
 		bool u3 = false;

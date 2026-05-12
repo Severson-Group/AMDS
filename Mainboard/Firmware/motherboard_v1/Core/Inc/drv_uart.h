@@ -2,7 +2,7 @@
 #define DRV_UART_H
 
 // BENCHMARK MODE FLAG for DMA
-//#define BENCHMARK_MODE
+#define BENCHMARK_MODE
 
 #include "platform.h"
 #include <stdint.h>
