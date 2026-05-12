@@ -50,7 +50,6 @@ bool drv_uart_has_dma_data(void) {
 }
 
 void process_routing(void) {
-//	GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_6);
     // Load tracking state into local CPU registers
 	uint8_t r1 = tracker1.read_index;
 	uint8_t r2 = tracker2.read_index;
@@ -132,9 +131,6 @@ void process_routing(void) {
 
 						// Break if we reach the 3us timeout
 						if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
-							if (avail1 > 0 || avail2 > 0) {
-//								GPIO_TOGGLE_PIN(GPIOC, GPIO_PIN_7);
-							}
 							break;
 						}
 					}
@@ -182,14 +178,9 @@ void process_routing(void) {
         // We only fall down here if a packet is fragmented across a DMA update
         // boundary or if data is corrupted. We can safely revert to the simple
         // 1-byte-at-a-time logic.
-        if (r1 != w1) {
+        while (r1 != w1 && s1 != STATE_IDLE) {
             uint8_t b1 = DAISY_RX1_Pool[r1++];
-            if (s1 == STATE_IDLE) {
-                if ((b1 & 0xF0) == 0x90) {
-                    drv_uart_putc_fast(USART2, b1 + 4);
-                    s1 = STATE_GOT_HEADER;
-                }
-            } else if (s1 == STATE_GOT_HEADER) {
+            if (s1 == STATE_GOT_HEADER) {
                 drv_uart_putc_fast(USART2, b1);
                 s1 = STATE_GOT_MSB;
             } else { // STATE_GOT_MSB
@@ -198,21 +189,16 @@ void process_routing(void) {
             }
         }
 
-        if (r2 != w2) {
-            uint8_t b2 = DAISY_RX2_Pool[r2++];
-            if (s2 == STATE_IDLE) {
-                if ((b2 & 0xF0) == 0x90) {
-                    drv_uart_putc_fast(USART3, b2 + 4);
-                    s2 = STATE_GOT_HEADER;
-                }
-            } else if (s2 == STATE_GOT_HEADER) {
-                drv_uart_putc_fast(USART3, b2);
-                s2 = STATE_GOT_MSB;
-            } else { // STATE_GOT_MSB
-                drv_uart_putc_fast(USART3, b2);
-                s2 = STATE_IDLE;
-            }
-        }
+        while (r2 != w2 && s2 != STATE_IDLE) {
+			uint8_t b2 = DAISY_RX2_Pool[r2++];
+			if (s2 == STATE_GOT_HEADER) {
+				drv_uart_putc_fast(USART3, b2);
+				s2 = STATE_GOT_MSB;
+			} else { // STATE_GOT_MSB
+				drv_uart_putc_fast(USART3, b2);
+				s2 = STATE_IDLE;
+			}
+		}
 
         // Check if we caught up to our cached write pointers.
         // If so, re-sample the DMA registers to see if new data arrived 
@@ -285,7 +271,7 @@ void DMA1_Stream0_IRQHandler(void)
 #elif defined(TARGET_2S)
 void USART6_IRQHandler(void)
 {
-    // Check for Parity, Overrun, Noise, or Frame errors
+	// Check for Parity, Overrun, Noise, or Frame errors
     if (__HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_PE)  ||
         __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_ORE) ||
         __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_NE)  ||
