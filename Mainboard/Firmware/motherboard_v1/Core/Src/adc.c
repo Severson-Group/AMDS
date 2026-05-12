@@ -350,7 +350,7 @@ void adc_sample_and_transmit_1_5_fast_path(uint16_t *sample_data_out)
 
     uint32_t start_cycles = DWT->CYCCNT;
     // reset DMA routing state machine
-//	try_reset_routing_state();
+	try_reset_routing_state();
 
 	// Calculate 1.3 microseconds in CPU cycles (integer math safe)
 	uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;

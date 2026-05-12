@@ -49,7 +49,6 @@ extern volatile uint8_t mock_dma_write_head;
 // Declare the global flag so all .c files know it exists
 extern volatile bool is_routing_active;
 
-// Add this prototype
 bool drv_uart_has_dma_data(void);
 
 #define GPIO_TOGGLE_PIN(port, pin) ((port)->BSRR = ((port)->ODR & (pin)) ? ((pin) << 16) : (pin))

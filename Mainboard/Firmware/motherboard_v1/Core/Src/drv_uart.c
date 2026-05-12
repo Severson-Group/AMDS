@@ -35,7 +35,7 @@ volatile bool is_routing_active = false;
 #else
     // NDTR counts down, so the write head is (SIZE - NDTR).
     // Casting to uint8_t naturally handles the modulo wrap-around at 256.
-    // AMDS_RX_BUF_SIZE MUST BE 256 FOR THIS MATH TO WORK PROPERLY!
+    // AMDS_RX_BUF_SIZE MUST BE 256
 	#define GET_W1() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX1_UART.hdmarx))
 	#define GET_W2() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX2_UART.hdmarx))
 #endif
@@ -371,14 +371,14 @@ void drv_uart_init(void)
 
 static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 {
-    // Configure USART peripheral to run in transmit mode only, 8-bit data.
+    // Configure USART peripherals.
     //
     // Baud Rate: Each USART peripheral can be clocked from a variety of sources.
-    // During uart_init() function, we set the clock tree mux such that USART2
-    // and USART3 are now clocked by the system clock, which is configured to
+    // During uart_init() function, we set the clock tree mux such that all uart peripherals
+	// are now clocked by the system clock, which is configured to
     // 200 MHz via the PLL.
     //
-    // If we configure our USART using oversampling of 8, we can get a max baud
+    // If we configure our USART using oversampling of 8, we can get a baud
     // rate of 200e6 / 10 = 20 Mbps
     uint32_t max_baudrate = SYSCLK_FREQ_HZ / 10; // 20 Mbps
 
