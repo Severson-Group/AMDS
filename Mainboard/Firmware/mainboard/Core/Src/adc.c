@@ -210,7 +210,7 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
 
 // This ISR is triggered by the AMDC to sync the ADC
 // conversions to the AMDC PWM carrier waveform. In
-// this ISR, all the motherboard ADCs should be sampled.
+// this ISR, all the mainboard ADCs should be sampled.
 void EXTI3_IRQHandler(void)
 {
 	// alert daisy chained AMDSs to begin converting
@@ -511,7 +511,7 @@ static void setup_pin_CONVST(void)
 static void setup_pin_SYNC_ADC(void)
 {
     // ADC Sync is a square wave input where every edge should
-    // trigger a sampling event from the motherboard ADCs.
+    // trigger a sampling event from the mainboard ADCs.
     //
     // These edges are aligned to the PWM carrier on the AMDC.
 
