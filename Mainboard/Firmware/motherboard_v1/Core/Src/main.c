@@ -26,9 +26,13 @@ int main(void)
     // Initialize the main modules
     adc_init();
 
-    // Infinite loop (all real work is done in ISRs)
     uint8_t led = 0;
-    uint32_t ledDelta = HAL_GetTick();
+
+    // Use DWT cycle counter instead of HAL_GetTick()
+	uint32_t ledDelta = DWT->CYCCNT;
+
+	// Calculate how many CPU cycles are in 250ms.
+	uint32_t cyclesPer250ms = SystemCoreClock / 4;
 
     // Disable the SysTick ISR
     //
@@ -37,14 +41,15 @@ int main(void)
     // we do not need it to run during operation!
     //
     // Set bit 0 to 0
-//    SysTick->CTRL &= 0xFFFFFFFE;
+    SysTick->CTRL &= 0xFFFFFFFE;
 
-    // Enable the Cortex-M7 DWT Cycle Counter for perfect hardware delays
+    // Enable the Cortex-M7 DWT Cycle Counter for hardware delays
 	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
 	DWT->LAR = 0xC5ACCE55;
 	DWT->CYCCNT = 0;
 	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
+	// Infinite loop (all real work is done in ISRs)
     while (1) {
 
         // Handle DMA data from UARTs and route to correct destination.
@@ -54,17 +59,18 @@ int main(void)
         if (drv_uart_has_dma_data())
         	try_process_routing(); // This try function is thread safe
 
-        // Handle LEDs
-        if (HAL_GetTick() - ledDelta >= 250) {
-            ledDelta = HAL_GetTick();
-            drv_led_clear();
-            drv_led_on(1 << led);
-            drv_led_display();
+        // Handle LEDs using hardware cycle counts
+		if (DWT->CYCCNT - ledDelta >= cyclesPer250ms) {
+			ledDelta = DWT->CYCCNT;
+			drv_led_clear();
 
-            if (++led >= DRV_LED_NUM_TOTAL) {
-                led = 0;
-            }
-        }
+			drv_led_on(1 << led);
+			drv_led_display();
+
+			if (++led >= DRV_LED_NUM_TOTAL) {
+				led = 0;
+			}
+		}
     }
 }
 

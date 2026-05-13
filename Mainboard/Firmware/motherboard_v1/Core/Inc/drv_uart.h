@@ -49,8 +49,9 @@ extern volatile uint8_t mock_dma_write_head;
 // Declare the global flag so all .c files know it exists
 extern volatile bool is_routing_active;
 
-// Add this prototype
 bool drv_uart_has_dma_data(void);
+
+#define GPIO_TOGGLE_PIN(port, pin) ((port)->BSRR = ((port)->ODR & (pin)) ? ((pin) << 16) : (pin))
 
 void process_routing(void);
 
@@ -124,7 +125,13 @@ static inline void drv_uart_putc_fast(USART_TypeDef *uart, uint8_t data)
 
 static inline void drv_uart_wait_TC(USART_TypeDef *uart)
 {
-    // After done sending characters, must wait for TC flag!!
+    // ONLY USE THIS IF DISABLING THE UART OR GOING TO SLEEP!
+    // This function waits for all data to be sent from the USART
+    //    (it waits for both the TDR and the Shift Register to be
+    //     completely empty)
+    //
+    // Do NOT USE THIS during normal continuous data transmission
+    //       as it will add significant delays
     while (!(uart->ISR & UART_FLAG_TC)) {
         asm("nop");
     }

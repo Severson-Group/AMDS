@@ -35,7 +35,7 @@ volatile bool is_routing_active = false;
 #else
     // NDTR counts down, so the write head is (SIZE - NDTR).
     // Casting to uint8_t naturally handles the modulo wrap-around at 256.
-    // AMDS_RX_BUF_SIZE MUST BE 256 FOR THIS MATH TO WORK PROPERLY!
+    // AMDS_RX_BUF_SIZE MUST BE 256
 	#define GET_W1() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX1_UART.hdmarx))
 	#define GET_W2() (uint8_t)(AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX2_UART.hdmarx))
 #endif
@@ -67,6 +67,28 @@ void process_routing(void) {
 		uint8_t avail1 = (uint8_t)(w1 - r1);
 		uint8_t avail2 = (uint8_t)(w2 - r2);
 
+
+		if (avail1 < 3 || avail2 < 3) {
+			// 1.3us timeout to let us receive enough data for dual-stream fast path
+			uint32_t start_cycles = DWT->CYCCNT;
+
+			// Calculate 1.3 microseconds in CPU cycles (integer math safe)
+			uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
+
+			while ((avail1 >= 0 && avail1 <= 2) || (avail2 >= 0 && avail2 <= 2)) {
+				w1 = GET_W1();
+				w2 = GET_W2();
+
+				avail1 = (uint8_t)(w1 - r1);
+				avail2 = (uint8_t)(w2 - r2);
+
+				// Break if we reach the 2us timeout
+				if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
+					break;
+				}
+			}
+		}
+
         // =====================================================================
         // OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
         // =====================================================================
@@ -82,27 +104,37 @@ void process_routing(void) {
                 drv_uart_putc_fast(USART3, h2 + 4);
                 
                 // Byte 2: MSB
-                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 1)]);
                 drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 1)]);
+                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 1)]);
                 
                 // Byte 3: LSB
                 drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 2)]);
                 drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 2)]);
-                
+
                 r1 += 3;
                 r2 += 3;
                 avail1 -= 3;
                 avail2 -= 3;
 
-                uint32_t start_cycles = DWT->CYCCNT;
+                if (avail1 < 3 || avail2 < 3) {
+                	uint32_t start_cycles = DWT->CYCCNT;
 
-				// Calculate 1 microseconds in CPU cycles (integer math safe)
-				uint32_t wait_cycles = (SystemCoreClock / 1000000) * 2;
+					// Calculate 3 microseconds in CPU cycles (integer math safe)
+					uint32_t wait_cycles = (SystemCoreClock / 1000000) * 3;
 
-				// Deterministic wait for exactly 1300ns using hardware cycles, not NOPs
-				while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
-					// Spin perfectly safely
-				}
+					while ((avail1 >= 0 && avail1 <= 2) || (avail2 >= 0 && avail2 <= 2)) {
+						w1 = GET_W1();
+						w2 = GET_W2();
+
+						avail1 = (uint8_t)(w1 - r1);
+						avail2 = (uint8_t)(w2 - r2);
+
+						// Break if we reach the 3us timeout
+						if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
+							break;
+						}
+					}
+                }
             } else {
                 break; // Misaligned or corrupted header, break to let the slow-path handle it
             }
@@ -118,7 +150,7 @@ void process_routing(void) {
                 drv_uart_putc_fast(USART2, h1 + 4);
                 drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 1)]);
                 drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t)(r1 + 2)]);
-                
+
                 r1 += 3;
                 avail1 -= 3;
             } else {
@@ -132,7 +164,7 @@ void process_routing(void) {
                 drv_uart_putc_fast(USART3, h2 + 4);
                 drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 1)]);
                 drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t)(r2 + 2)]);
-                
+
                 r2 += 3;
                 avail2 -= 3;
             } else {
@@ -144,16 +176,11 @@ void process_routing(void) {
         // SLOW PATH: Fragmentation / State Recovery
         // =====================================================================
         // We only fall down here if a packet is fragmented across a DMA update
-        // boundary or if data is corrupted. We can safely revert to the simple 
+        // boundary or if data is corrupted. We can safely revert to the simple
         // 1-byte-at-a-time logic.
-        if (r1 != w1) {
+        while (r1 != w1 && s1 != STATE_IDLE) {
             uint8_t b1 = DAISY_RX1_Pool[r1++];
-            if (s1 == STATE_IDLE) {
-                if ((b1 & 0xF0) == 0x90) {
-                    drv_uart_putc_fast(USART2, b1 + 4);
-                    s1 = STATE_GOT_HEADER;
-                }
-            } else if (s1 == STATE_GOT_HEADER) {
+            if (s1 == STATE_GOT_HEADER) {
                 drv_uart_putc_fast(USART2, b1);
                 s1 = STATE_GOT_MSB;
             } else { // STATE_GOT_MSB
@@ -162,21 +189,16 @@ void process_routing(void) {
             }
         }
 
-        if (r2 != w2) {
-            uint8_t b2 = DAISY_RX2_Pool[r2++];
-            if (s2 == STATE_IDLE) {
-                if ((b2 & 0xF0) == 0x90) {
-                    drv_uart_putc_fast(USART3, b2 + 4);
-                    s2 = STATE_GOT_HEADER;
-                }
-            } else if (s2 == STATE_GOT_HEADER) {
-                drv_uart_putc_fast(USART3, b2);
-                s2 = STATE_GOT_MSB;
-            } else { // STATE_GOT_MSB
-                drv_uart_putc_fast(USART3, b2);
-                s2 = STATE_IDLE;
-            }
-        }
+        while (r2 != w2 && s2 != STATE_IDLE) {
+			uint8_t b2 = DAISY_RX2_Pool[r2++];
+			if (s2 == STATE_GOT_HEADER) {
+				drv_uart_putc_fast(USART3, b2);
+				s2 = STATE_GOT_MSB;
+			} else { // STATE_GOT_MSB
+				drv_uart_putc_fast(USART3, b2);
+				s2 = STATE_IDLE;
+			}
+		}
 
         // Check if we caught up to our cached write pointers.
         // If so, re-sample the DMA registers to see if new data arrived 
@@ -249,13 +271,14 @@ void DMA1_Stream0_IRQHandler(void)
 #elif defined(TARGET_2S)
 void USART6_IRQHandler(void)
 {
-    // Check for Parity, Overrun, Noise, or Frame errors
+	// Check for Parity, Overrun, Noise, or Frame errors
     if (__HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_PE)  ||
         __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_ORE) ||
         __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_NE)  ||
         __HAL_UART_GET_FLAG(&DAISY_RX1_UART, UART_FLAG_FE))
     {
-        // 1. Clear the error flags (Added UART_CLEAR_PEF)
+
+    	// 1. Clear the error flags
         __HAL_UART_CLEAR_IT(&DAISY_RX1_UART, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
         // 2. IMPORTANT: Re-enable DMA receiver request
@@ -282,6 +305,7 @@ void USART1_IRQHandler(void)
 		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_NE)  ||
 		__HAL_UART_GET_FLAG(&DAISY_RX2_UART, UART_FLAG_FE))
 	{
+
 		// 1. Clear the error flags
 		__HAL_UART_CLEAR_IT(&DAISY_RX2_UART, UART_CLEAR_PEF | UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF);
 
@@ -347,16 +371,16 @@ void drv_uart_init(void)
 
 static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 {
-    // Configure USART peripheral to run in transmit mode only, 8-bit data.
+    // Configure USART peripherals.
     //
     // Baud Rate: Each USART peripheral can be clocked from a variety of sources.
-    // During uart_init() function, we set the clock tree mux such that USART2
-    // and USART3 are now clocked by the system clock, which is configured to
+    // During uart_init() function, we set the clock tree mux such that all uart peripherals
+	// are now clocked by the system clock, which is configured to
     // 200 MHz via the PLL.
     //
-    // If we configure our USART using oversampling of 8, we can get a max baud
-    // rate of 200e6 / 8 = 25 Mbps
-    uint32_t max_baudrate = SYSCLK_FREQ_HZ / 8; // 25 Mbps
+    // If we configure our USART using oversampling of 8, we can get a baud
+    // rate of 200e6 / 10 = 20 Mbps
+    uint32_t max_baudrate = SYSCLK_FREQ_HZ / 10; // 20 Mbps
 
     // Also, note that the AMDC FPGA is running at 200 MHz, so the fact that the
     // baud rate is an integer multiple of the FPGA clock is actually very nice!

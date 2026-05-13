@@ -194,8 +194,8 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out)
     		send_header = true;
     	}
 
+    	drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[i + 4] >> 8));
 		drv_uart_putc_fast(USART2, (uint8_t)(sample_data_out[i] >> 8));
-		drv_uart_putc_fast(USART3, (uint8_t)(sample_data_out[i + 4] >> 8));
 
 		drv_uart_putc_fast(USART2, (uint8_t)sample_data_out[i]);
 		drv_uart_putc_fast(USART3, (uint8_t)sample_data_out[i + 4]);
@@ -221,15 +221,16 @@ void EXTI3_IRQHandler(void)
     // INJECT MOCK DMA DATA FOR BENCHMARKING
     // Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
     // =========================================================================
+	try_reset_routing_state();
     uint8_t current_head = mock_dma_write_head;
     for (int i = 0; i < 24; i++) {
         uint8_t idx = (uint8_t)(current_head + i);
         if (i % 3 == 0) {
-            UART4_DMA_Pool[idx] = 0x90; // Valid Header
-            UART5_DMA_Pool[idx] = 0x90;
+        	DAISY_RX1_Pool[idx] = 0x90; // Valid Header
+            DAISY_RX2_Pool[idx] = 0x90;
         } else {
-            UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
-            UART5_DMA_Pool[idx] = 0xBB;
+        	DAISY_RX1_Pool[idx] = 0xAA; // Dummy Payload Data
+            DAISY_RX2_Pool[idx] = 0xBB;
         }
     }
     // Instantly advance the mock hardware write head
@@ -248,7 +249,9 @@ void EXTI3_IRQHandler(void)
     // SLOW PATH: Legacy sampling for Partial Masks
     // =========================================================================
     else {
-    	try_reset_routing_state();
+#ifndef BENCHMARK_MODE
+		try_reset_routing_state();
+#endif
     	adc_sample_all_daughtercards(new_data);
 
         for (uint32_t i = 0; i < 4; i++) {
@@ -282,7 +285,7 @@ void EXTI3_IRQHandler(void)
     }
 
     // Handle any DMA data that has been received from daisy chain
-    try_process_routing();
+	try_process_routing();
 
     NVIC_ClearPendingIRQ(EXTI3_IRQn);
     __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
@@ -397,22 +400,23 @@ void EXTI15_10_IRQHandler(void)
 	// INJECT MOCK DMA DATA FOR BENCHMARKING
 	// Simulates 8 packets (24 bytes) arriving instantly on the SYNC edge.
 	// =========================================================================
+	try_reset_routing_state();
 	uint8_t current_head = mock_dma_write_head;
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 3; i++) {
 		uint8_t idx = (uint8_t)(current_head + i);
 		if (i == 0) {
-			UART4_DMA_Pool[idx] = 0x90; // Valid Header
-			UART5_DMA_Pool[idx] = 0x90;
+			DAISY_RX1_Pool[idx] = 0x90; // Valid Header
+			DAISY_RX2_Pool[idx] = 0x90;
 		} else if (i == 3) {
-			UART4_DMA_Pool[idx] = 0x94; // Valid Header
-			UART5_DMA_Pool[idx] = 0x94;
+			DAISY_RX1_Pool[idx] = 0x94; // Valid Header
+			DAISY_RX2_Pool[idx] = 0x94;
 		} else {
-			UART4_DMA_Pool[idx] = 0xAA; // Dummy Payload Data
-			UART5_DMA_Pool[idx] = 0xBB;
+			DAISY_RX1_Pool[idx] = 0xAA; // Dummy Payload Data
+			DAISY_RX2_Pool[idx] = 0xBB;
 		}
 	}
 	// Instantly advance the mock hardware write head
-	mock_dma_write_head = (uint8_t)(current_head + 6);
+	mock_dma_write_head = (uint8_t)(current_head + 3);
 #endif
 
 	uint16_t new_data[8] = { 0 };
@@ -427,7 +431,9 @@ void EXTI15_10_IRQHandler(void)
 	// SLOW PATH: Safe loop for Partial Masks
 	// =========================================================================
 	else {
+#ifndef BENCHMARK_MODE
 		try_reset_routing_state();
+#endif
 		adc_sample_1_5_daughtercards(new_data);
 
 		bool u3 = false;
@@ -448,24 +454,15 @@ void EXTI15_10_IRQHandler(void)
 		if (u3) drv_uart_putc_fast(USART3, (uint8_t)(new_data[4]));
 	}
 
-//	uint32_t start_cycles = DWT->CYCCNT;
-//
-//	// Calculate 1 microseconds in CPU cycles (integer math safe)
-//	uint32_t wait_cycles = (SystemCoreClock / 1000000);
-//
-//	// Deterministic wait for exactly 1000ns using hardware cycles, not NOPs
-//	while ((DWT->CYCCNT - start_cycles) < wait_cycles) {
-//		// Spin perfectly safely
-//	}
-//
-////  NOP128;
-////	NOP64;
-////	NOP8;
-
 	uint32_t start_cycles = DWT->CYCCNT;
+
+	// Calculate 1 microseconds in CPU cycles (integer math safe)
 	uint32_t wait_cycles = (SystemCoreClock / 1000000);
 
-	while ((DWT->CYCCNT - start_cycles) < wait_cycles);
+
+	while (!(USART2->ISR & UART_FLAG_TC) && !(USART3->ISR & UART_FLAG_TC) && ((DWT->CYCCNT - start_cycles) < wait_cycles)) {
+
+	}
 
 	//Handle any DMA data that has been received from daisy chain
 	try_process_routing(); // This try function is thread safe
