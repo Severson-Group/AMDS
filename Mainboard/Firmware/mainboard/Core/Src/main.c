@@ -56,6 +56,11 @@ int main(void)
         // Only attempt to grab the lock and route data if there
         // is actually data waiting in the DMA buffers to help the
         // external IRQ retain higher priority access to process_routing
+		// IMPORTANT NOTE: the goal is to handle all data in the
+		// interrupts. This pathway to process_routing() is being provided 
+		// as a fail safe. If it is regularly being used, consider this a 
+		// warning sign of a broader system problem as it will cause slow 
+		// link speeds.
         if (drv_uart_has_dma_data())
         	try_process_routing(); // This try function is thread safe
 
