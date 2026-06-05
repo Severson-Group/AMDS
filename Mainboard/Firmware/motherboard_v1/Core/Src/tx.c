@@ -48,5 +48,3 @@ void transmit_samples(void)
     drv_uart_wait_TC(USART2);
     drv_uart_wait_TC(USART3);
 }
-
-
