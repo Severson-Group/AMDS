@@ -1,0 +1,19 @@
+name: Check Format
+
+defaults:
+    run:
+      working-directory: ./Mainboard/Firmware/motherboard_v1
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  check-format:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install libraries for clang-format to work
+      run: wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && sudo ./llvm.sh all
+    - name: Check formatting matches clang-format
+      run: sudo chmod +x ./scripts/clang-format && ./scripts/clang-format -version && sudo bash ./scripts/check-format.sh

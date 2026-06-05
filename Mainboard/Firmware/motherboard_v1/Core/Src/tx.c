@@ -36,17 +36,15 @@ void transmit_samples(void)
         }
 
         // Send ADC sample data MSBs
-        drv_uart_putc_fast(USART2, (uint8_t)(sample1 >> 8));
-        drv_uart_putc_fast(USART3, (uint8_t)(sample2 >> 8));
+        drv_uart_putc_fast(USART2, (uint8_t) (sample1 >> 8));
+        drv_uart_putc_fast(USART3, (uint8_t) (sample2 >> 8));
 
         // Send ADC sample data LSBs
-        drv_uart_putc_fast(USART2, (uint8_t)(sample1 & 0x00FF));
-        drv_uart_putc_fast(USART3, (uint8_t)(sample2 & 0x00FF));
+        drv_uart_putc_fast(USART2, (uint8_t) (sample1 & 0x00FF));
+        drv_uart_putc_fast(USART3, (uint8_t) (sample2 & 0x00FF));
     }
 
     // Wait for entire UART transmission to complete
     drv_uart_wait_TC(USART2);
     drv_uart_wait_TC(USART3);
 }
-
-
