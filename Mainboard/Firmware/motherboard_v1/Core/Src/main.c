@@ -38,7 +38,7 @@ int main(void)
     //
     // Set bit 0 to 0
     SysTick->CTRL &= 0xFFFFFFFE;
-    
+
     while (1) {
         drv_led_clear();
         drv_led_on(1 << led);
