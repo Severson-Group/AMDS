@@ -151,6 +151,7 @@
 #define  USE_RTOS                     0U
 #define  PREFETCH_ENABLE              0U
 #define  ART_ACCLERATOR_ENABLE        0U /* To enable instruction cache and prefetch */
+#define  USE_HAL_UART_REGISTER_CALLBACKS    1U /* UART register callback disabled    */
 
 /* ########################## Assert Selection ############################## */
 /**
