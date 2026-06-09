@@ -2,7 +2,7 @@ name: Check Format
 
 defaults:
     run:
-      working-directory: ./Mainboard/Firmware/motherboard_v1
+      working-directory: ./Mainboard/Firmware/mainboard
 
 on:
   workflow_dispatch:
