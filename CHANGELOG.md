@@ -2,6 +2,14 @@
 
 This document summarizes the changes introduced to the code base for each release.
 
+## v3.0.0
+
+- Add daisy chain support
+- Add daisy chain adapter board
+- Update baud rate to 20MHz
+- Update `adc_sample` function to be faster
+- Rename motherboard folder to mainboard
+
 ## v2.0.1
 
 - Fix and standarize PCB release file packages for all boards
