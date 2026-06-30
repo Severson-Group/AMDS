@@ -51,6 +51,12 @@ volatile uint8_t active_sensor_mask = 0x11;
 #error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
 #endif
 
+uint32_t prev_start_time = 0;
+uint32_t execution_period = 0xFFFFFFFF;
+uint32_t negative_time_delay = (20000000 / 1000000) * 40; // cpu cycles
+uint8_t received_trigger = 0;
+uint8_t lock_transmission = 0;
+
 void adc_init(void) {
 	// Setup output pin which starts ADC conversions
 	setup_pin_CONVST();
@@ -136,7 +142,6 @@ static void adc_sample_all_daughtercards(uint16_t *sample_data_out) {
 }
 
 void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out) {
-	bool send_header = false;
 	// 1. Start all ADC conversions.
 	SET_PIN_CONVST12_HIGH;
 	SET_PIN_CONVST34_HIGH;
@@ -182,8 +187,17 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out) {
 	drv_spi_get_DR(SPI5, &sample_data_out[4]);
 	drv_spi_get_DR(SPI6, &sample_data_out[6]);
 
-	__disable_irq();
+	// End conversion
+	SET_PIN_CONVST12_LOW;
+	SET_PIN_CONVST34_LOW;
+	SET_PIN_CONVST56_LOW;
+	SET_PIN_CONVST78_LOW;
 
+	if (!received_trigger) {
+		lock_transmission = 0;
+		return;
+	}
+	__disable_irq();
 	for (uint8_t i = 0; i < 4; i++) {
 		drv_uart_putc_fast(USART3, (uint8_t) (sample_data_out[i + 4] >> 8));
 		drv_uart_putc_fast(USART2, (uint8_t) (sample_data_out[i] >> 8));
@@ -194,19 +208,9 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out) {
 
 	process_routing_veryfast();
 	__enable_irq();
-	// End conversion
-	SET_PIN_CONVST12_LOW;
-	SET_PIN_CONVST34_LOW;
-	SET_PIN_CONVST56_LOW;
-	SET_PIN_CONVST78_LOW;
 }
 
-// This ISR is triggered by the AMDC to sync the ADC
-// conversions to the AMDC PWM carrier waveform. In
-// this ISR, all the mainboard ADCs should be sampled.
-void EXTI3_IRQHandler(void) {
-	// alert daisy chained AMDSs to begin converting
-	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+void trigger_sensor_read_and_transmit(void) {
 
 #ifdef BENCHMARK_MODE
     // =========================================================================
@@ -231,15 +235,15 @@ void EXTI3_IRQHandler(void) {
 
 	uint16_t new_data[8] = { 0 };
 
-	// =========================================================================
-	// FAST PATH: Integrated Sampling and Transmission!
-	// =========================================================================
+// =========================================================================
+// FAST PATH: Integrated Sampling and Transmission!
+// =========================================================================
 	if (active_sensor_mask == 0xFF) {
 		adc_sample_and_transmit_fast_path(new_data);
 	}
-	// =========================================================================
-	// SLOW PATH: Legacy sampling for Partial Masks
-	// =========================================================================
+// =========================================================================
+// SLOW PATH: Legacy sampling for Partial Masks
+// =========================================================================
 	else {
 #ifndef BENCHMARK_MODE
 		try_reset_routing_state();
@@ -286,6 +290,44 @@ void EXTI3_IRQHandler(void) {
 	NVIC_ClearPendingIRQ(EXTI3_IRQn);
 	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
 	NVIC_ClearPendingIRQ(EXTI3_IRQn);
+}
+
+// This ISR is triggered by the AMDC to sync the ADC
+// conversions to the AMDC PWM carrier waveform. In
+// this ISR, all the mainboard ADCs should be sampled.
+void EXTI3_IRQHandler(void) {
+	// alert daisy chained AMDSs to begin converting
+	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+	execution_period *= 3;
+	execution_period += DWT->CYCCNT - prev_start_time;
+	execution_period >>= 2;
+	prev_start_time = DWT->CYCCNT;
+	received_trigger = 1;
+	if (lock_transmission) {
+		NVIC_ClearPendingIRQ(EXTI3_IRQn);
+		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
+		NVIC_ClearPendingIRQ(EXTI3_IRQn);
+		return;
+	}
+	lock_transmission = 1;
+	trigger_sensor_read_and_transmit();
+	lock_transmission = 0;
+}
+
+void check_timings_read_data(void) {
+	if (DWT->CYCCNT - prev_start_time
+			> execution_period - negative_time_delay) {
+		lock_transmission = 1;
+		received_trigger = 0;
+		trigger_sensor_read_and_transmit();
+		lock_transmission = 0;
+	}
+}
+
+void try_read_sensors_before_trigger(void) {
+	if (lock_transmission)
+		return;
+	check_timings_read_data();
 }
 
 #elif defined(TARGET_2S)
@@ -484,12 +526,12 @@ static void setup_pin_CONVST(void) {
 	__HAL_RCC_GPIOF_CLK_ENABLE();
 	__HAL_RCC_GPIOG_CLK_ENABLE();
 
-	// Configure GPIO pin Output Level
+// Configure GPIO pin Output Level
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10 | GPIO_PIN_11, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_6, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_8, GPIO_PIN_RESET);
 
-	// Configure GPIO pins
+// Configure GPIO pins
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -505,10 +547,10 @@ static void setup_pin_CONVST(void) {
 }
 
 static void setup_pin_SYNC_ADC(void) {
-	// ADC Sync is a square wave input where every edge should
-	// trigger a sampling event from the mainboard ADCs.
-	//
-	// These edges are aligned to the PWM carrier on the AMDC.
+// ADC Sync is a square wave input where every edge should
+// trigger a sampling event from the mainboard ADCs.
+//
+// These edges are aligned to the PWM carrier on the AMDC.
 
 	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
@@ -516,11 +558,11 @@ static void setup_pin_SYNC_ADC(void) {
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 	__HAL_RCC_GPIOD_CLK_ENABLE();
 
-	// Configure GPIO pin Output Level
+// Configure GPIO pin Output Level
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, GPIO_PIN_SET);
 
-	// Configure GPIO pins
+// Configure GPIO pins
 	GPIO_InitStruct.Pin = GPIO_PIN_3;
 	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -533,7 +575,7 @@ static void setup_pin_SYNC_ADC(void) {
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-	// EXTI interrupt init
+// EXTI interrupt init
 	HAL_NVIC_SetPriority(EXTI3_IRQn, 10, 0);
 	HAL_NVIC_EnableIRQ(EXTI3_IRQn);
 #elif defined(TARGET_2S)
