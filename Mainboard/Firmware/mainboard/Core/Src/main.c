@@ -33,8 +33,6 @@ int main(void) {
 	// Calculate how many CPU cycles are in 250ms.
 	uint32_t cyclesPer250ms = SystemCoreClock / 4;
 
-	uint32_t cyclesPerUS = SystemCoreClock / 1000000;
-
 	// Disable the SysTick ISR
 	//
 	// The SysTick ISR causes jitter in the firmware operation,
@@ -64,7 +62,6 @@ int main(void) {
 		// link speeds.
 		//if (drv_uart_has_dma_data())
 		//try_process_routing(); // This try function is thread safe
-		//if (DWT->CYCCNT - ledDelta >= cyclesPerUS)
 		try_read_sensors_before_trigger();
 		// Handle LEDs using hardware cycle counts
 		if (DWT->CYCCNT - ledDelta >= cyclesPer250ms) {

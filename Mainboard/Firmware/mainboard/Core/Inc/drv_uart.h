@@ -47,13 +47,13 @@ extern volatile uint8_t mock_dma_write_head;
 // Declare the global flag so all .c files know it exists
 extern volatile bool is_routing_active;
 
-bool drv_uart_has_dma_data(void);
+//bool drv_uart_has_dma_data(void);
 
 #define GPIO_TOGGLE_PIN(port, pin) ((port)->BSRR = ((port)->ODR & (pin)) ? ((pin) << 16) : (pin))
 
 void process_routing(void);
 void process_routing_veryfast(void);
-
+void process_routing_veryslow(void);
 /**
  * Thread-safe, non-blocking wrapper for process_routing().
  * Uses an atomic try-lock to prevent reentrancy without

@@ -59,224 +59,30 @@ void process_routing(void) {
 	uint8_t w1 = GET_W1();
 	uint8_t w2 = GET_W2();
 
-	uint8_t avail1;
-	uint8_t avail2;
-
 	// Process as long as either buffer has data
 	while ((r1 != w1) || (r2 != w2)) {
 		// Calculate how many bytes are sitting unread in the DMA buffer
 		// Because everything is cast to uint8_t, this math safely handles
 		// circular buffer wrap-around natively (e.g. w4=2, r4=254 -> avail=4)
 
-		if (avail1 < 2 || avail2 < 2) {
-			w1 = GET_W1();
-			w2 = GET_W2();
-		}
-
-		avail1 = (uint8_t) (w1 - r1);
-		avail2 = (uint8_t) (w2 - r2);
-
-//            // 1.3us timeout to let us receive enough data for dual-stream fast path
-//            uint32_t start_cycles = DWT->CYCCNT;
-//
-//            // Calculate 1.3 microseconds in CPU cycles (integer math safe)
-//            uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
-//
-//            while ((avail1 >= 0 && avail1 <= 1) || (avail2 >= 0 && avail2 <= 1)) {
-//                w1 = GET_W1();
-//                w2 = GET_W2();
-//
-//                avail1 = (uint8_t) (w1 - r1);
-//                avail2 = (uint8_t) (w2 - r2);
-//
-//                // Break if we reach the 2us timeout
-//                if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
-//                    break;
-//                }
-//            }
-//        }
-
 		// =====================================================================
-		// OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
+		// SLOW PATH: Fragmentation / State Recovery
 		// =====================================================================
-		// If both streams have at least a full 3-byte packet, process them completely
-		// interleaved to keep both hardware lines saturated simultaneously.
-		while ((s1 == STATE_IDLE && avail1 >= 2)
-				&& (s2 == STATE_IDLE && avail2 >= 2)) {
-//			uint8_t h1 = DAISY_RX1_Pool[r1];
-//			uint8_t h2 = DAISY_RX2_Pool[r2];
-
-			//if (((h1 & 0xF0) == 0x90) && ((h2 & 0xF0) == 0x90)) {
-			// Byte 1: Headers (Incremented)
-//                drv_uart_putc_fast(USART2, h1 + 4);
-//                drv_uart_putc_fast(USART3, h2 + 4);
-
-			// Byte 2: MSB
-			drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t) (r2 + 1)]);
-			drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t) (r1 + 1)]);
-
-			// Byte 3: LSB
-			drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t) (r1 + 2)]);
-			drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t) (r2 + 2)]);
-
-			r1 += 2;
-			r2 += 2;
-			avail1 -= 2;
-			avail2 -= 2;
-
-			if (avail1 < 2 || avail2 < 2) {
-
-				w1 = GET_W1();
-				w2 = GET_W2();
-
-				avail1 = (uint8_t) (w1 - r1);
-				avail2 = (uint8_t) (w2 - r2);
-
-//
-//				uint32_t start_cycles = DWT->CYCCNT;
-//
-//				// Calculate  microseconds in CPU cycles (integer math safe)
-//				uint32_t wait_cycles = (SystemCoreClock / 1000000);
-//
-//				while ((avail1 >= 0 && avail1 <= 1)
-//						|| (avail2 >= 0 && avail2 <= 1)) {
-//					w1 = GET_W1();
-//					w2 = GET_W2();
-//
-//					avail1 = (uint8_t) (w1 - r1);
-//					avail2 = (uint8_t) (w2 - r2);
-//
-//					// Break if we reach the us timeout
-//					if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
-//						break;
-//					}
-//				}
-			}
-			//} else {
-			//    break; // Misaligned or corrupted header, break to let the slow-path handle it
-			//}
+		// We only fall down here if a packet is fragmented across a DMA update
+		// boundary or if data is corrupted. We can safely revert to the simple
+		// 1-byte-at-a-time logic.
+		if (r1 != w1) {
+			uint8_t b1 = DAISY_RX1_Pool[r1++];
+			drv_uart_putc_fast(USART2, b1);
 		}
 
-//		// =====================================================================
-//		// OPTIMIZATION 2: SINGLE-STREAM FAST PATHS
-//		// =====================================================================
-//		// If one UART receives data slightly faster than the other, process it.
-//		while (s1 == STATE_IDLE && avail1 >= 2) {
-//			uint8_t h1 = DAISY_RX1_Pool[r1];
-//			//if ((h1 & 0xF0) == 0x90) {
-//			//drv_uart_putc_fast(USART2, h1 + 4);
-//			drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t) (r1 + 1)]);
-//			drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t) (r1 + 2)]);
-//
-//			r1 += 2;
-//			avail1 -= 2;
-//			//} else {
-//			//    break;
-//			//}
-//		}
-//
-//		while (s2 == STATE_IDLE && avail2 >= 2) {
-//			uint8_t h2 = DAISY_RX2_Pool[r2];
-//			//if ((h2 & 0xF0) == 0x90) {
-//			//drv_uart_putc_fast(USART3, h2 + 4);
-//			drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t) (r2 + 1)]);
-//			drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t) (r2 + 2)]);
-//
-//			r2 += 2;
-//			avail2 -= 2;
-//			//} else {
-//			//    break;
-//			//}
-//		}
-//
-//		// =====================================================================
-//		// SLOW PATH: Fragmentation / State Recovery
-//		// =====================================================================
-//		// We only fall down here if a packet is fragmented across a DMA update
-//		// boundary or if data is corrupted. We can safely revert to the simple
-//		// 1-byte-at-a-time logic.
-//		while (r1 != w1 && s1 != STATE_IDLE) {
-//			uint8_t b1 = DAISY_RX1_Pool[r1++];
-//			if (s1 == STATE_GOT_HEADER) {
-//				drv_uart_putc_fast(USART2, b1);
-//				s1 = STATE_GOT_MSB;
-//			} else { // STATE_GOT_MSB
-//				drv_uart_putc_fast(USART2, b1);
-//				s1 = STATE_IDLE;
-//			}
-//		}
-//
-//		while (r2 != w2 && s2 != STATE_IDLE) {
-//			uint8_t b2 = DAISY_RX2_Pool[r2++];
-//			if (s2 == STATE_GOT_HEADER) {
-//				drv_uart_putc_fast(USART3, b2);
-//				s2 = STATE_GOT_MSB;
-//			} else { // STATE_GOT_MSB
-//				drv_uart_putc_fast(USART3, b2);
-//				s2 = STATE_IDLE;
-//			}
-//		}
-
-		// Check if we caught up to our cached write pointers.
-		// If so, re-sample the DMA registers to see if new data arrived
-		// while we were actively processing the previous bytes.
-		if ((r1 == w1) && (r2 == w2)) {
-			w1 = GET_W1();
-			w2 = GET_W2();
+		if (r2 != w2) {
+			uint8_t b2 = DAISY_RX2_Pool[r2++];
+			drv_uart_putc_fast(USART3, b2);
 		}
-	}
 
-	// Store states back
-	tracker1.read_index = r1;
-	tracker2.read_index = r2;
-	tracker1.state = s1;
-	tracker2.state = s2;
-}
-
-void process_routing_veryfast(void) {
-	// Load tracking state into local CPU registers
-	uint8_t r1 = tracker1.read_index;
-	uint8_t r2 = tracker2.read_index;
-	uint8_t s1 = tracker1.state;
-	uint8_t s2 = tracker2.state;
-
-	uint8_t w1 = GET_W1();
-	uint8_t w2 = GET_W2();
-
-	uint8_t avail1 = (uint8_t) (w1 - r1);
-	uint8_t avail2 = (uint8_t) (w2 - r2);
-
-	// =====================================================================
-	// OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
-	// =====================================================================
-	// If both streams have at least a full 3-byte packet, process them completely
-	// interleaved to keep both hardware lines saturated simultaneously.
-	while ((s1 == STATE_IDLE && avail1 >= 2)
-			&& (s2 == STATE_IDLE && avail2 >= 2)) {
-
-		// Byte 2: MSB
-		drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t) (r2 + 1)]);
-		drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t) (r1 + 1)]);
-
-		// Byte 3: LSB
-		drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t) (r1 + 2)]);
-		drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t) (r2 + 2)]);
-
-		r1 += 2;
-		r2 += 2;
-
-		if (avail1 < 4 || avail2 < 4) {
-
-			w1 = GET_W1();
-			w2 = GET_W2();
-
-			avail1 = (uint8_t) (w1 - r1);
-			avail2 = (uint8_t) (w2 - r2);
-
-		} else {
-			avail1 -= 2;
-			avail2 -= 2;
-		}
+		w1 = GET_W1();
+		w2 = GET_W2();
 	}
 
 	// Store states back
@@ -463,7 +269,6 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 
 	if (HAL_UART_Init(huart) != HAL_OK) {
 		PANIC
-			;
 	}
 
 #if defined(TARGET_AMDS)
@@ -477,7 +282,6 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 		if (HAL_UART_Receive_DMA(&DAISY_RX1_UART, DAISY_RX1_Pool,
 		AMDS_RX_BUF_SIZE) != HAL_OK) {
 			PANIC
-				;
 		}
 	}
 
@@ -491,7 +295,6 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
 		if (HAL_UART_Receive_DMA(&DAISY_RX2_UART, DAISY_RX2_Pool,
 		AMDS_RX_BUF_SIZE) != HAL_OK) {
 			PANIC
-				;
 		}
 	}
 #elif defined(TARGET_2S)
@@ -602,7 +405,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle) {
 
 		if (HAL_DMA_Init(&hdma_uart4_rx) != HAL_OK) {
 			PANIC
-				;
+			;
 		}
 
 		// This links the DMA handle to the UART handle
@@ -643,7 +446,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle) {
 
 		if (HAL_DMA_Init(&hdma_uart5_rx) != HAL_OK) {
 			PANIC
-				;
+			;
 		}
 
 		// This links the DMA handle to the UART handle
