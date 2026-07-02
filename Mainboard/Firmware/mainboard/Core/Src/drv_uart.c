@@ -353,8 +353,8 @@ void drv_uart_init(void)
     MX_USART_UART_Init(&DAISY_RX1_UART, UART4);
     MX_USART_UART_Init(&DAISY_RX2_UART, UART5);
 #elif defined(TARGET_2S)
-    MX_USART_UART_Init(&DAISY_RX1_UART, USART6);
-    MX_USART_UART_Init(&DAISY_RX2_UART, USART1);
+    MX_USART_UART_Init(&DAISY_RX1_UART, USART1);
+    MX_USART_UART_Init(&DAISY_RX2_UART, USART6);
 #else
 #error "Please define a target board (TARGET_AMDS or TARGET_2S)!"
 #endif
