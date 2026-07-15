@@ -2,6 +2,10 @@
 
 This document summarizes the changes introduced to the code base for each release.
 
+## v3.0.1
+
+- Fix swapped `UART` channels on `FBC` board when daisy chained
+
 ## v3.0.0
 
 - Add daisy chain support
