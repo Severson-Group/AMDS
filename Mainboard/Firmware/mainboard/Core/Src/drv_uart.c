@@ -432,7 +432,7 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
         __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
         __HAL_UART_FLUSH_DRREGISTER(huart);
 
-        if (HAL_UART_Receive_DMA(&DAISY_RX1_UART, DAISY_RX1_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
+        if (HAL_UART_Receive_DMA(&DAISY_RX1_UART, DAISY_RX2_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
             PANIC;
         }
     } else if (huart->Instance == USART1) {
@@ -442,7 +442,7 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
         __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF);
         __HAL_UART_FLUSH_DRREGISTER(huart);
 
-        if (HAL_UART_Receive_DMA(&DAISY_RX2_UART, DAISY_RX2_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
+        if (HAL_UART_Receive_DMA(&DAISY_RX2_UART, DAISY_RX1_Pool, AMDS_RX_BUF_SIZE) != HAL_OK) {
             PANIC;
         }
     }
