@@ -44,7 +44,7 @@ static void setup_pin_CONVST(void);
 // Global bitmask: 1 = Active, 0 = Inactive.
 // For example: 0b00001111 (0x0F) means channels 1-4 are active, 5-8 are disabled.
 #if defined(TARGET_AMDS)
-volatile uint8_t active_sensor_mask = 0x11;
+volatile uint8_t active_sensor_mask = 0xFF;
 #elif defined(TARGET_2S)
 volatile uint8_t active_sensor_mask = 0x11;
 #else
@@ -211,6 +211,8 @@ void adc_sample_and_transmit_fast_path(uint16_t *sample_data_out) {
 void EXTI3_IRQHandler(void) {
 	// alert daisy chained AMDSs to begin converting
 	GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+	// We can still receive DMA while IRQ are disabled, and we don't get
+	// any annoying 5us pauses that would happen normally if IRQ was enabled.
 	__disable_irq();
 
 #ifdef BENCHMARK_MODE
@@ -396,6 +398,8 @@ void adc_sample_and_transmit_1_5_fast_path(uint16_t *sample_data_out) {
 void EXTI15_10_IRQHandler(void) {
 	// alert daisy chained AMDSs to begin converting
 	GPIO_TOGGLE_PIN(GPIOG, GPIO_PIN_14);
+	// We can still receive DMA while IRQ are disabled, and we don't get
+	// any annoying 5us pauses that would happen normally if IRQ was enabled.
 	__disable_irq();
 #ifdef BENCHMARK_MODE
     // =========================================================================
