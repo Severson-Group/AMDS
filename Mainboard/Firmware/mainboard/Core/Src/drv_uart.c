@@ -4,6 +4,20 @@
 #include "platform.h"
 #include <stdint.h>
 
+// clang-format off
+
+#define NOP1   asm("nop")
+#define NOP2   NOP1;NOP1
+#define NOP4   NOP2;NOP2
+#define NOP8   NOP4;NOP4
+#define NOP16  NOP8;NOP8
+#define NOP32  NOP16;NOP16
+#define NOP64  NOP32;NOP32
+#define NOP128 NOP64;NOP64
+#define NOP256 NOP128;NOP128
+
+// clang-format on
+
 static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle);
 
 UART_HandleTypeDef huart2;
@@ -50,8 +64,8 @@ bool drv_uart_has_dma_data(void) {
 }
 
 void process_routing(void) {
-	// Calculate 1 microseconds in CPU cycles (integer math safe)
-	const uint32_t wait_cycles = (SystemCoreClock / 1000000);
+	// Calculate x microseconds in CPU cycles (integer math safe)
+	const uint32_t wait_cycles = (SystemCoreClock / 1000000) / 2;
 
 	// Load tracking state into local CPU registers
 	uint8_t r1 = tracker1.read_index;
@@ -63,32 +77,32 @@ void process_routing(void) {
 	uint8_t w2 = GET_W2();
 	uint8_t b1;
 	uint8_t b2;
-
+	//__disable_irq();
 	// Process as long as either buffer has data
 	//(r1 != w1) || (r2 != w2)
 	for (int i = 0; i < 24; i++) {
 		// Calculate how many bytes are sitting unread in the DMA buffer
 		// Because everything is cast to uint8_t, this math safely handles
 		// circular buffer wrap-around natively (e.g. w4=2, r4=254 -> avail=4)
-		if (w1 - r1 + w2 - r2 == 0) {
-			// 1.3us timeout to let us receive enough data for dual-stream fast path
+		if (w1 - r1 == 0 || w2 - r2 == 0) {
+			// timeout to let us receive enough data for dual-stream fast path
 			uint32_t start_cycles = DWT->CYCCNT;
 
-			while ((w1 - r1 + w2 - r2 == 0)
-					&& (DWT->CYCCNT - start_cycles) < wait_cycles) {
+			while ((DWT->CYCCNT - start_cycles) < wait_cycles
+					&& ((w1 - r1 == 0 || w2 - r2 == 0))) {
 				w1 = GET_W1();
 				w2 = GET_W2();
 			}
 		}
-
 //		// =====================================================================
 //		// SLOW PATH: Fragmentation / State Recovery
 //		// =====================================================================
 //		// We only fall down here if a packet is fragmented across a DMA update
 //		// boundary or if data is corrupted. We can safely revert to the simple
 //		// 1-byte-at-a-time logic.
-		for (int bytesSent = 0; bytesSent < 9 && (w1 - r1 + w2 - r2) != 0;
+		for (int bytesSent = 0; bytesSent < 24 && (w1 - r1 + w2 - r2) != 0;
 				bytesSent++) {
+
 			if (r1 != w1) {
 				b1 = DAISY_RX1_Pool[r1++];
 				if (s1 == STATE_IDLE && ((b1 & 0xF0) == 0x90)) {
@@ -106,7 +120,7 @@ void process_routing(void) {
 					drv_uart_putc_fast(USART3, b2 + 4);
 					s2 = STATE_GOT_HEADER;
 				} else if (s2 != STATE_IDLE) {
-					drv_uart_putc_fast(USART3, b1);
+					drv_uart_putc_fast(USART3, b2);
 					s2--;
 				}
 			}
@@ -114,6 +128,7 @@ void process_routing(void) {
 			w2 = GET_W2();
 		}
 	}
+	//__enable_irq();
 
 	// Store states back
 	tracker1.read_index = r1;

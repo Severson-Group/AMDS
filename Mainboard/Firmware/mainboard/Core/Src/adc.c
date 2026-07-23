@@ -392,7 +392,7 @@ void adc_sample_and_transmit_1_5_fast_path(uint16_t *sample_data_out) {
 void EXTI15_10_IRQHandler(void) {
 	// alert daisy chained AMDSs to begin converting
 	GPIO_TOGGLE_PIN(GPIOG, GPIO_PIN_14);
-
+	__disable_irq();
 #ifdef BENCHMARK_MODE
     // =========================================================================
     // INJECT MOCK DMA DATA FOR BENCHMARKING
@@ -454,18 +454,19 @@ void EXTI15_10_IRQHandler(void) {
 			drv_uart_putc_fast(USART3, (uint8_t) (new_data[4]));
 	}
 
-//	uint32_t start_cycles = DWT->CYCCNT;
-//
-//	// Calculate 1 microseconds in CPU cycles (integer math safe)
-//	uint32_t wait_cycles = (SystemCoreClock / 1000000);
-//
-//	while (!(USART2->ISR & UART_FLAG_TC) && !(USART3->ISR & UART_FLAG_TC)
-//			&& ((DWT->CYCCNT - start_cycles) < wait_cycles)) {
-//	}
+	uint32_t start_cycles = DWT->CYCCNT;
+
+	// Calculate 1 microseconds in CPU cycles (integer math safe)
+	uint32_t wait_cycles = (SystemCoreClock / 1000000);
+
+	while (!(USART2->ISR & UART_FLAG_TC) && !(USART3->ISR & UART_FLAG_TC)
+			&& ((DWT->CYCCNT - start_cycles) < wait_cycles)) {
+	}
 
 	// Handle any DMA data that has been received from daisy chain
-	try_process_routing(); // This try function is thread safe
+	process_routing(); // This try function is thread safe
 
+	__enable_irq();
 	// Clear all pending IRQs for ADC conversions at the
 	// end of this ISR so that the system realigns the
 	// ADC conversions with the SYNC signal from the AMDC.
