@@ -83,11 +83,12 @@ void process_routing(void) {
 	// Process as long as either buffer has data
 	//(r1 != w1) || (r2 != w2)
 	for (int i = 0;
-			i < 24 && (DWT->CYCCNT - function_start_time) < maximum_wait_cycles;
+			i < 24/* && (DWT->CYCCNT - function_start_time) < maximum_wait_cycles*/;
 			i++) {
 		// Calculate how many bytes are sitting unread in the DMA buffer
 		// Because everything is cast to uint8_t, this math safely handles
 		// circular buffer wrap-around natively (e.g. w4=2, r4=254 -> avail=4)
+#ifdef TARGET_2S
 		if (w1 - r1 == 0 || w2 - r2 == 0) {
 			// timeout to let us receive enough data for dual-stream fast path
 			uint32_t start_cycles = DWT->CYCCNT;
@@ -98,43 +99,40 @@ void process_routing(void) {
 				w2 = GET_W2();
 			}
 		}
+#endif
 //		// =====================================================================
 //		// SLOW PATH: Fragmentation / State Recovery
 //		// =====================================================================
 //		// We only fall down here if a packet is fragmented across a DMA update
 //		// boundary or if data is corrupted. We can safely revert to the simple
 //		// 1-byte-at-a-time logic.
-		for (int bytesSent = 0; bytesSent < 24 && (w1 - r1 + w2 - r2) != 0;
-				bytesSent++) {
+		//for (int bytesSent = 0; bytesSent < 24 && (w1 - r1 + w2 - r2) != 0;
+		//		bytesSent++) {
 
-			if (r1 != w1) {
-				b1 = DAISY_RX1_Pool[r1++];
-				if (s1 == STATE_IDLE && ((b1 & 0xF0) == 0x90)) {
-					drv_uart_putc_fast(USART2, b1 + 4);
-					s1 = STATE_GOT_HEADER;
-					i++;
-				} else if (s1 != STATE_IDLE) {
-					drv_uart_putc_fast(USART2, b1);
-					s1--;
-					i++;
-				}
+		if (r1 != w1) {
+			b1 = DAISY_RX1_Pool[r1++];
+			if (s1 == STATE_IDLE && ((b1 & 0xF0) == 0x90)) {
+				drv_uart_putc_fast(USART2, b1 + 4);
+				s1 = STATE_GOT_HEADER;
+			} else if (s1 != STATE_IDLE) {
+				drv_uart_putc_fast(USART2, b1);
+				s1--;
 			}
-
-			if (r2 != w2) {
-				b2 = DAISY_RX2_Pool[r2++];
-				if (s2 == STATE_IDLE && ((b2 & 0xF0) == 0x90)) {
-					drv_uart_putc_fast(USART3, b2 + 4);
-					s2 = STATE_GOT_HEADER;
-					i++;
-				} else if (s2 != STATE_IDLE) {
-					drv_uart_putc_fast(USART3, b2);
-					s2--;
-					i++;
-				}
-			}
-			w1 = GET_W1();
-			w2 = GET_W2();
 		}
+
+		if (r2 != w2) {
+			b2 = DAISY_RX2_Pool[r2++];
+			if (s2 == STATE_IDLE && ((b2 & 0xF0) == 0x90)) {
+				drv_uart_putc_fast(USART3, b2 + 4);
+				s2 = STATE_GOT_HEADER;
+			} else if (s2 != STATE_IDLE) {
+				drv_uart_putc_fast(USART3, b2);
+				s2--;
+			}
+		}
+		w1 = GET_W1();
+		w2 = GET_W2();
+		//}
 	}
 	//__enable_irq();
 

@@ -44,7 +44,7 @@ static void setup_pin_CONVST(void);
 // Global bitmask: 1 = Active, 0 = Inactive.
 // For example: 0b00001111 (0x0F) means channels 1-4 are active, 5-8 are disabled.
 #if defined(TARGET_AMDS)
-volatile uint8_t active_sensor_mask = 0xFF;
+volatile uint8_t active_sensor_mask = 0x11;
 #elif defined(TARGET_2S)
 volatile uint8_t active_sensor_mask = 0x11;
 #else
