@@ -66,6 +66,8 @@ bool drv_uart_has_dma_data(void) {
 void process_routing(void) {
 	// Calculate x microseconds in CPU cycles (integer math safe)
 	const uint32_t wait_cycles = (SystemCoreClock / 1000000) / 2;
+	const uint32_t maximum_wait_cycles = (SystemCoreClock / 1000000) * 32;
+	uint32_t function_start_time = DWT->CYCCNT;
 
 	// Load tracking state into local CPU registers
 	uint8_t r1 = tracker1.read_index;
@@ -80,7 +82,9 @@ void process_routing(void) {
 	//__disable_irq();
 	// Process as long as either buffer has data
 	//(r1 != w1) || (r2 != w2)
-	for (int i = 0; i < 24; i++) {
+	for (int i = 0;
+			i < 24 && (DWT->CYCCNT - function_start_time) < maximum_wait_cycles;
+			i++) {
 		// Calculate how many bytes are sitting unread in the DMA buffer
 		// Because everything is cast to uint8_t, this math safely handles
 		// circular buffer wrap-around natively (e.g. w4=2, r4=254 -> avail=4)
@@ -108,9 +112,11 @@ void process_routing(void) {
 				if (s1 == STATE_IDLE && ((b1 & 0xF0) == 0x90)) {
 					drv_uart_putc_fast(USART2, b1 + 4);
 					s1 = STATE_GOT_HEADER;
+					i++;
 				} else if (s1 != STATE_IDLE) {
 					drv_uart_putc_fast(USART2, b1);
 					s1--;
+					i++;
 				}
 			}
 
@@ -119,9 +125,11 @@ void process_routing(void) {
 				if (s2 == STATE_IDLE && ((b2 & 0xF0) == 0x90)) {
 					drv_uart_putc_fast(USART3, b2 + 4);
 					s2 = STATE_GOT_HEADER;
+					i++;
 				} else if (s2 != STATE_IDLE) {
 					drv_uart_putc_fast(USART3, b2);
 					s2--;
+					i++;
 				}
 			}
 			w1 = GET_W1();

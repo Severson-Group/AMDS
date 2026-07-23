@@ -61,7 +61,7 @@ int main(void) {
 		// warning sign of a broader system problem as it will cause slow
 		// link speeds.
 		//if (drv_uart_has_dma_data())
-		//    try_process_routing(); // This try function is thread safe
+		//	try_process_routing(); // This try function is thread safe
 
 		// Handle LEDs using hardware cycle counts
 		if (DWT->CYCCNT - ledDelta >= cyclesPer250ms) {
