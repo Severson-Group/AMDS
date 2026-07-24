@@ -4,20 +4,6 @@
 #include "platform.h"
 #include <stdint.h>
 
-// clang-format off
-
-#define NOP1   asm("nop")
-#define NOP2   NOP1;NOP1
-#define NOP4   NOP2;NOP2
-#define NOP8   NOP4;NOP4
-#define NOP16  NOP8;NOP8
-#define NOP32  NOP16;NOP16
-#define NOP64  NOP32;NOP32
-#define NOP128 NOP64;NOP64
-#define NOP256 NOP128;NOP128
-
-// clang-format on
-
 static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle);
 
 UART_HandleTypeDef huart2;
@@ -66,7 +52,7 @@ bool drv_uart_has_dma_data(void)
 
 void process_routing(void)
 {
-    // Calculate x microseconds in CPU cycles (integer math safe)
+    // Calculate 0.5 microseconds in CPU cycles (integer math safe)
     const uint32_t wait_cycles = (SystemCoreClock / 1000000) / 2;
 
     // Load tracking state into local CPU registers
