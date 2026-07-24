@@ -10,66 +10,69 @@
 // Modules
 #include "adc.h"
 
-int main(void) {
-	// Reset of all peripherals, Initializes the Flash interface and the Systick
-	HAL_Init();
+int main(void)
+{
+    // Reset of all peripherals, Initializes the Flash interface and the Systick
+    HAL_Init();
 
-	// Configure the system clock
-	drv_clock_init();
+    // Configure the system clock
+    drv_clock_init();
 
-	// Initialize peripherals
-	drv_spi_init();
-	drv_uart_init();
-	drv_led_init();
+    // Initialize peripherals
+    drv_spi_init();
+    drv_uart_init();
+    drv_led_init();
 
-	// Initialize the main modules
-	adc_init();
+    // Initialize the main modules
+    adc_init();
 
-	uint8_t led = 0;
+    uint8_t led = 0;
 
-	// Use DWT cycle counter instead of HAL_GetTick()
-	uint32_t ledDelta = DWT->CYCCNT;
+    // Use DWT cycle counter instead of HAL_GetTick()
+    uint32_t ledDelta = DWT->CYCCNT;
 
-	// Calculate how many CPU cycles are in 250ms.
-	uint32_t cyclesPer250ms = SystemCoreClock / 4;
+    // Calculate how many CPU cycles are in 250ms.
+    uint32_t cyclesPer250ms = SystemCoreClock / 4;
 
-	// Disable the SysTick ISR
-	//
-	// The SysTick ISR causes jitter in the firmware operation,
-	// and since this project does not use the SysTick features,
-	// we do not need it to run during operation!
-	//
-	// Set bit 0 to 0
-	SysTick->CTRL &= 0xFFFFFFFE;
+    // Disable the SysTick ISR
+    //
+    // The SysTick ISR causes jitter in the firmware operation,
+    // and since this project does not use the SysTick features,
+    // we do not need it to run during operation!
+    //
+    // Set bit 0 to 0
+    SysTick->CTRL &= 0xFFFFFFFE;
 
-	// Enable the Cortex-M7 DWT Cycle Counter for hardware delays
-	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-	DWT->LAR = 0xC5ACCE55;
-	DWT->CYCCNT = 0;
-	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    // Enable the Cortex-M7 DWT Cycle Counter for hardware delays
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->LAR = 0xC5ACCE55;
+    DWT->CYCCNT = 0;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
-	// Infinite loop (all real work is done in ISRs)
-	while (1) {
-		// Handle LEDs using hardware cycle counts
-		if (DWT->CYCCNT - ledDelta >= cyclesPer250ms) {
-			ledDelta = DWT->CYCCNT;
-			drv_led_clear();
+    // Infinite loop (all real work is done in ISRs)
+    while (1) {
+        // Handle LEDs using hardware cycle counts
+        if (DWT->CYCCNT - ledDelta >= cyclesPer250ms) {
+            ledDelta = DWT->CYCCNT;
+            drv_led_clear();
 
-			drv_led_on(1 << led);
-			drv_led_display();
+            drv_led_on(1 << led);
+            drv_led_display();
 
-			if (++led >= DRV_LED_NUM_TOTAL) {
-				led = 0;
-			}
-		}
-	}
+            if (++led >= DRV_LED_NUM_TOTAL) {
+                led = 0;
+            }
+        }
+    }
 }
 
-void HAL_MspInit(void) {
-	__HAL_RCC_PWR_CLK_ENABLE();
-	__HAL_RCC_SYSCFG_CLK_ENABLE();
+void HAL_MspInit(void)
+{
+    __HAL_RCC_PWR_CLK_ENABLE();
+    __HAL_RCC_SYSCFG_CLK_ENABLE();
 }
 
-void SysTick_Handler(void) {
-	HAL_IncTick();
+void SysTick_Handler(void)
+{
+    HAL_IncTick();
 }
