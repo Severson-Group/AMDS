@@ -42,9 +42,6 @@ extern uint8_t DAISY_RX2_Pool[AMDS_RX_BUF_SIZE];
 extern volatile uint8_t mock_dma_write_head;
 #endif
 
-// Declare the global flag so all .c files know it exists
-extern volatile bool is_routing_active;
-
 bool drv_uart_has_dma_data(void);
 
 #define GPIO_TOGGLE_PIN(port, pin) ((port)->BSRR = ((port)->ODR & (pin)) ? ((pin) << 16) : (pin))
@@ -52,62 +49,25 @@ bool drv_uart_has_dma_data(void);
 void process_routing(void);
 
 /**
- * Thread-safe, non-blocking wrapper for process_routing().
- * Uses an atomic try-lock to prevent reentrancy without
- * stalling the CPU or blinding interrupts for too long.
- */
-static inline void try_process_routing(void)
-{
-    // 1. Enter brief critical section (approx. 3 CPU cycles)
-    __disable_irq();
-
-    // 2. Check if the lock is already claimed
-    if (is_routing_active) {
-        // Someone else is already routing. Safely abort.
-        __enable_irq();
-        return;
-    }
-
-    // 3. Claim the lock
-    is_routing_active = true;
-
-    // 4. Exit critical section BEFORE the heavy lifting
-    __enable_irq();
-
-    // 5. Perform the actual routing with interrupts perfectly active
-    process_routing();
-
-    // 6. Release the lock when finished
-    // (This single write is inherently atomic on a 32-bit ARM core,
-    // so we don't need to disable interrupts just to clear it).
-    is_routing_active = false;
-}
-
-/**
  * Attempt to instantly reset the routing state machine and flush buffers.
  * To be called ONLY from the very beginning of EXTI3_IRQHandler.
  */
 static inline void try_reset_routing_state(void)
 {
-    // Because we are inside an IRQ, we preempted main().
-    // We do NOT need to disable interrupts here to check the flag safely.
-    if (!is_routing_active) {
+    // 1. Reset state machines to gracefully await the next packet
+    tracker1.state = STATE_IDLE;
+    tracker2.state = STATE_IDLE;
 
-        // 1. Reset state machines to gracefully await the next packet
-        tracker1.state = STATE_IDLE;
-        tracker2.state = STATE_IDLE;
-
-        // 2. Soft-flush the DMA buffers.
-        // We advance our read pointers to exactly where the DMA hardware
-        // is currently writing. All old, unprocessed bytes are instantly discarded.
+    // 2. Soft-flush the DMA buffers.
+    // We advance our read pointers to exactly where the DMA hardware
+    // is currently writing. All old, unprocessed bytes are instantly discarded.
 #ifdef BENCHMARK_MODE
-        tracker1.read_index = mock_dma_write_head;
-        tracker2.read_index = mock_dma_write_head;
+    tracker1.read_index = mock_dma_write_head;
+    tracker2.read_index = mock_dma_write_head;
 #else
-        tracker1.read_index = (uint8_t) (AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX1_UART.hdmarx));
-        tracker2.read_index = (uint8_t) (AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX2_UART.hdmarx));
+    tracker1.read_index = (uint8_t) (AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX1_UART.hdmarx));
+    tracker2.read_index = (uint8_t) (AMDS_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(DAISY_RX2_UART.hdmarx));
 #endif
-    }
 }
 
 static inline void drv_uart_putc_fast(USART_TypeDef *uart, uint8_t data)
