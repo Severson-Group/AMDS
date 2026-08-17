@@ -213,6 +213,9 @@ void EXTI3_IRQHandler(void)
 {
     // alert daisy chained AMDSs to begin converting
     GPIO_TOGGLE_PIN(GPIOD, GPIO_PIN_1);
+    // We can still receive DMA while IRQ are disabled, and we don't get
+    // any annoying 5us pauses that would happen normally if IRQ was enabled.
+    __disable_irq();
 
 #ifdef BENCHMARK_MODE
     // =========================================================================
@@ -285,7 +288,8 @@ void EXTI3_IRQHandler(void)
     }
 
     // Handle any DMA data that has been received from daisy chain
-    try_process_routing();
+    process_routing();
+    __enable_irq();
 
     NVIC_ClearPendingIRQ(EXTI3_IRQn);
     __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_3);
@@ -394,7 +398,9 @@ void EXTI15_10_IRQHandler(void)
 {
     // alert daisy chained AMDSs to begin converting
     GPIO_TOGGLE_PIN(GPIOG, GPIO_PIN_14);
-
+    // We can still receive DMA while IRQ are disabled, and we don't get
+    // any annoying 5us pauses that would happen normally if IRQ was enabled.
+    __disable_irq();
 #ifdef BENCHMARK_MODE
     // =========================================================================
     // INJECT MOCK DMA DATA FOR BENCHMARKING
@@ -466,8 +472,9 @@ void EXTI15_10_IRQHandler(void)
     }
 
     // Handle any DMA data that has been received from daisy chain
-    try_process_routing(); // This try function is thread safe
+    process_routing(); // This try function is thread safe
 
+    __enable_irq();
     // Clear all pending IRQs for ADC conversions at the
     // end of this ISR so that the system realigns the
     // ADC conversions with the SYNC signal from the AMDC.
