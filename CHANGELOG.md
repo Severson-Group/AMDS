@@ -2,6 +2,11 @@
 
 This document summarizes the changes introduced to the code base for each release.
 
+## v3.0.2
+
+- Fix daisy chain race condition in data process routing function
+- Optimize timing for daisy chain communication
+
 ## v3.0.1
 
 - Fix swapped `UART` channels on `FBC` board when daisy chained
