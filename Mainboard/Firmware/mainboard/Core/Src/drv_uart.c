@@ -52,6 +52,9 @@ bool drv_uart_has_dma_data(void)
 
 void process_routing(void)
 {
+    // Calculate 0.5 microseconds in CPU cycles (integer math safe)
+    const uint32_t wait_cycles = (SystemCoreClock / 1000000) / 2;
+
     // Load tracking state into local CPU registers
     uint8_t r1 = tracker1.read_index;
     uint8_t r2 = tracker2.read_index;
@@ -60,154 +63,53 @@ void process_routing(void)
 
     uint8_t w1 = GET_W1();
     uint8_t w2 = GET_W2();
+    uint8_t b1;
+    uint8_t b2;
 
-    // Process as long as either buffer has data
-    while ((r1 != w1) || (r2 != w2)) {
-        // Calculate how many bytes are sitting unread in the DMA buffer
-        // Because everything is cast to uint8_t, this math safely handles
-        // circular buffer wrap-around natively (e.g. w4=2, r4=254 -> avail=4)
-        uint8_t avail1 = (uint8_t) (w1 - r1);
-        uint8_t avail2 = (uint8_t) (w2 - r2);
+    // Attempt to process 24 bytes, the maximum amount of data we ever expect to see here.
+    for (int i = 0; i < 24; i++) {
 
-        if (avail1 < 3 || avail2 < 3) {
-            // 1.3us timeout to let us receive enough data for dual-stream fast path
+        // For whatever reason, this block is required to get the FBC timings stable,
+        // but on the AMDS it slows down the entire transmission, regardless of the
+        // number of enabled sensor cards.
+#ifdef TARGET_2S
+        // If either read pointer has caught up to the write pointer
+        if (w1 - r1 == 0 || w2 - r2 == 0) {
+            // timeout to let us receive data
             uint32_t start_cycles = DWT->CYCCNT;
 
-            // Calculate 1.3 microseconds in CPU cycles (integer math safe)
-            uint32_t wait_cycles = (SystemCoreClock / 1000000) * 13 / 10;
-
-            while ((avail1 >= 0 && avail1 <= 2) || (avail2 >= 0 && avail2 <= 2)) {
+            while ((DWT->CYCCNT - start_cycles) < wait_cycles && ((w1 - r1 == 0 || w2 - r2 == 0))) {
                 w1 = GET_W1();
                 w2 = GET_W2();
-
-                avail1 = (uint8_t) (w1 - r1);
-                avail2 = (uint8_t) (w2 - r2);
-
-                // Break if we reach the 2us timeout
-                if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
-                    break;
-                }
             }
         }
+#endif
 
-        // =====================================================================
-        // OPTIMIZATION 1: DUAL-STREAM FAST PATH (Perfect Interleaving)
-        // =====================================================================
-        // If both streams have at least a full 3-byte packet, process them completely
-        // interleaved to keep both hardware lines saturated simultaneously.
-        while ((s1 == STATE_IDLE && avail1 >= 3) && (s2 == STATE_IDLE && avail2 >= 3)) {
-            uint8_t h1 = DAISY_RX1_Pool[r1];
-            uint8_t h2 = DAISY_RX2_Pool[r2];
-
-            if (((h1 & 0xF0) == 0x90) && ((h2 & 0xF0) == 0x90)) {
-                // Byte 1: Headers (Incremented)
-                drv_uart_putc_fast(USART2, h1 + 4);
-                drv_uart_putc_fast(USART3, h2 + 4);
-
-                // Byte 2: MSB
-                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t) (r2 + 1)]);
-                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t) (r1 + 1)]);
-
-                // Byte 3: LSB
-                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t) (r1 + 2)]);
-                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t) (r2 + 2)]);
-
-                r1 += 3;
-                r2 += 3;
-                avail1 -= 3;
-                avail2 -= 3;
-
-                if (avail1 < 3 || avail2 < 3) {
-                    uint32_t start_cycles = DWT->CYCCNT;
-
-                    // Calculate 3 microseconds in CPU cycles (integer math safe)
-                    uint32_t wait_cycles = (SystemCoreClock / 1000000) * 3;
-
-                    while ((avail1 >= 0 && avail1 <= 2) || (avail2 >= 0 && avail2 <= 2)) {
-                        w1 = GET_W1();
-                        w2 = GET_W2();
-
-                        avail1 = (uint8_t) (w1 - r1);
-                        avail2 = (uint8_t) (w2 - r2);
-
-                        // Break if we reach the 3us timeout
-                        if ((DWT->CYCCNT - start_cycles) > wait_cycles) {
-                            break;
-                        }
-                    }
-                }
-            } else {
-                break; // Misaligned or corrupted header, break to let the slow-path handle it
-            }
-        }
-
-        // =====================================================================
-        // OPTIMIZATION 2: SINGLE-STREAM FAST PATHS
-        // =====================================================================
-        // If one UART receives data slightly faster than the other, process it.
-        while (s1 == STATE_IDLE && avail1 >= 3) {
-            uint8_t h1 = DAISY_RX1_Pool[r1];
-            if ((h1 & 0xF0) == 0x90) {
-                drv_uart_putc_fast(USART2, h1 + 4);
-                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t) (r1 + 1)]);
-                drv_uart_putc_fast(USART2, DAISY_RX1_Pool[(uint8_t) (r1 + 2)]);
-
-                r1 += 3;
-                avail1 -= 3;
-            } else {
-                break;
-            }
-        }
-
-        while (s2 == STATE_IDLE && avail2 >= 3) {
-            uint8_t h2 = DAISY_RX2_Pool[r2];
-            if ((h2 & 0xF0) == 0x90) {
-                drv_uart_putc_fast(USART3, h2 + 4);
-                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t) (r2 + 1)]);
-                drv_uart_putc_fast(USART3, DAISY_RX2_Pool[(uint8_t) (r2 + 2)]);
-
-                r2 += 3;
-                avail2 -= 3;
-            } else {
-                break;
-            }
-        }
-
-        // =====================================================================
-        // SLOW PATH: Fragmentation / State Recovery
-        // =====================================================================
-        // We only fall down here if a packet is fragmented across a DMA update
-        // boundary or if data is corrupted. We can safely revert to the simple
-        // 1-byte-at-a-time logic.
-        while (r1 != w1 && s1 != STATE_IDLE) {
-            uint8_t b1 = DAISY_RX1_Pool[r1++];
-            if (s1 == STATE_GOT_HEADER) {
+        if (r1 != w1) {
+            b1 = DAISY_RX1_Pool[r1++];
+            if (s1 == STATE_IDLE && ((b1 & 0xF0) == 0x90)) {
+                drv_uart_putc_fast(USART2, b1 + 4);
+                s1 = STATE_GOT_HEADER;
+            } else if (s1 != STATE_IDLE) {
                 drv_uart_putc_fast(USART2, b1);
-                s1 = STATE_GOT_MSB;
-            } else { // STATE_GOT_MSB
-                drv_uart_putc_fast(USART2, b1);
-                s1 = STATE_IDLE;
+                // decrement enum until it equals state got header.
+                s1--;
             }
         }
 
-        while (r2 != w2 && s2 != STATE_IDLE) {
-            uint8_t b2 = DAISY_RX2_Pool[r2++];
-            if (s2 == STATE_GOT_HEADER) {
+        if (r2 != w2) {
+            b2 = DAISY_RX2_Pool[r2++];
+            if (s2 == STATE_IDLE && ((b2 & 0xF0) == 0x90)) {
+                drv_uart_putc_fast(USART3, b2 + 4);
+                s2 = STATE_GOT_HEADER;
+            } else if (s2 != STATE_IDLE) {
                 drv_uart_putc_fast(USART3, b2);
-                s2 = STATE_GOT_MSB;
-            } else { // STATE_GOT_MSB
-                drv_uart_putc_fast(USART3, b2);
-                s2 = STATE_IDLE;
+                // decrement enum until it equals state got header.
+                s2--;
             }
         }
-
-        // Check if we caught up to our cached write pointers.
-        // If so, re-sample the DMA registers to see if new data arrived
-        // while we were actively processing the previous bytes.
-        if ((r1 == w1) && (r2 == w2)) {
-            w1 = GET_W1();
-            w2 = GET_W2();
-        }
+        w1 = GET_W1();
+        w2 = GET_W2();
     }
 
     // Store states back
@@ -380,7 +282,7 @@ static void MX_USART_UART_Init(UART_HandleTypeDef *huart, USART_TypeDef *handle)
     huart->Instance = handle;
     huart->Init.BaudRate = max_baudrate;
     huart->Init.WordLength = UART_WORDLENGTH_9B;
-    huart->Init.StopBits = UART_STOPBITS_2;
+    huart->Init.StopBits = UART_STOPBITS_1;
     huart->Init.Parity = UART_PARITY_ODD;
 
     if (huart->Instance == UART4 || huart->Instance == USART6) {
@@ -675,9 +577,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
         __HAL_RCC_USART2_CLK_DISABLE();
 
         /**USART2 GPIO Configuration
-        PA2     ------> USART2_TX
-        PA3     ------> USART2_RX
-        */
+         PA2     ------> USART2_TX
+         PA3     ------> USART2_RX
+         */
         HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2 | GPIO_PIN_3);
     }
 
@@ -686,9 +588,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
         __HAL_RCC_USART3_CLK_DISABLE();
 
         /**USART3 GPIO Configuration
-        PB10     ------> USART3_TX
-        PB11     ------> USART3_RX
-        */
+         PB10     ------> USART3_TX
+         PB11     ------> USART3_RX
+         */
         HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10 | GPIO_PIN_11);
     }
 #if defined(TARGET_AMDS)
@@ -697,9 +599,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
         __HAL_RCC_UART4_CLK_DISABLE();
 
         /**USART3 GPIO Configuration
-        PD0     ------> UART4_RX
-        PD1     ------> UART4_TX
-        */
+         PD0     ------> UART4_RX
+         PD1     ------> UART4_TX
+         */
         HAL_GPIO_DeInit(GPIOD, GPIO_PIN_0);
     }
 
@@ -708,8 +610,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
         __HAL_RCC_UART5_CLK_DISABLE();
 
         /**USART3 GPIO Configuration
-        PD2      ------> UART5_RX
-        */
+         PD2      ------> UART5_RX
+         */
         HAL_GPIO_DeInit(GPIOD, GPIO_PIN_2);
     }
 #elif defined(TARGET_2S)
@@ -718,9 +620,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
         __HAL_RCC_USART6_CLK_DISABLE();
 
         /**USART3 GPIO Configuration
-        PG9     ------> USART6_RX
-        PG14    ------> USART6_TX
-        */
+         PG9     ------> USART6_RX
+         PG14    ------> USART6_TX
+         */
         HAL_GPIO_DeInit(GPIOG, GPIO_PIN_9 | GPIO_PIN_14);
     }
 
@@ -729,9 +631,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *uartHandle)
         __HAL_RCC_USART1_CLK_DISABLE();
 
         /**USART3 GPIO Configuration
-        PA9      ------> UART5_TX
-        PA10     ------> UART5_RX
-        */
+         PA9      ------> UART5_TX
+         PA10     ------> UART5_RX
+         */
         HAL_GPIO_DeInit(GPIOA, GPIO_PIN_9 | GPIO_PIN_10);
     }
 #else
