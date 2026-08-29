@@ -1,0 +1,18 @@
+----------------------------------------------------------------------------------------------------------------------------------
+NCDrill File Report For: AnalogSensorBoard.PcbDoc   5/20/2025  2:09:17 PM
+----------------------------------------------------------------------------------------------------------------------------------
+
+Layer Pair : Top Layer to Bottom Layer
+ASCII RoundHoles File : AnalogSensorBoard.TXT
+
+Tool       Hole Size               Hole Tolerance               Hole Type       Hole Count   Plated         Tool Travel
+----------------------------------------------------------------------------------------------------------------------------------
+T1      0.381mm (15mil)                                           Round             33        PTH        289.30mm (11.39inch)
+T2      1.1mm (43mil)                                             Round             14        PTH        104.26mm (4.10inch)
+T3      1.3mm (51mil)                                             Round             2         PTH        5.00mm (0.20inch)
+T4      1.4mm (55mil)                                             Round             4         PTH        18.78mm (0.74inch)
+T5      3.3mm (130mil)                                            Round             2         PTH        70.43mm (2.77inch)
+----------------------------------------------------------------------------------------------------------------------------------
+Totals                                                                              55
+
+Total Processing Time (hh:mm:ss) : 00:00:00

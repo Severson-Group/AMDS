@@ -1,0 +1,20 @@
+----------------------------------------------------------------------------------------------------------------------------------
+NCDrill File Report For: CurrentSensorBoard.PcbDoc   5/19/2025  3:20:41 PM
+----------------------------------------------------------------------------------------------------------------------------------
+
+Layer Pair : Top Layer to Bottom Layer
+ASCII RoundHoles File : CurrentSensorBoard.TXT
+
+Tool       Hole Size               Hole Tolerance               Hole Type       Hole Count   Plated         Tool Travel
+----------------------------------------------------------------------------------------------------------------------------------
+T1      16mil (0.4mm)                                             Round             16        PTH        5.55inch (141.04mm)
+T2      40mil (1.016mm)                                           Round             7         PTH        1.77inch (44.91mm)
+T3      43mil (1.1mm)                                             Round             13        PTH        3.85inch (97.73mm)
+T4      46mil (1.168mm)                                           Round             5         PTH        1.87inch (47.46mm)
+T5      47mil (1.2mm)                                             Round             3         PTH        1.10inch (27.94mm)
+T6      101mil (2.57mm)                                           Round             12        PTH        4.62inch (117.34mm)
+T7      130mil (3.3mm)                                            Round             2         PTH        2.77inch (70.43mm)
+----------------------------------------------------------------------------------------------------------------------------------
+Totals                                                                              58
+
+Total Processing Time (hh:mm:ss) : 00:00:00
